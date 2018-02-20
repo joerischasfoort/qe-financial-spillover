@@ -4,6 +4,7 @@ python:
 install: 
     - "pip install -r requirements.txt"
     - "pip install coveralls"
+    - "pip install --upgrade setuptools" 
     - "pip install -e ."
 script: 
     - 'coverage run --source=stockmarket setup.py test'
