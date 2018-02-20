@@ -1,0 +1,4 @@
+coverage
+pytest
+numpy
+pandas
