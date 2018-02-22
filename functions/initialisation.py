@@ -1,8 +1,8 @@
-from qe_financial_spillover.src.fund import Fund
-from qe_financial_spillover.src.asset import Asset
-from qe_financial_spillover.src.functions import *
-from qe_financial_spillover.src.functions.distribute import *
-from qe_financial_spillover.src.functions.stochasticprocess import ornstein_uhlenbeck_levels
+from objects.fund import Fund
+from objects.asset import Asset
+from functions import *
+from functions.distribute import *
+from functions.stochasticprocess import ornstein_uhlenbeck_levels
 import random
 import numpy as np
 

@@ -1,4 +1,4 @@
-from src.model import qe_casp_model
+from model import qe_casp_model
 import numpy as np
 """
 Simulation parameters

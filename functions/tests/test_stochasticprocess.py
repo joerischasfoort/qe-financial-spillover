@@ -1,5 +1,5 @@
 from numpy.testing import assert_equal
-from qe_financial_spillover.src.functions.stochasticprocess import *
+from functions.stochasticprocess import *
 
 def test_ornstein_uhlenbeck_levels():
     """Basic checks for ornstein uhlenbeck function"""

@@ -1,7 +1,7 @@
 from math import log
 from math import exp, expm1
 import numpy as np
-from src.functions.weights import *
+from functions.weights import *
 
 
 

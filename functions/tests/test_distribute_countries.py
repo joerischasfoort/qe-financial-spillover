@@ -1,5 +1,5 @@
 from numpy.testing import assert_equal
-from qe_financial_spillover.src.functions.distribute import *
+from functions.distribute import *
 
 """ Helper functions to assign funds to countries """
 

@@ -1,5 +1,5 @@
 from numpy.testing import assert_equal
-from qe_financial_spillover.src.functions.market_mechanism import *
+from functions.market_mechanism import *
 import pytest
 
 @pytest.fixture
@@ -53,7 +53,7 @@ def test_incomplete_walrasian_auction_price_moves(set_of_funds, asset):
     asset = asset
     std_market_noise = 0.001
     imperfection_tolerance = 10
-    price_step = 0.05
+    price_step = 0.20
     funds = set_of_funds
     # a low price should lead to excess demand and a higher price
     previous_price = 0.8
@@ -65,3 +65,7 @@ def test_incomplete_walrasian_auction_price_moves(set_of_funds, asset):
     assert_equal(incomplete_walrasian_auction_price(asset, funds, previous_price,
                                                     imperfection_tolerance,
                                                     price_step, std_market_noise)[1] < previous_price, True)
+
+# incomplete_walrasian_auction_price(asset(), set_of_funds(), 0.8,
+#                                                     10,
+#                                                     0.05, 0.001)[1]

@@ -1,5 +1,5 @@
-from initialisation import *
-from qe_financial_spillover.src.functions.portfolio import *
+from functions.initialisation import *
+from functions.portfolio import *
 
 def qe_casp_model(days, identifiers_funds, lambdas, thetas, phis,  phis_p, phis_x, regions, std_noises , identifiers_assets, ms, rhos, omegas, face_values, global_supply, prices, backward_simulated_time, exchange_rate):
     """
