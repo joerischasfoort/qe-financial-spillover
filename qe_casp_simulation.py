@@ -64,7 +64,7 @@ std_noises = [0.001, 0.002 , 0.001 , 0.004 ]  # Todo: using np array.tolist() as
 regions = ["domestic", "foreign"]
 
 "Asset parameters"
-identifiers_assets = ["domestic_low_risk", "domestic_high_risk", "foreign_high_risk", "foreign_low_risk", "domestic_cash", "foreign_cash"]
+identifiers_assets = ["domestic_low_risk", "domestic_high_risk", "foreign_high_risk", "foreign_low_risk", "domestic_cash", "foreign_cash"] # assets are portfolios of assets
 number_assets = len(identifiers_assets)
 number_cash = len([i for i in identifiers_assets if "cash" in i])
 
@@ -75,7 +75,7 @@ cash_rhos = np.ones(number_cash) * 0
 rhos  = np.append(bond_rhos, cash_rhos ).tolist()  # rhos are nominal interest rate paid on the face value
 
 """Creating a list of default probabilities"""
-omega = 10e-7
+omega = 10e-7 # the meaning of omega has changed from default probability to default rate
 bond_omegas = (np.ones(number_assets - number_cash ) * omega )
 cash_omegas = np.ones(number_cash) * 0
 omegas  = np.append(bond_omegas, cash_omegas ).tolist()  # default probabilities omegas
@@ -89,7 +89,7 @@ face_values = np.append(bond_face_value, cash_face_value).tolist()
 
 
 supply_bond = issuance
-supply_cash = 0.1 * issuance
+supply_cash = 0.05 * issuance
 """Creating a list of global_supplies"""
 # Price is one, so quantity is the same as issuance
 bond_supply = (np.ones(number_assets - number_cash ) * supply_bond)
@@ -112,3 +112,4 @@ ms = [0.95, 0.99 , 0.95, 0.99 , 0 , 0 ]  #(1 - m) fraction of principal being re
 
 qe_casp_model(days, identifiers_funds, lambdas, thetas, phis, phis_p, phis_x, regions, std_noises,
               identifiers_assets, ms, rhos, omegas, face_values, global_supply, prices, backward_simulated_time, exchange_rate   )
+
