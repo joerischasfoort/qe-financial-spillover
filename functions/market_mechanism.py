@@ -24,7 +24,7 @@ def incomplete_walrasian_auction_price(asset, funds, previous_price, imperfectio
     # if excesss aggregate demand: increase price by step
     if abs(excess_demand) > imperfection_tolerance:
         cleared = False
-        imperfect_price = log(price) + gamma * (excess_demand / asset.parameters["global_quantity"]) + market_noise  #price_step # equation 1.14
+        imperfect_price = log(price) + gamma * (excess_demand / float(asset.parameters["global_quantity"])) + market_noise  #price_step # equation 1.14
         imperfect_price = exp(imperfect_price)
         return cleared, imperfect_price
     else:
