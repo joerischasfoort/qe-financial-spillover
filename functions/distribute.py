@@ -3,7 +3,7 @@ from bisect import bisect
 
 """ Helper functions to assign funds to countries """
 
-def distribute_funds_equally(n_funds, list_countries):
+def distribute_options_equally(n_funds, list_options):
     """
 	param: n_funds integer
 		total number of funds to be assigned to a country
@@ -14,8 +14,8 @@ def distribute_funds_equally(n_funds, list_countries):
 	"""
     funds = []
     for fund in range(n_funds):
-        for i in range(len(list_countries)):
-            funds.append(list_countries[i])
+        for i in range(len(list_options)):
+            funds.append(list_options[i])
 
     return funds[:n_funds]
 	

@@ -2,48 +2,53 @@ class Parameters:
     """
     Holds the model parameters
     """
-    def __init__(self, n_assets, n_funds, days, lambdas, theta, phi, regions, std_noise, ms, rho, omega, face_value, global_supply):
+    def __init__(self, n_assets, n_funds, days, regions, price_memory, fx_memory, total_money,
+                 face_value, default_rate, repayment_rate, nominal_interest_rate, quantity, init_asset_price):
+        # global parameters
         self.n_assets = n_assets
         self.n_funds = n_funds
         self.days = days
-        self.lambdas = lambdas
-        self.theta = theta
-        self.phi = phi
         self.regions = regions
-        self.std_noise = std_noise
-        self.ms = ms
-        self.rho = rho
-        self.omega = omega
+
+        # asset parameters
         self.face_value = face_value
+        self.default_rate = default_rate
+        self.repayment_rate = repayment_rate
+        self.nominal_interest_rate = nominal_interest_rate
+        self.quantity = quantity
+
+        # init asset variables
+        self.init_asset_price = init_asset_price
+
+        # agent parameters
+        self.price_memory = price_memory
+        self.fx_memory = fx_memory
+
+        # agent variables
+        self.total_money = total_money
 
 
-class AgentInitialVariables:
+class AgentVariables:
     """
     Holds the initial variables for the agents
     """
-    def __init__(self, nationality, dm_portfolio1, dm_portfolio2, f_portfolio1, f_portfolio2, money):
-        self.nationality = nationality
-        self.domestic_portfolio1 = dm_portfolio1
-        self.domestic_portfolio2 = dm_portfolio2
-        self.foreign_portfolio1 = f_portfolio1
-        self.foreign_portfolio2 = f_portfolio2
+    def __init__(self, assets, money, redeemable_shares):
+        self.assets = assets
         self.money = money
+        self.redeemable_shares = redeemable_shares
 
 
 class AgentParameters:
     """
-    Holds the initial variables for the agents
+    Holds the the agent parameters
     """
-    def __init__(self, nationality, dm_portfolio1, dm_portfolio2, f_portfolio1, f_portfolio2, money):
+    def __init__(self, nationality, price_memory, fx_memory):
         self.nationality = nationality
-        self.domestic_portfolio1 = dm_portfolio1
-        self.domestic_portfolio2 = dm_portfolio2
-        self.foreign_portfolio1 = f_portfolio1
-        self.foreign_portfolio2 = f_portfolio2
-        self.money = money
+        self.price_memory = price_memory
+        self.fx_memory = fx_memory
 
 
-class AssetInitialVariables:
+class AssetVariables:
     """
     Holds the initial variables for the assets, for now empty
     """
@@ -55,10 +60,10 @@ class AssetParameters:
     """
     Holds the initial variables for the assets
     """
-    def __init__(self, nationality, face_value, default_rate, repayment_rate, nominal_interest_rate, asset_supply):
-        self.nationality = nationality
+    def __init__(self, regions, face_value, default_rate, repayment_rate, nominal_interest_rate, quantity):
+        self.regions = regions
         self.face_value = face_value
         self.default_rate = default_rate
         self.repayment_rate = repayment_rate
         self.nominal_interest_rate = nominal_interest_rate
-        self.asset_supply = asset_supply
+        self.quantity = quantity

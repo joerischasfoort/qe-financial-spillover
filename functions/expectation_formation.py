@@ -4,6 +4,22 @@ import numpy as np
 from functions.weights import *
 
 
+def update_expectations():
+    """
+    Method to update expected asset attributes for the next iteration
+    1) New expected default probability Equation 1.6
+    2) New expected prices, exchange rates Equation 1.7
+    3) New expected returns Equation 1.1
+    4) Get realised returns for covariance variance matrix  Equation 1.3
+    5) Compute new ewma (Mhat) for realised returns   Equation 1.5
+    6) Use latest realised
+    return and ewma mhat for covariance   Equation 1.4
+    5) Calculate new ewma covariance Equation 1.3 continued
+    6) Plug it into portfolio optimisation Equation 1.7
+    7) get weights...phew!"""
+
+    return 0
+
 
 def exp_price( mhat, phi, last_price ):
 
