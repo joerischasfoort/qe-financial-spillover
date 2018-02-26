@@ -18,7 +18,7 @@ def update_expectations():
     6) Plug it into portfolio optimisation Equation 1.7
     7) get weights...phew!"""
 
-    return 0
+    pass
 
 
 def exp_price( mhat, phi, last_price ):

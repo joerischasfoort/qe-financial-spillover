@@ -2,10 +2,8 @@ def exp_weighted_moving_average(last_exp_w_ma_average, phi, variable_of_interest
     """
     returns new weighted moving average
     param: last_exp_w_ma_average
-    param: phi
-        memory parameter
-    param: variable_of_interest
-        can be anything
+    param: phi: float memory parameter
+    param: variable_of_interest: float
     return: new_exp_w_ma_average
     """
     new_exp_w_ma_average =  (1 - phi) * last_exp_w_ma_average + phi * variable_of_interest
