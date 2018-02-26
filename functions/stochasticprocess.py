@@ -1,6 +1,7 @@
 import math
 import numpy.random as nrand
 
+
 def ornstein_uhlenbeck_levels(time=500, init_level=10e-7, rate_of_time = 0.003968253968253968, sigma=0.125,
                               mean_reversion=0.99, long_run_average_level=10e-7):
     """
