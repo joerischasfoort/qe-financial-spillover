@@ -1,15 +1,15 @@
 from init_objects import *
-from objects.parameters import *
+from objects.modelparameters import *
 from numpy.testing import assert_equal
 import pytest
 
 @pytest.fixture
 def parameters():
     """Returns global parameter which indicates there are four assets"""
-    params = Parameters(n_assets=4, n_funds=2, days=10, regions=['domestic', 'foreign'],
-                        price_memory=2, fx_memory=2, total_money=4000,
-                        face_value=100, default_rate=0.12, repayment_rate=0.3, nominal_interest_rate=0.003, maturity=1,
-                        quantity=5000, init_asset_price=1, init_exchange_rate=1)
+    params = ModelParameters(n_assets=4, n_funds=2, days=10, regions=['domestic', 'foreign'],
+                             price_memory=2, fx_memory=2, total_money=4000,
+                             face_value=100, default_rate=0.12, nominal_interest_rate=0.003, maturity=1,
+                             quantity=5000, init_asset_price=1, init_exchange_rate=1)
     return params
 
 
@@ -30,4 +30,4 @@ def test_init_objects(parameters):
     # test 4 sum of money held by funds is global money input
     assert_equal(total_money, parameters.total_money)
 
-#test_init_objects(parameters())
+test_init_objects(parameters())
