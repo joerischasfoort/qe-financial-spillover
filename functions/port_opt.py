@@ -20,11 +20,10 @@ def portfolio_optimization(funds, assets):
         Cov_assets = f.exp.covariance_matrix.copy()
         E_ret_assets = np.zeros(len(Cov_assets))
         for i, a in enumerate(Cov_assets.columns.values):
-            print i, a, f.exp.returns[a]
             E_ret_assets[i] = f.exp.returns[a]
             
-        E_ret_cash = f.exp.cash_return
-                
+        E_ret_cash = f.exp.cash_return.copy()
+        risk_aversion = f.par.risk_aversion.copy()       
     
         # adding cash to the covariance matrix
         aux_cov = np.concatenate((Cov_assets, np.zeros((1,len(Cov_assets)))),axis=0)
@@ -55,6 +54,7 @@ def portfolio_optimization(funds, assets):
                 if test[i]==True: 
                    aux_cov[i,:]=0
                    aux_cov[i,i]=1
+                   aux_ret[i]=0
             # recompute compute matrix inverse and weights
             inv_aux_cov=np.linalg.inv(aux_cov)
             weights=np.matmul(inv_aux_cov, aux_ret)*(1/float(risk_aversion))      
