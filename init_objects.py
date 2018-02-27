@@ -30,7 +30,7 @@ def init_objects(parameters):
     # calculate initial asset vars for agent parameters
     asset_values = [asset.var.price * asset.par.quantity for asset in assets]
     default_rates = [asset.par.default_rate for asset in assets]
-    returns = [realised_returns_domestic(asset.par.default_rate,
+    returns = [realised_returns(asset.par.default_rate,
                                          asset.par.face_value,
                                          asset.var.price,
                                          asset.var.price,
@@ -53,7 +53,7 @@ def init_objects(parameters):
     def divide_by_funds(variable): return np.divide(variable, parameters.n_funds)
 
     for idx, nat in enumerate(fund_nationalities):
-        fund_params = AgentParameters(nat, parameters.price_memory, parameters.fx_memory)
+        fund_params = AgentParameters(nat, parameters.price_memory, parameters.fx_memory, parameters.risk_aversion)
         asset_portfolio = {asset: divide_by_funds(value) for (asset, value) in zip(assets, asset_values)} #for every asset {asset: value}
         ewma_returns = {asset: rt for (asset, rt) in zip(assets, returns)}
         ewma_delta_prices = {asset: 0 for (asset, rt) in zip(assets, returns)}
@@ -80,7 +80,7 @@ def simulated_return_variance(asset, days): #TODO what to do with implied parame
     :return: float initial variance of the asset
     """
     simulated_default_rates = ornstein_uhlenbeck_levels(time=days)
-    simulated_returns = [realised_returns_domestic(df, V=asset.par.face_value ,P=1,
+    simulated_returns = [realised_returns(df, V=asset.par.face_value ,P=1,
                                                    P_tau=1, Q=asset.par.quantity,
                                                    rho=asset.par.nominal_interest_rate,
                                                    m=asset.par.maturity) for df in simulated_default_rates]

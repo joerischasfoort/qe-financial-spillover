@@ -28,10 +28,11 @@ class AgentParameters:
     """
     Holds the the agent parameters
     """
-    def __init__(self, nationality, price_memory, fx_memory):
+    def __init__(self, nationality, price_memory, fx_memory, risk_aversion):
         self.nationality = nationality
         self.price_memory = price_memory
         self.fx_memory = fx_memory
+        self.risk_aversion = risk_aversion
 
 
 class AgentExpectations:

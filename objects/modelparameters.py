@@ -2,7 +2,8 @@ class ModelParameters:
     """
     Holds the model parameters
     """
-    def __init__(self, n_assets, n_funds, days, regions, price_memory, fx_memory, total_money,
+    def __init__(self, n_assets, n_funds, days, regions, price_memory, fx_memory,
+                 risk_aversion, total_money,
                  face_value, default_rate, nominal_interest_rate, maturity, quantity,
                  init_asset_price, init_exchange_rate):
         # global parameters
@@ -25,6 +26,7 @@ class ModelParameters:
         # agent parameters
         self.price_memory = price_memory
         self.fx_memory = fx_memory
+        self.risk_aversion = risk_aversion
 
         # agent variables
         self.total_money = total_money
