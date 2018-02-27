@@ -64,9 +64,9 @@ def init_objects(parameters):
                                    ewma_returns,
                                    ewma_delta_prices,
                                    ewma_delta_fx)
-        returns = ewma_returns.copy()
+        r = ewma_returns.copy()
         df_rates = {asset: default_rate for (asset, default_rate) in zip(assets, default_rates)}
-        fund_expectations = AgentExpectations(returns, df_rates, parameters.init_exchange_rate, covariance_matrix)
+        fund_expectations = AgentExpectations(r, df_rates, parameters.init_exchange_rate, covariance_matrix)
         funds.append(Fund(idx, fund_vars, fund_vars, fund_params, fund_expectations))
 
     return assets, funds
