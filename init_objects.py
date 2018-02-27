@@ -1,6 +1,5 @@
 from objects.fund import *
 from objects.asset import *
-from functions.realised_returns import *
 from functions.distribute import distribute_options_equally
 from functions.stochasticprocess import *
 from functions.realised_returns import *
@@ -63,10 +62,11 @@ def init_objects(parameters):
                                    sum(asset_portfolio.values()) + divide_by_funds(parameters.total_money),
                                    ewma_returns,
                                    ewma_delta_prices,
-                                   ewma_delta_fx)
+                                   ewma_delta_fx,
+                                   covariance_matrix)
         r = ewma_returns.copy()
         df_rates = {asset: default_rate for (asset, default_rate) in zip(assets, default_rates)}
-        fund_expectations = AgentExpectations(r, df_rates, parameters.init_exchange_rate, covariance_matrix)
+        fund_expectations = AgentExpectations(r, df_rates, parameters.init_exchange_rate, parameters.cash_return)
         funds.append(Fund(idx, fund_vars, fund_vars, fund_params, fund_expectations))
 
     return assets, funds

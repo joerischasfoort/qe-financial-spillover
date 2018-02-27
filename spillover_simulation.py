@@ -10,7 +10,7 @@ parameters = ModelParameters(n_assets=4,
                              price_memory=2, fx_memory=2, risk_aversion=1, total_money=4000,
                              face_value=100, default_rate=0.12,
                              nominal_interest_rate=0.003, maturity=1,
-                             quantity=5000, init_asset_price=1, init_exchange_rate=1)
+                             quantity=5000, init_asset_price=1, init_exchange_rate=1, cash_return=0)
 
 # 2 initalise model objects
 assets, funds = init_objects(parameters)
