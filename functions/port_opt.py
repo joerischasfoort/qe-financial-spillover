@@ -15,6 +15,9 @@ def portfolio_optimization(E_ret_assets, Cov_assets, E_ret_cash, risk_aversion):
     risk_aversion = np.array([2])
     ## the real function starts here
     
+    for f in funds:
+        Cov_assets = 
+    
     # adding cash to the covariance matrix
     aux_cov = np.concatenate((Cov_assets, np.zeros((1,len(Cov_assets)))),axis=0)
     aux_cov = np.concatenate((aux_cov, np.zeros((len(aux_cov),1))),axis=1)
