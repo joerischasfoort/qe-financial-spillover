@@ -3,27 +3,20 @@ import pandas as pd
 
 def portfolio_optimization(funds, assets):
     
-    ## some random sample values to test the function
-    Cov_assets = np.random.rand(5,5)
-    # making the sample covariance matrix symmetric
-    for i in range(len(Cov_assets)):
-        for j in range(len(Cov_assets)):
-            if j != i:
-                Cov_assets[i,j]=Cov_assets[j,i]
-                
-    E_ret_assets =np.random.rand(5) 
-    E_ret_cash = np.array([0])
-    risk_aversion = np.array([2])
-    ## the real function starts here
-    
+   
     for f in funds:
+        
         Cov_assets = f.exp.covariance_matrix.copy()
         E_ret_assets = np.zeros(len(Cov_assets))
+        
         for i, a in enumerate(Cov_assets.columns.values):
             E_ret_assets[i] = f.exp.returns[a]
             
         E_ret_cash = f.exp.cash_return.copy()
-        risk_aversion = f.par.risk_aversion.copy()       
+        risk_aversion = f.par.risk_aversion.copy()   
+        
+        #E_ret_cash = np.array([0])
+        #risk_aversion = np.array([2])
     
         # adding cash to the covariance matrix
         aux_cov = np.concatenate((Cov_assets, np.zeros((1,len(Cov_assets)))),axis=0)
@@ -60,5 +53,6 @@ def portfolio_optimization(funds, assets):
             weights=np.matmul(inv_aux_cov, aux_ret)*(1/float(risk_aversion))      
             test = weights[:-1] < 0       
             
-    
-    return weights
+        #f.var.weights=weights
+        
+    #return f.var.weights=weights
