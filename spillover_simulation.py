@@ -17,3 +17,4 @@ assets, funds = init_objects(parameters)
 
 # 3 simulate model
 # assets, funds = spillover_model(assets, funds, parameters.days)
+

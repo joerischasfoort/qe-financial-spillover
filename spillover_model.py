@@ -2,6 +2,8 @@
 import numpy as np
 import random
 
+from functions.port_opt import *
+
 def spillover_model(assets, funds, days, seed):
     """
     Kozai, Riedler & Schasfoort Agent-based simulation model of financial spillovers
@@ -17,4 +19,8 @@ def spillover_model(assets, funds, days, seed):
     for day in range(days-1):
         tau = 0
         for fund in funds:
-            fund.expected_vars = update_expectations(fund, assets, assets.exchange_rate, tau)
+            #fund.expected_vars = update_expectations(fund, assets, assets.exchange_rate, tau)
+            
+            fund.var.weights = portfolio_optimization(fund)
+            
+            
