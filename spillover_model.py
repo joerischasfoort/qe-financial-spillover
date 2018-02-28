@@ -3,6 +3,7 @@ import numpy as np
 import random
 
 from functions.port_opt import *
+from functions.initialisation import * 
 
 def spillover_model(assets, funds, days, seed):
     """
@@ -22,5 +23,13 @@ def spillover_model(assets, funds, days, seed):
             #fund.expected_vars = update_expectations(fund, assets, assets.exchange_rate, tau)
             
             fund.var.weights = portfolio_optimization(fund)
+            
+            #New demands 
+            #fund.var.demands = new_demand(fund)
+            
+            #Marchet mechanism  
+            #assets.var.price = incomplete_walrasian_auction_price(assets, funds, imperfection_tolerance, gamma)
+              
+            
             
             

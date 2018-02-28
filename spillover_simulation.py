@@ -4,6 +4,7 @@ from init_objects import *
 from objects.modelparameters import *
 
 # 1 setup parameters
+
 parameters = ModelParameters(n_assets=4, 
                              n_funds=2, 
                              days=10, regions=['domestic', 'foreign'],
@@ -15,6 +16,7 @@ parameters = ModelParameters(n_assets=4,
 # 2 initalise model objects
 assets, funds = init_objects(parameters)
 
+        
 # 3 simulate model
-# assets, funds = spillover_model(assets, funds, parameters.days)
+# assets, funds = spillover_model(assets, funds, parameters.days, parameters.gamma)
 
