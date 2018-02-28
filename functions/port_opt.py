@@ -1,7 +1,7 @@
 import numpy as np
 import pandas as pd
 
-def portfolio_optimization(fund):
+def portfolio_optimization(f):
     
 
         
@@ -49,5 +49,9 @@ def portfolio_optimization(fund):
         inv_aux_cov=np.linalg.inv(aux_cov)
         weights=np.matmul(inv_aux_cov, aux_ret)*(1/float(risk_aversion))      
         test = weights[:-1] < 0       
-            
-    return weights
+    output = {}    
+    for i, a in enumerate(Cov_assets.columns.values):
+        output[a] = weights[i]
+    
+    output["cash"] = weights[-2]    
+    return output
