@@ -7,7 +7,7 @@ from functions.initialisation import *
 
 def spillover_model(assets, funds, days, seed):
     """
-    Kozai, Riedler & Schasfoort Agent-based simulation model of financial spillovers
+    Koziol, Riedler & Schasfoort Agent-based simulation model of financial spillovers
     :param assets: list of Asset objects
     :param funds: list of Fund objects
     :param days: integer amount of days over which the simulation will take place
@@ -27,8 +27,8 @@ def spillover_model(assets, funds, days, seed):
             #New demands 
             #fund.var.demands = new_demand(fund)
             
-            #Marchet mechanism  
-            #assets.var.price = incomplete_walrasian_auction_price(assets, funds, imperfection_tolerance, gamma)
+            #Market mechanism  
+            #assets.var.price = lazy_wal_auction(assets, funds, imperfection_tolerance, gamma)
               
             
             
