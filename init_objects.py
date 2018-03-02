@@ -93,7 +93,7 @@ def init_objects(parameters):
                                    ewma_returns,
                                    ewma_delta_prices,
                                    ewma_delta_fx,
-                                   covariance_matrix)
+                                   cov_matr)
         r = ewma_returns.copy()
         df_rates = {asset: default_rate for (asset, default_rate) in zip(portfolios, default_rates)}
         fund_expectations = AgentExpectations(r, df_rates, parameters["init_exchange_rate"], parameters["currency_rate"])

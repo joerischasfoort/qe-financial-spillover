@@ -8,7 +8,7 @@ def parameters():
     # 1 setup parameters
     parameters = {
         # global parameters
-        "n_domestic assets": 2,
+        "n_domestic_assets": 2,
         "n_foreign_assets": 3,
         "n_domestic_funds": 3,
         "n_foreign_funds": 2,
@@ -18,11 +18,9 @@ def parameters():
         "face_value": 100,
         "default_rate": 0.012,
         "nominal_interest_rate": 0.003,
-        "cash_return": 0,
+        "currency_rate": 0,
         "maturity": 1,
         "quantity": 5000,
-        # currency parameters
-        "currency_rate": 0,
         # agent parameters
         "price_memory": 2,
         "fx_memory": 2,
@@ -32,13 +30,22 @@ def parameters():
         "init_exchange_rate": 1,
         "total_money": 4000,
         "init_agent_ewma_delta_prices": 0,
-        "init_ewma_delta_fx": 0
+        "init_ewma_delta_fx": 0,
+        "init_asset_demand": 0,
+        "init_currency_demand": 0,
+        # shock processes parameters
+        "fx_shock_mu": 0,
+        "fx_shock_std": 0.001,
+        "default_rate_mu": 10e-7,
+        "default_rate_std": 0.125,
+        "default_rate_mean_reversion": 0.99,
+        "default_rate_delta_t": 0.003968253968253968
     }
     return parameters
 
 
 def test_init_objects(parameters):
-    assets, funds = init_objects(parameters)
+    assets, currencies, funds = init_objects(parameters)
     # test 1 the function creates four assets and two funds
     assert_equal(len(assets), 5)
     assert_equal(len(funds), 5)
@@ -46,9 +53,9 @@ def test_init_objects(parameters):
     sum_portfolio_values = 0
     total_money = 0
     for fund in funds:
-        assert_equal(fund.var.money + sum(fund.var.assets.values()) == fund.var.redeemable_shares, True)
+        assert_equal(sum(fund.var.currency.values()) + sum(fund.var.assets.values()) == fund.var.redeemable_shares, True)
         sum_portfolio_values += sum(fund.var.assets.values())
-        total_money += fund.var.money
+        total_money += sum(fund.var.currency.values())
     # test 3 sum of fund portfolio values = global portfolio values
     assert_equal(sum_portfolio_values, (parameters["quantity"] * len(assets)))
     # test 4 sum of money held by funds is global money input
