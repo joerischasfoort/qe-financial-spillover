@@ -17,12 +17,22 @@ def distribute_options_equally(n_funds, list_options):
     return funds[:n_funds]
 
 
+def ordered_list_of_countries(n_domestic, n_foreign):
+    """
+    Create list of shape ['domestic'...n & 'foreign'....n]
+    :param n_domestic: number of domestic object
+    :param n_foreign: number of foreign objects
+    :return: list
+    """
+    return ['domestic' for x in range(n_domestic)] + ['foreign' for x in range(n_foreign)]
+
+
 def weighted_choice(choices):
     """
-	param: choices list of tuples with (Country, chance of getting country)
-	returns: string of chosen country
-	from https://stackoverflow.com/questions/3679694/a-weighted-version-of-random-choice
-	"""
+    param: choices list of tuples with (Country, chance of getting country)
+    returns: string of chosen country
+    from https://stackoverflow.com/questions/3679694/a-weighted-version-of-random-choice
+    """
     values, weights = zip(*choices)
     total = 0
     cum_weights = []
