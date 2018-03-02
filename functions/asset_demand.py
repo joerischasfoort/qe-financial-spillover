@@ -13,5 +13,5 @@ def asset_demand(fund, assets, cash):
     for c in cash:
         c_demand[c] = ((fund.var.weights[a] * fund.var.redeemable_shares) / fund.var.exchange_rate[a] ) -  fund.var_previous.cash
         
-    return = (a_demand, c_demand)
+    return = a_demand, c_demand
         

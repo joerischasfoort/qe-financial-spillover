@@ -26,13 +26,14 @@ def spillover_model(assets, cash, funds, days, seed):
             fund.var.weights = portfolio_optimization(fund) 
             
 
-            #New demands 
-            #fund.var.demands = new_demand(fund)
+            # compute demand for balance sheet positions
+            fund.var.asset_demand, fund.var.cash_demand = asset_demand(fund, assets, cash)
+
+
             
             #Market mechanism  
             #assets.var.price = lazy_wal_auction(assets, funds, imperfection_tolerance, gamma)
               
             
             
-            
->>>>>>> 22f9c767fca44ac23f6099a0db1c69c5490253be
+
