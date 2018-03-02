@@ -13,18 +13,18 @@ def init_objects(parameters):
     :param parameters: object which holds all model parameters
     :return: list of fund objects, list of asset objects
     """
-    asset_nationalities = distribute_options_equally(parameters.n_assets, parameters.regions)
+    asset_nationalities = distribute_options_equally(parameters["n_assets"], parameters["regions"])
     assets = []
     asset_return_variance = []
-    for asset_n, nat in zip(range(parameters.n_assets), asset_nationalities):
-        asset_params = AssetParameters(nat, parameters.face_value, parameters.default_rate,
-                                       parameters.nominal_interest_rate, parameters.maturity, parameters.quantity)
+    for idx, nat in enumerate(asset_nationalities):
+        asset_params = AssetParameters(nat, parameters["face_value"], parameters["default_rate"],
+                                       parameters["nominal_interest_rate"], parameters["maturity"], parameters["quantity"])
         # initialise asset vars and historical vars from global params
-        init_asset_vars = AssetVariables(parameters.init_asset_price)
-        previous_assets_vars = AssetVariables(parameters.init_asset_price)
-        assets.append(Asset(asset_n, init_asset_vars, previous_assets_vars, asset_params))
+        init_asset_vars = AssetVariables(parameters["init_asset_price"])
+        previous_assets_vars = AssetVariables(parameters["init_asset_price"])
+        assets.append(Asset(idx, init_asset_vars, previous_assets_vars, asset_params))
         # calculate initial variance of returns
-        asset_return_variance.append(simulated_return_variance(assets[-1], parameters.days))
+        asset_return_variance.append(simulated_return_variance(assets[-1], parameters["days"]))
 
     # calculate initial asset vars for agent parameters
     asset_values = [asset.var.price * asset.par.quantity for asset in assets]
@@ -47,26 +47,26 @@ def init_objects(parameters):
     covariance_matrix = pd.DataFrame(covs, index=assets, columns=assets)
 
     funds = []
-    fund_nationalities = distribute_options_equally(parameters.n_funds, parameters.regions)
+    fund_nationalities = distribute_options_equally(parameters["n_funds"], parameters["regions"])
 
-    def divide_by_funds(variable): return np.divide(variable, parameters.n_funds)
+    def divide_by_funds(variable): return np.divide(variable, parameters["n_funds"])
 
     for idx, nat in enumerate(fund_nationalities):
-        fund_params = AgentParameters(nat, parameters.price_memory, parameters.fx_memory, parameters.risk_aversion)
+        fund_params = AgentParameters(nat, parameters["price_memory"], parameters["fx_memory"], parameters["risk_aversion"])
         asset_portfolio = {asset: divide_by_funds(value) for (asset, value) in zip(assets, asset_values)} #for every asset {asset: value}
         ewma_returns = {asset: rt for (asset, rt) in zip(assets, returns)}
         ewma_delta_prices = {asset: 0 for (asset, rt) in zip(assets, returns)}
         ewma_delta_fx = 0
         fund_vars = AgentVariables(asset_portfolio,
-                                   divide_by_funds(parameters.total_money),
-                                   sum(asset_portfolio.values()) + divide_by_funds(parameters.total_money),
+                                   divide_by_funds(parameters["total_money"]),
+                                   sum(asset_portfolio.values()) + divide_by_funds(parameters["total_money"]),
                                    ewma_returns,
                                    ewma_delta_prices,
                                    ewma_delta_fx,
                                    covariance_matrix)
         r = ewma_returns.copy()
         df_rates = {asset: default_rate for (asset, default_rate) in zip(assets, default_rates)}
-        fund_expectations = AgentExpectations(r, df_rates, parameters.init_exchange_rate, parameters.cash_return)
+        fund_expectations = AgentExpectations(r, df_rates, parameters["init_exchange_rate"], parameters["cash_return"])
         funds.append(Fund(idx, fund_vars, fund_vars, fund_params, fund_expectations))
 
     return assets, funds
