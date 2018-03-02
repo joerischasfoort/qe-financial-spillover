@@ -5,12 +5,13 @@ class ModelParameters:
     def __init__(self, n_assets, n_funds, days, regions, price_memory, fx_memory,
                  risk_aversion, total_money,
                  face_value, default_rate, nominal_interest_rate, maturity, quantity,
-                 init_asset_price, init_exchange_rate, cash_return):
+                 init_asset_price, init_exchange_rate, cash_return, p_change_intensity):
         # global parameters
         self.n_assets = n_assets
         self.n_funds = n_funds
         self.days = days
         self.regions = regions
+        self.p_change_intensity = p_change_intensity
 
         # asset parameters
         self.face_value = face_value

@@ -3,10 +3,11 @@ import numpy as np
 import random
 
 from functions.port_opt import *
+from functions.initialisation import * 
 
 def spillover_model(assets, cash, funds, days, seed):
     """
-    Kozai, Riedler & Schasfoort Agent-based simulation model of financial spillovers
+    Koziol, Riedler & Schasfoort Agent-based simulation model of financial spillovers
     :param assets: list of Asset objects
     :param funds: list of Fund objects
     :param days: integer amount of days over which the simulation will take place
@@ -24,5 +25,14 @@ def spillover_model(assets, cash, funds, days, seed):
             # compute the weights of optimal balance sheet positions
             fund.var.weights = portfolio_optimization(fund) 
             
-            # compute demand for balance sheet positions
-            (fund.var.asset_demand, fund.var.cash_demand) = asset_demand(fund, assets, cash)
+
+            #New demands 
+            #fund.var.demands = new_demand(fund)
+            
+            #Market mechanism  
+            #assets.var.price = lazy_wal_auction(assets, funds, imperfection_tolerance, gamma)
+              
+            
+            
+            
+>>>>>>> 22f9c767fca44ac23f6099a0db1c69c5490253be

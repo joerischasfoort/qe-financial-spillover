@@ -2,9 +2,9 @@ from math import log
 from math import exp
 import numpy as np
 
-def incomplete_walrasian_auction_price(asset, funds, previous_price, imperfection_tolerance, gamma, std_market_noise):
+def lazy_wal_auction(asset, funds, previous_price, imperfection_tolerance, gamma, std_market_noise):
     """
-    Find the next tau price .
+    Find the next t price.
     :param asset: current asset of interest
     :param funds: list of funds which participate in the market
     :param previous_price: float
@@ -19,8 +19,10 @@ def incomplete_walrasian_auction_price(asset, funds, previous_price, imperfectio
     # collect supply and demand from agents at price
     excess_demand = 0
     market_noise = np.random.normal(0, std_market_noise)
+    
     for fund in funds:
         excess_demand += fund.get_demand(price, asset)
+        
     # if excesss aggregate demand: increase price by step
     if abs(excess_demand) > imperfection_tolerance:
         cleared = False

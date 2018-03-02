@@ -6,11 +6,30 @@ import pytest
 @pytest.fixture
 def parameters():
     """Returns global parameter which indicates there are four assets"""
-    params = ModelParameters(n_assets=4, n_funds=2, days=10, regions=['domestic', 'foreign'],
-                             price_memory=2, fx_memory=2, risk_aversion=1, total_money=4000,
-                             face_value=100, default_rate=0.12, nominal_interest_rate=0.003, maturity=1,
-                             quantity=5000, init_asset_price=1, init_exchange_rate=1, cash_return=0)
-    return params
+    parameters = {
+        # global parameters
+        "n_assets": 4,
+        "n_funds": 2,
+        "days": 10,
+        "regions": ['domestic', 'foreign'],
+        "p_change_intensity": 0.1,
+        # asset parameters
+        "face_value": 100,
+        "default_rate": 0.012,
+        "nominal_interest_rate": 0.003,
+        "cash_return": 0,
+        "maturity": 1,
+        "quantity": 5000,
+        # agent parameters
+        "price_memory": 2,
+        "fx_memory": 2,
+        "risk_aversion": 1,
+        # initial values
+        "init_asset_price": 1,
+        "init_exchange_rate": 1,
+        "total_money": 4000
+    }
+    return parameters
 
 
 def test_init_objects(parameters):
@@ -26,8 +45,8 @@ def test_init_objects(parameters):
         sum_portfolio_values += sum(fund.var.assets.values())
         total_money += fund.var.money
     # test 3 sum of fund portfolio values = global portfolio values
-    assert_equal(sum_portfolio_values, (parameters.quantity * len(assets)))
+    assert_equal(sum_portfolio_values, (parameters["quantity"] * len(assets)))
     # test 4 sum of money held by funds is global money input
-    assert_equal(total_money, parameters.total_money)
+    assert_equal(total_money, parameters["total_money"])
 
 test_init_objects(parameters())
