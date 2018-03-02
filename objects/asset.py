@@ -14,18 +14,18 @@ class AssetVariables:
     """
     Holds the initial variables for the assets, for now empty
     """
-    def __init__(self, price):
+    def __init__(self, price, default_rate):
         self.price = price
+        self.default_rate = default_rate
 
 
 class AssetParameters:
     """
     Holds the initial variables for the assets
     """
-    def __init__(self, regions, face_value, default_rate, nominal_interest_rate, maturity, quantity):
+    def __init__(self, regions, face_value, nominal_interest_rate, maturity, quantity):
         self.regions = regions
         self.face_value = face_value
-        self.default_rate = default_rate
         self.nominal_interest_rate = nominal_interest_rate
         self.maturity = maturity
         self.quantity = quantity
