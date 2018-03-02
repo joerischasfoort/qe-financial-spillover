@@ -3,6 +3,8 @@ import numpy as np
 import random
 
 from functions.port_opt import *
+from functions.asset_demand import *
+from function.balance_sheet_adjustments import *
 from functions.initialisation import * 
 
 def spillover_model(assets, cash, funds, days, seed):
@@ -18,22 +20,26 @@ def spillover_model(assets, cash, funds, days, seed):
     np.random.seed(seed)
 
     for day in range(days-1):
-        tau = 0
-        for fund in funds:
-            #fund.expected_vars = update_expectations(fund, assets, assets.exchange_rate, tau)
+        
+        for tau in range(100): #this needs to be rewritten into a while loop when stopping criteria are defined
             
-            # compute the weights of optimal balance sheet positions
-            fund.var.weights = portfolio_optimization(fund) 
-            
-
-            # compute demand for balance sheet positions
-            fund.var.asset_demand, fund.var.cash_demand = asset_demand(fund, assets, cash)
-
-
-            
-            #Market mechanism  
-            #assets.var.price = lazy_wal_auction(assets, funds, imperfection_tolerance, gamma)
-              
-            
+            for fund in funds:
+                #fund.expected_vars = update_expectations(fund, assets, assets.exchange_rate, tau)
+                
+                # compute the weights of optimal balance sheet positions
+                fund.var.weights = portfolio_optimization(fund) 
+                
+    
+                # compute demand for balance sheet positions
+                fund.var.asset_demand, fund.var.cash_demand = asset_demand(fund, assets, cash)
+    
+    
+                
+                #Market mechanism  
+                #assets.var.price = lazy_wal_auction(assets, funds, imperfection_tolerance, gamma)
+        
+       
+        for fund in funds
+        fund.var.asset, fund.var.cash = balance_sheet_adjustments(fund, funds, assets, currencies)            
             
 
