@@ -4,6 +4,7 @@ from objects.currency import *
 from functions.distribute import *
 from functions.stochasticprocess import *
 from functions.realised_returns import *
+import copy
 import numpy as np
 import pandas as pd
 
@@ -25,15 +26,15 @@ def init_objects(parameters):
 
     for idx in range(total_assets):
         asset_params = AssetParameters(asset_nationalities[idx], parameters["face_value"],
-                                       parameters["default_rate"], parameters["nominal_interest_rate"],
+                                       parameters["nominal_interest_rate"],
                                        parameters["maturity"], parameters["quantity"])
-        init_asset_vars = AssetVariables(parameters["init_asset_price"])
-        previous_assets_vars = AssetVariables(parameters["init_asset_price"])
+        init_asset_vars = AssetVariables(parameters["init_asset_price"], parameters["default_rate"])
+        previous_assets_vars = AssetVariables(parameters["init_asset_price"], parameters["default_rate"])
         portfolios.append(Asset(idx, init_asset_vars, previous_assets_vars, asset_params))
         asset_return_variance.append(simulated_return_variance(portfolios[-1], parameters["days"], parameters))
         asset_values.append(portfolios[idx].var.price * portfolios[idx].par.quantity)
-        default_rates.append(portfolios[idx].par.default_rate)
-        returns.append(realised_returns(portfolios[idx].par.default_rate, portfolios[idx].par.face_value,
+        default_rates.append(portfolios[idx].var.default_rate)
+        returns.append(realised_returns(portfolios[idx].var.default_rate, portfolios[idx].par.face_value,
                                         portfolios[idx].var.price, portfolios[idx].var.price,
                                         portfolios[idx].par.quantity, portfolios[idx].par.nominal_interest_rate,
                                         portfolios[idx].par.maturity))
@@ -93,11 +94,11 @@ def init_objects(parameters):
                                    ewma_returns,
                                    ewma_delta_prices,
                                    ewma_delta_fx,
-                                   cov_matr)
+                                   cov_matr, parameters["init_payouts"], dict.fromkeys(assets))
         r = ewma_returns.copy()
         df_rates = {asset: default_rate for (asset, default_rate) in zip(portfolios, default_rates)}
         fund_expectations = AgentExpectations(r, df_rates, parameters["init_exchange_rate"], parameters["currency_rate"])
-        funds.append(Fund(idx, fund_vars, fund_vars, fund_params, fund_expectations))
+        funds.append(Fund(idx, fund_vars,  copy.deepcopy(fund_vars), fund_params, fund_expectations))
 
     return portfolios, currencies, funds
 
