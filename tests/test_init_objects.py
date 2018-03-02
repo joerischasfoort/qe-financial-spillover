@@ -1,17 +1,18 @@
 from init_objects import *
-from objects.modelparameters import *
 from numpy.testing import assert_equal
 import pytest
 
 @pytest.fixture
 def parameters():
     """Returns global parameter which indicates there are four assets"""
+    # 1 setup parameters
     parameters = {
         # global parameters
-        "n_assets": 4,
-        "n_funds": 2,
+        "n_domestic assets": 2,
+        "n_foreign_assets": 3,
+        "n_domestic_funds": 3,
+        "n_foreign_funds": 2,
         "days": 10,
-        "regions": ['domestic', 'foreign'],
         "p_change_intensity": 0.1,
         # asset parameters
         "face_value": 100,
@@ -27,7 +28,9 @@ def parameters():
         # initial values
         "init_asset_price": 1,
         "init_exchange_rate": 1,
-        "total_money": 4000
+        "total_money": 4000,
+        "init_agent_ewma_delta_prices": 0,
+        "init_ewma_delta_fx": 0
     }
     return parameters
 
@@ -35,8 +38,8 @@ def parameters():
 def test_init_objects(parameters):
     assets, funds = init_objects(parameters)
     # test 1 the function creates four assets and two funds
-    assert_equal(len(assets), 4)
-    assert_equal(len(funds), 2)
+    assert_equal(len(assets), 5)
+    assert_equal(len(funds), 5)
     # test 2 funds assets = liabilities
     sum_portfolio_values = 0
     total_money = 0
