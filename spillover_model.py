@@ -4,7 +4,7 @@ import random
 
 from functions.port_opt import *
 from functions.asset_demand import *
-from function.balance_sheet_adjustments import *
+from functions.balance_sheet_adjustments import *
 from functions.initialisation import * 
 
 def spillover_model(assets, cash, funds, days, seed):
