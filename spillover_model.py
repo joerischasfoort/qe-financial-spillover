@@ -24,6 +24,9 @@ def spillover_model(assets, cash, funds, days, seed):
         for tau in range(100): #this needs to be rewritten into a while loop when stopping criteria are defined
             
             for fund in funds:
+                # update the value of redeemable shares and payouts to share holders
+                fund.var.redeemable_shares, fund.var.payouts = payouts_and_share_value(assets, currencies, fund)
+                
                 #fund.expected_vars = update_expectations(fund, assets, assets.exchange_rate, tau)
                 
                 # compute the weights of optimal balance sheet positions
