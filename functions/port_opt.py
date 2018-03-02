@@ -12,25 +12,16 @@ def portfolio_optimization(f):
             E_ret_assets[i] = f.exp.returns[a]
 
         
-    #E_ret_cash = f.exp.cash_returns
     risk_aversion = f.par.risk_aversion
     
-
-    # adding cash to the covariance matrix
-    #aux_cov = np.concatenate((Cov_assets, np.zeros((1,len(Cov_assets)))),axis=0)
-    #aux_cov = np.concatenate((aux_cov, np.zeros((len(aux_cov),1))),axis=1)
     
     # adding the budget constraint to the covariance matrix - to solve the model using linear algebra
-    aux_cov = np.concatenate((Cov_assets,np.ones((1,len(aux_cov)))),axis=0)
-    #aux_cov = np.concatenate((aux_cov,np.ones((1,len(aux_cov)))),axis=0) # cash should be included in the covariance matrix
+    aux_cov = np.concatenate((Cov_assets,np.ones((1,len(Cov_assets)))),axis=0)
     aux_cov = np.concatenate((aux_cov,np.ones((len(aux_cov),1))),axis=1) 
     aux_cov[len(aux_cov)-1,len(aux_cov)-1] = 0
     
-    # adding cash to the return vector
-    #aux_ret=np.append(E_ret_assets, E_ret_cash) # should no longer be needed
     
     # adding the budget constraint to the return vector - to solve the model using linear algebra
-    #aux_ret=np.append(aux_ret,risk_aversion) #should be outdated
     aux_ret=np.append(E_ret_assets,risk_aversion)
     
     # compute matrix inverse
@@ -56,5 +47,5 @@ def portfolio_optimization(f):
     for i, a in enumerate(Cov_assets.columns.values):
         output[a] = weights[i]
     
-    #output["cash"] = weights[-2]    #
+
     return output

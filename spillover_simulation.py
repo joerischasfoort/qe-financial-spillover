@@ -31,7 +31,7 @@ parameters = {
     "init_asset_demand": 0,
     "init_currency_demand": 0,
     # shock processes parameters
-    "fx_shock_mu": 0,
+    "fx_shock_mu": 0.0,
     "fx_shock_std": 0.001,
     "default_rate_mu": 10e-7,
     "default_rate_std": 0.125,
