@@ -23,8 +23,8 @@ class AssetParameters:
     """
     Holds the initial variables for the assets
     """
-    def __init__(self, regions, face_value, nominal_interest_rate, maturity, quantity):
-        self.regions = regions
+    def __init__(self, country, face_value, nominal_interest_rate, maturity, quantity):
+        self.country = country
         self.face_value = face_value
         self.nominal_interest_rate = nominal_interest_rate
         self.maturity = maturity

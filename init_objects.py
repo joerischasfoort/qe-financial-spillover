@@ -86,6 +86,18 @@ def init_objects(parameters):
                 # add to variance to covariance matrix
                 cov_matr.loc[currency][currency] = parameters["fx_shock_std"]
 
+        # init xfx vector
+        asset_xfx = {}
+        for asset in assets:
+            # set correct fx rate
+            fx = parameters["init_exchange_rate"]
+            if fund_nationalities[idx] == 'foreign':
+                fx = 1 / fx
+            if asset.par.country == fund_nationalities[idx]:
+                asset_xfx[asset] = 1
+            else:
+                asset_xfx[asset] = fx
+
         fund_vars = AgentVariables(asset_portfolio,
                                    currency_portfolio,
                                    sum(asset_portfolio.values()) + divide_by_funds(parameters["total_money"]),
@@ -94,7 +106,8 @@ def init_objects(parameters):
                                    ewma_returns,
                                    ewma_delta_prices,
                                    ewma_delta_fx,
-                                   cov_matr, parameters["init_payouts"], dict.fromkeys(assets))
+                                   cov_matr, parameters["init_payouts"], dict.fromkeys(assets),
+                                   asset_xfx)
         r = ewma_returns.copy()
         df_rates = {asset: default_rate for (asset, default_rate) in zip(portfolios, default_rates)}
         fund_expectations = AgentExpectations(r, df_rates, parameters["init_exchange_rate"], parameters["currency_rate"])
