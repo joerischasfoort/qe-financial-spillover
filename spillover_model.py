@@ -4,7 +4,7 @@ import random
 
 from functions.port_opt import *
 
-def spillover_model(assets, funds, days, seed):
+def spillover_model(assets, cash, funds, days, seed):
     """
     Kozai, Riedler & Schasfoort Agent-based simulation model of financial spillovers
     :param assets: list of Asset objects
@@ -21,6 +21,8 @@ def spillover_model(assets, funds, days, seed):
         for fund in funds:
             #fund.expected_vars = update_expectations(fund, assets, assets.exchange_rate, tau)
             
-            fund.var.weights = portfolio_optimization(fund)
+            # compute the weights of optimal balance sheet positions
+            fund.var.weights = portfolio_optimization(fund) 
             
-            
+            # compute demand for balance sheet positions
+            (fund.var.asset_demand, fund.var.cash_demand) = asset_demand(fund, assets, cash)
