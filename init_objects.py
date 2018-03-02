@@ -99,7 +99,7 @@ def init_objects(parameters):
         fund_expectations = AgentExpectations(r, df_rates, parameters["init_exchange_rate"], parameters["currency_rate"])
         funds.append(Fund(idx, fund_vars, fund_vars, fund_params, fund_expectations))
 
-    return assets, funds
+    return portfolios, currencies, funds
 
 
 def simulated_return_variance(asset, days, parameters):
