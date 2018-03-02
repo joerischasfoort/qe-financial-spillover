@@ -41,5 +41,6 @@ def spillover_model(assets, cash, funds, days, seed):
        #this is where intraday calculations end
         for fund in funds:
             fund.var.asset, fund.var.cash = balance_sheet_adjustments(fund, funds, assets, currencies)            
-            
+        
+        underwriter.inventory = update_underwriter(assets, funds)    
 
