@@ -19,10 +19,13 @@ class AgentVariables:
     """
     Holds the initial variables for the agents
     """
-    def __init__(self, assets, money, redeemable_shares, ewma_returns, ewma_delta_prices, ewma_delta_fx, covariance_matrix):
+    def __init__(self, assets, currency, redeemable_shares, asset_demand, currency_demand,
+                 ewma_returns, ewma_delta_prices, ewma_delta_fx, covariance_matrix):
         self.assets = assets
-        self.money = money
+        self.currency = currency
         self.redeemable_shares = redeemable_shares
+        self.asset_demand = asset_demand
+        self.currency_demand = currency_demand
         self.ewma_returns = ewma_returns
         self.ewma_delta_prices = ewma_delta_prices
         self.ewma_delta_fx = ewma_delta_fx

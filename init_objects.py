@@ -1,5 +1,6 @@
 from objects.fund import *
 from objects.asset import *
+from objects.currency import *
 from functions.distribute import *
 from functions.stochasticprocess import *
 from functions.realised_returns import *
@@ -14,9 +15,9 @@ def init_objects(parameters):
     :return: list of fund objects, list of asset objects
     """
     # 1 initialize assets
-    assets = []
-    total_assets = parameters["n_domestic assets"] + parameters["n_foreign_assets"]
-    asset_nationalities = ordered_list_of_countries(parameters["n_domestic assets"], parameters["n_foreign_assets"])
+    portfolios = []
+    total_assets = parameters["n_domestic_assets"] + parameters["n_foreign_assets"]
+    asset_nationalities = ordered_list_of_countries(parameters["n_domestic_assets"], parameters["n_foreign_assets"])
     asset_return_variance = []
     asset_values = []
     default_rates = []
@@ -28,25 +29,34 @@ def init_objects(parameters):
                                        parameters["maturity"], parameters["quantity"])
         init_asset_vars = AssetVariables(parameters["init_asset_price"])
         previous_assets_vars = AssetVariables(parameters["init_asset_price"])
-        assets.append(Asset(idx, init_asset_vars, previous_assets_vars, asset_params))
-        asset_return_variance.append(simulated_return_variance(assets[-1], parameters["days"]))
-        asset_values.append(assets[idx].var.price * assets[idx].par.quantity)
-        default_rates.append(assets[idx].par.default_rate)
-        returns.append(realised_returns(assets[idx].par.default_rate, assets[idx].par.face_value,
-                                        assets[idx].var.price, assets[idx].var.price,
-                                        assets[idx].par.quantity, assets[idx].par.nominal_interest_rate,
-                                        assets[idx].par.maturity))
+        portfolios.append(Asset(idx, init_asset_vars, previous_assets_vars, asset_params))
+        asset_return_variance.append(simulated_return_variance(portfolios[-1], parameters["days"], parameters))
+        asset_values.append(portfolios[idx].var.price * portfolios[idx].par.quantity)
+        default_rates.append(portfolios[idx].par.default_rate)
+        returns.append(realised_returns(portfolios[idx].par.default_rate, portfolios[idx].par.face_value,
+                                        portfolios[idx].var.price, portfolios[idx].var.price,
+                                        portfolios[idx].par.quantity, portfolios[idx].par.nominal_interest_rate,
+                                        portfolios[idx].par.maturity))
 
+    # 2 Initialize currencies
+    currencies = []
+    total_currency = parameters["total_money"]
+    for idx, country in enumerate(set(asset_nationalities)):
+        currency_param = CurrencyParameters(country, parameters["currency_rate"],
+                                            np.divide(total_currency, len(set(asset_nationalities))))
+        currencies.append(Currency(idx, currency_param))
+        returns.append(parameters["currency_rate"])
 
-    # 2 Create covariance matrix for assets
-    covs = np.zeros((total_assets, total_assets))
+    # 3 Create covariance matrix for assets
+    covs = np.zeros((total_assets + len(currencies), total_assets + len(currencies)))
     # insert variance into the diagonal of the matrix
     for idx, var in enumerate(asset_return_variance):
         covs[idx][idx] = var
 
+    assets = portfolios + currencies
     covariance_matrix = pd.DataFrame(covs, index=assets, columns=assets)
 
-    # 3 Create funds
+    # 4 Create funds
     funds = []
     total_funds = parameters["n_domestic_funds"] + parameters["n_foreign_funds"]
     fund_nationalities = ordered_list_of_countries(parameters["n_domestic_funds"], parameters["n_foreign_funds"])
@@ -54,36 +64,58 @@ def init_objects(parameters):
     def divide_by_funds(variable): return np.divide(variable, total_funds)
 
     for idx in range(total_funds):
+        cov_matr = covariance_matrix.copy()
         fund_params = AgentParameters(fund_nationalities[idx], parameters["price_memory"],
                                       parameters["fx_memory"], parameters["risk_aversion"])
-        asset_portfolio = {asset: divide_by_funds(value) for (asset, value) in zip(assets, asset_values)}
+        asset_portfolio = {asset: divide_by_funds(value) for (asset, value) in zip(portfolios, asset_values)}
+        asset_demand = {asset: parameters["init_asset_demand"] for asset, value in zip(portfolios, asset_values)}
         ewma_returns = {asset: rt for (asset, rt) in zip(assets, returns)}
-        ewma_delta_prices = {asset: parameters["init_agent_ewma_delta_prices"] for (asset, rt) in zip(assets, returns)}
+        ewma_delta_prices = {asset: parameters["init_agent_ewma_delta_prices"] for (asset, rt) in zip(portfolios, returns)}
         ewma_delta_fx = parameters["init_ewma_delta_fx"]
+
+        currency_portfolio = {}
+        currency_demand = {}
+        for currency in currencies:
+            currency_demand[currency] = parameters["init_currency_demand"]
+            if currency.par.country == fund_nationalities[idx]:
+                # give this fund an initial amount of currency
+                currency_portfolio[currency] = divide_by_funds(parameters["total_money"])
+            else:
+                currency_portfolio[currency] = 0
+                # add to variance to covariance matrix
+                cov_matr.loc[currency][currency] = parameters["fx_shock_std"]
+
         fund_vars = AgentVariables(asset_portfolio,
-                                   divide_by_funds(parameters["total_money"]),
+                                   currency_portfolio,
                                    sum(asset_portfolio.values()) + divide_by_funds(parameters["total_money"]),
+                                   asset_demand,
+                                   currency_demand,
                                    ewma_returns,
                                    ewma_delta_prices,
                                    ewma_delta_fx,
                                    covariance_matrix)
         r = ewma_returns.copy()
-        df_rates = {asset: default_rate for (asset, default_rate) in zip(assets, default_rates)}
-        fund_expectations = AgentExpectations(r, df_rates, parameters["init_exchange_rate"], parameters["cash_return"])
+        df_rates = {asset: default_rate for (asset, default_rate) in zip(portfolios, default_rates)}
+        fund_expectations = AgentExpectations(r, df_rates, parameters["init_exchange_rate"], parameters["currency_rate"])
         funds.append(Fund(idx, fund_vars, fund_vars, fund_params, fund_expectations))
 
     return assets, funds
 
 
-def simulated_return_variance(asset, days): #TODO what to do with implied parameters for random process
+def simulated_return_variance(asset, days, parameters):
     """
     Calculate an approximate variance for an asset by simulating the average underlying default probability
     :param asset: Asset object of interest
     :param days: integer amount of days over which to conduct the simulation
+    :param parameters: dictionary with model parameters
     :return: float initial variance of the asset
     """
-    simulated_default_rates = ornstein_uhlenbeck_levels(time=days)
-    simulated_returns = [realised_returns(df, V=asset.par.face_value ,P=1,
+    simulated_default_rates = ornstein_uhlenbeck_levels(days, parameters["default_rate_mu"],
+                                                        parameters["default_rate_delta_t"],
+                                                        parameters["default_rate_std"],
+                                                        parameters["default_rate_mean_reversion"],
+                                                        parameters["default_rate_mu"])
+    simulated_returns = [realised_returns(df, V=asset.par.face_value, P=1,
                                                    P_tau=1, Q=asset.par.quantity,
                                                    rho=asset.par.nominal_interest_rate,
                                                    m=asset.par.maturity) for df in simulated_default_rates]

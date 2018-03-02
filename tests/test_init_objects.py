@@ -21,6 +21,8 @@ def parameters():
         "cash_return": 0,
         "maturity": 1,
         "quantity": 5000,
+        # currency parameters
+        "currency_rate": 0,
         # agent parameters
         "price_memory": 2,
         "fx_memory": 2,

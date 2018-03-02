@@ -5,7 +5,7 @@ from init_objects import *
 # 1 setup parameters
 parameters = {
     # global parameters
-    "n_domestic assets": 2,
+    "n_domestic_assets": 2,
     "n_foreign_assets": 3,
     "n_domestic_funds": 3,
     "n_foreign_funds": 2,
@@ -15,7 +15,7 @@ parameters = {
     "face_value": 100,
     "default_rate" : 0.012,
     "nominal_interest_rate" : 0.003,
-    "cash_return": 0,
+    "currency_rate": 0,
     "maturity" : 1,
     "quantity" : 5000,
     # agent parameters
@@ -27,12 +27,21 @@ parameters = {
     "init_exchange_rate" : 1,
     "total_money": 4000,
     "init_agent_ewma_delta_prices": 0,
-    "init_ewma_delta_fx": 0
+    "init_ewma_delta_fx": 0,
+    "init_asset_demand": 0,
+    "init_currency_demand": 0,
+    # shock processes parameters
+    "fx_shock_mu": 0,
+    "fx_shock_std": 0.001,
+    "default_rate_mu": 10e-7,
+    "default_rate_std": 0.125,
+    "default_rate_mean_reversion": 0.99,
+    "default_rate_delta_t": 0.003968253968253968
 }
 
 # 2 initalise model objects
 assets, funds = init_objects(parameters)
-
+print(assets, funds)
 # 3 simulate model
 # assets, funds = spillover_model(assets, funds, parameters.days, parameters.gamma)
 
