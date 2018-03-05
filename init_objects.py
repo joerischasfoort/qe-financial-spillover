@@ -4,7 +4,7 @@ from objects.currency import *
 from functions.distribute import *
 from functions.stochasticprocess import *
 from functions.realised_returns import *
-import copy
+from functions.supercopy import copy_agent_variables
 import numpy as np
 import pandas as pd
 
@@ -111,7 +111,7 @@ def init_objects(parameters):
         r = ewma_returns.copy()
         df_rates = {asset: default_rate for (asset, default_rate) in zip(portfolios, default_rates)}
         fund_expectations = AgentExpectations(r, df_rates, parameters["init_exchange_rate"], parameters["currency_rate"])
-        funds.append(Fund(idx, fund_vars,  copy.deepcopy(fund_vars), fund_params, fund_expectations))
+        funds.append(Fund(idx, fund_vars,  copy_agent_variables(fund_vars), fund_params, fund_expectations))
 
     return portfolios, currencies, funds
 

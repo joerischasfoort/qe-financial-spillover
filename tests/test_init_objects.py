@@ -62,4 +62,4 @@ def test_init_objects(parameters):
     # test 4 sum of money held by funds is global money input
     assert_equal(total_money, parameters["total_money"])
 
-test_init_objects(parameters())
+#test_init_objects(parameters())
