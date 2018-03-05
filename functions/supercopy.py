@@ -1,13 +1,13 @@
 from objects.fund import *
 
 
-def copy_agent_variables(fund_object):
+def copy_agent_variables(fund_var_object):
     """
     Takes an agent variable object and returns a copy with dictionary keys intact
     :param fund_object: object that will be copied
     :return: copied object
     """
-    variables = vars(fund_object)
+    variables = vars(fund_var_object)
     new_variables = {}
     for variable in variables:
         if type(variables[variable]) == dict:
