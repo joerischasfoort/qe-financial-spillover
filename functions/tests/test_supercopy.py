@@ -53,7 +53,6 @@ def test_copy_obj_dict(dict_with_classes):
     some_dict = dict_with_classes
     copy_some_dict = copy_dict(some_dict)
     assert_equal(copy_some_dict, some_dict)
-    some_dict.keys()[0].name = "Wazaa"
     assert_equal(copy_some_dict == some_dict, True)
 
 
