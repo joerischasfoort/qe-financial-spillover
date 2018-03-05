@@ -37,7 +37,8 @@ parameters = {
     "default_rate_mu": 10e-7,
     "default_rate_std": 0.125,
     "default_rate_mean_reversion": 0.99,
-    "default_rate_delta_t": 0.003968253968253968
+    "default_rate_delta_t": 0.003968253968253968,
+    "adaptive_param": 0.5
 }
 
 # 2 initalise model objects

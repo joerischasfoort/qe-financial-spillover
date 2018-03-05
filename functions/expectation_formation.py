@@ -21,6 +21,51 @@ def update_expectations():
     pass
 
 
+def exp_return_asset(asset, fund, rho, m, face_value, exp_omega, exp_price, actual_price, quantity):
+    """ # TODO
+    Method to calculate the expected returns of assets which go into portfolio optimisation Equation 1.5 - 1.6
+    :param asset:
+    :param fund:
+    :param rho: nominal interest rate of asset
+    :param m: maturity
+    :param face_value: face_value
+    :param exp_omega: expected default probability of the underlying asset
+    :param exp_price: expected price
+    :param actual_price: current price
+    :param quantity: global quantity of the asset
+    :return: float expected return of the asset
+    """
+    exp_return = (1 - exp_omega) * (
+            ((expected_x * face_value) / (actual_x * actual_price * quantity)) * (rho + 1 - m) + (
+            (m * expected_x * exp_price / (actual_x * actual_price)) - 1) - exp_omega)
+    return exp_return
+
+
+def exp_return_cash(): #TODO equation 1.7
+    pass
+
+
+def compute_covar(): #TODO equation 1.8
+    pass
+
+
+def compute_ewma(): #TODO equation 1.9
+    pass
+
+
+def exp_default_rate(fund, asset, delta_news, std_noise): #TODO equation 1.10
+    previously_exp_dr = fund.exp.default_rates[asset]
+    default_rate = asset.var.default_rate
+    noise = np.random.normal(0, std_noise)
+    log_exp_default_rate = log(previously_exp_dr) + delta_news + noise + fund.par.adaptive_param * (log(default_rate) - log(previously_exp_dr))
+    exp_default_rate = exp(log_exp_default_rate)
+    return exp_default_rate
+
+
+def exp_price_or_fx(): # TODO equation 1.11
+    pass
+
+
 def exp_price(mhat, phi, last_price):
     """
     The new expected price is the old price times a growth factor. The growth factor is the
@@ -54,24 +99,7 @@ def exp_default_probability(omega, delta_news, theta, current_exp_omega, std_noi
     return exp_omega_var
 
 
-def exp_return(asset, fund, rho, m, face_value, exp_omega, exp_price, actual_price, quantity):
-    """
-    Method to calculate the expected returns of assets which go into portfolio optimisation Equation 1.4 - 1.5
-    :param asset:
-    :param fund:
-    :param rho: nominal interest rate of asset
-    :param m: maturity
-    :param face_value: face_value
-    :param exp_omega: expected default probability of the underlying asset
-    :param exp_price: expected price
-    :param actual_price: current price
-    :param quantity: global quantity of the asset
-    :return: float expected return of the asset
-    """
-    exp_return = (1 - exp_omega) * (
-            ((expected_x * face_value) / (actual_x * actual_price * quantity)) * (rho + 1 - m) + (
-            (m * expected_x * exp_price / (actual_x * actual_price)) - 1) - exp_omega)
-    return exp_return
+
 
 
 

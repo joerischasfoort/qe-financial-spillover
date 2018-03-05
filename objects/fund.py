@@ -12,7 +12,6 @@ class Fund():
     
     def get_demand(self, asset): #Equation 1.14 to 1.16
         pass
-        
 
 
 class AgentVariables:
@@ -39,11 +38,12 @@ class AgentParameters:
     """
     Holds the the agent parameters
     """
-    def __init__(self, nationality, price_memory, fx_memory, risk_aversion):
+    def __init__(self, nationality, price_memory, fx_memory, risk_aversion, adaptive_param):
         self.nationality = nationality
         self.price_memory = price_memory
         self.fx_memory = fx_memory
         self.risk_aversion = risk_aversion
+        self.adaptive_param = adaptive_param
 
 
 class AgentExpectations:

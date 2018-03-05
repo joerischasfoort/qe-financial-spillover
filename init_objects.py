@@ -67,7 +67,8 @@ def init_objects(parameters):
     for idx in range(total_funds):
         cov_matr = covariance_matrix.copy()
         fund_params = AgentParameters(fund_nationalities[idx], parameters["price_memory"],
-                                      parameters["fx_memory"], parameters["risk_aversion"])
+                                      parameters["fx_memory"], parameters["risk_aversion"],
+                                      parameters["adaptive_param"])
         asset_portfolio = {asset: divide_by_funds(value) for (asset, value) in zip(portfolios, asset_values)}
         asset_demand = {asset: parameters["init_asset_demand"] for asset, value in zip(portfolios, asset_values)}
         ewma_returns = {asset: rt for (asset, rt) in zip(assets, returns)}
