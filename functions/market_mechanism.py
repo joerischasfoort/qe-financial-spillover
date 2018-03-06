@@ -3,7 +3,7 @@ from math import exp
 import numpy as np
 
 
-def price_adjustment(funds, portfolios, exogenous_agents, p_change_intensity):
+def price_adjustment(funds, portfolios, underwriter, p_change_intensity, ):
     """
     Find the next  price.
   
@@ -30,14 +30,13 @@ def price_adjustment(funds, portfolios, exogenous_agents, p_change_intensity):
      
     market_noise = np.random.normal(0, 0.1) 
      
-        
       # collect total demand from agents per asset
       for a in portfolios:
           for fund in funds: 
           
               total_demand[a] +=  fund.var.asset_demand[a] 
           #exit the loop and take into account underwriter demand
-          total_demand[a] = total_demand[a] + exogenous_agents.underwriter[a]
+          total_demand[a] = total_demand[a] + underwriter.var.asset_demand[a]
          
     log_new_xrate  = log(asset.var.price[a]) +  p_change_intensity *  total_demand[a]/asset.par.quantity[a] + market_noise
     asset.var.price[a] = exp(log_new_xrate)        

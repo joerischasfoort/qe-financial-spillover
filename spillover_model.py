@@ -39,7 +39,8 @@ def spillover_model(assets, cash, funds, days, seed):
     
                 
             #Price adjustment
-            assets.var.price = price_adjustment( funds, portfolios, exogenous_agents, p_change_intensity)
+            assets.var.price = price_adjustment(funds, portfolios, exogenous_agents, p_change_intensity)
+      
         #this is where intraday calculations end
         for fund in funds:
             fund.var.asset, fund.var.cash = balance_sheet_adjustments(fund, funds, portfolios, currencies)            
