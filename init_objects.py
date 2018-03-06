@@ -1,6 +1,7 @@
 from objects.fund import *
 from objects.asset import *
 from objects.currency import *
+from objects.environment import *
 from functions.distribute import *
 from functions.stochasticprocess import *
 from functions.realised_returns import *
@@ -114,7 +115,21 @@ def init_objects(parameters):
         fund_expectations = AgentExpectations(r, df_rates, parameters["init_exchange_rate"], parameters["currency_rate"])
         funds.append(Fund(idx, fund_vars,  copy_agent_variables(fund_vars), fund_params, fund_expectations))
 
-    return portfolios, currencies, funds
+    # 5 create environment with exchange rates
+    fx_matrix = np.zeros([len(currencies), len(currencies)])
+    fx_matrix = pd.DataFrame(fx_matrix, index=currencies, columns=currencies)
+
+    for c1, c2 in zip(currencies, currencies[::-1]):
+        fx = parameters["init_exchange_rate"]
+        if c1.par.country == 'foreign':
+            fx = 1 / fx
+        fx_matrix.loc[c1, c2] = fx
+        fx_matrix.loc[c1, c1] = np.nan
+
+    environment = Environment(EnvironmentVariables(fx_matrix), EnvironmentVariables(fx_matrix.copy()),
+                              EnvironmentParameters(parameters))
+
+    return portfolios, currencies, funds, environment
 
 
 def simulated_return_variance(asset, days, parameters):

@@ -11,6 +11,7 @@ parameters = {
     "n_foreign_funds": 2,
     "days": 10,
     "p_change_intensity": 0.1,
+    "fx_change_intensity": 0.1,
     # asset parameters
     "face_value": 100,
     "default_rate" : 0.012,
@@ -42,8 +43,8 @@ parameters = {
 }
 
 # 2 initalise model objects
-portfolios, currencies, funds = init_objects(parameters)
-print(portfolios, currencies, funds)
+portfolios, currencies, funds, environment = init_objects(parameters)
+print(portfolios, currencies, funds, environment)
 # 3 simulate model
 # assets, funds = spillover_model(assets, funds, parameters.days, parameters.gamma)
 

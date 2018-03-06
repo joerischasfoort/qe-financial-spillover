@@ -54,6 +54,14 @@ def compute_ewma(): #TODO equation 1.9
 
 
 def exp_default_rate(fund, asset, delta_news, std_noise): #TODO equation 1.10
+    """
+    For a fund, calculate the expected default rate of a certain asset
+    :param fund: Fund object which formes the expectation
+    :param asset: Asset object about which the expectation is formed
+    :param delta_news: float change in the news process about the asset
+    :param std_noise: float standard deviation of the agent uncertainty about the news process
+    :return: float of the expected default rate
+    """
     previously_exp_dr = fund.exp.default_rates[asset]
     default_rate = asset.var.default_rate
     noise = np.random.normal(0, std_noise)
