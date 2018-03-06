@@ -10,9 +10,6 @@ class Fund():
     def __repr__(self):
         return 'fund' + str(self.name)
     
-    def get_demand(self, asset): #Equation 1.14 to 1.16
-        pass
-
 
 class AgentVariables:
     """

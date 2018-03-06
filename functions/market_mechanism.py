@@ -2,33 +2,41 @@ from math import log
 from math import exp
 import numpy as np
 
-def lazy_wal_auction(asset, funds, previous_price, imperfection_tolerance, gamma, std_market_noise):
+
+def price_adjustment(funds, portfolios, underwriter, p_change_intensity, ):
     """
-    Find the next t price.
-    :param asset: current asset of interest
-    :param funds: list of funds which participate in the market
-    :param previous_price: float
-    :param imperfection_tolerance: amount by how much the market maker is willing to settle for an equilibrium
-    :param gamma: price step
-    :param std_market_noise: standard deviation of the noise in price formation
-    :return: next_price
+    Find the next  price.
+  
     """
-    # set initial price at last price
-    price = previous_price
-    cleared = False
-    # collect supply and demand from agents at price
-    excess_demand = 0
-    market_noise = np.random.normal(0, std_market_noise)
+ 
+    #Equation 1.19 : Get aggregate demand 
+    total_demand = {}
     
-    for fund in funds:
-        excess_demand += fund.get_demand(price, asset)
-        
-    # if excesss aggregate demand: increase price by step
-    if abs(excess_demand) > imperfection_tolerance:
-        cleared = False
-        imperfect_price = log(price) + gamma * (excess_demand / float(asset.parameters["global_quantity"])) + market_noise  #price_step # equation 1.14
-        imperfect_price = exp(imperfect_price)
-        return cleared, imperfect_price
-    else:
-        cleared = True
-        return cleared, price
+      # collect total demand from agents per asset
+      for a in portfolios:
+          for fund in funds: 
+          
+              total_demand[a] +=  fund.var.asset_demand[a] 
+          #exit the loop and take into account underwriter demand
+          total_demand[a] = total_demand[a] + exogenous_agents.underwriter[a]
+
+    #Equation 1.20 : price adjustment 
+    for a in portfolios:
+        log_new_price  = log(asset.var.price[a]) +  p_change_intensity *  total_demand[a]/asset.par.quantity[a]
+        asset.var.price[a] = exp(log_new_price)
+    
+    #Now exchange rates
+    # We get the random noise 
+     
+    market_noise = np.random.normal(0, 0.1) 
+     
+      # collect total demand from agents per asset
+      for a in portfolios:
+          for fund in funds: 
+          
+              total_demand[a] +=  fund.var.asset_demand[a] 
+          #exit the loop and take into account underwriter demand
+          total_demand[a] = total_demand[a] + underwriter.var.asset_demand[a]
+         
+    log_new_xrate  = log(asset.var.price[a]) +  p_change_intensity *  total_demand[a]/asset.par.quantity[a] + market_noise
+    asset.var.price[a] = exp(log_new_xrate)        
