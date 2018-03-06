@@ -27,8 +27,7 @@ def funds_and_assets():
                                ewma_delta_prices={obj1: 2, obj2: 3},
                                ewma_delta_fx={'currency1': 2},
                                covariance_matrix=pd.DataFrame({obj1: [1, 2], obj2: [0, 2]}),
-                               payouts={obj1: 2, obj2: 2}, weights={obj1: 2, obj2: 3},
-                               asset_xfx={obj1: 0, obj2: 1})
+                               payouts={obj1: 2, obj2: 2}, weights={obj1: 2, obj2: 3})
         fund_params = AgentParameters(fund_nationalities[idx], 2, 2, 1, 0.5)
         fund_expectations = AgentExpectations({obj1: 0.003, obj2: 0.002}, {obj1: 0.0007, obj2: 0.001}, 1, 0)
         funds.append(Fund(idx, fund_vars, copy_agent_variables(fund_vars), fund_params, fund_expectations))
