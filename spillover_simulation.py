@@ -45,5 +45,5 @@ parameters = {
 portfolios, currencies, funds = init_objects(parameters)
 print(portfolios, currencies, funds)
 # 3 simulate model
-# assets, funds = spillover_model(assets, funds, parameters.days, parameters.gamma)
+# assets, funds = spillover_model(assets, funds, parameters.days, parameters.p_change_intensity)
 
