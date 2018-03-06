@@ -7,6 +7,7 @@ def balance_sheet_adjustments(fund,funds, portfolios, currencies):
     #compute correcting factors for portfolios of assets
     pi = {}
     nu = {}
+    new_position = {}
     for a in portfolios:
         set_of_positive = 0
         set_of_negative = 0
@@ -27,7 +28,6 @@ def balance_sheet_adjustments(fund,funds, portfolios, currencies):
             nu[a] = 1
         
         #compute new balance sheet position
-        new_position = {}
         if fund.var.asset_demand[a] > 0 and excess_demand > 0:
             new_position[a] = a.par.maturity * fund.var_previous.assets[a] + fund.var.asset_demand[a] * pi[a]
             
@@ -42,6 +42,7 @@ def balance_sheet_adjustments(fund,funds, portfolios, currencies):
     #compute correcting factors for portfolios of assets
     piC = {}
     nuC = {}
+    new_cash_position = {}
     for c in currencies:
         set_of_positive = 0
         set_of_negative = 0
@@ -61,7 +62,7 @@ def balance_sheet_adjustments(fund,funds, portfolios, currencies):
         else:
             nuC[c] = 1
         #compute new balance sheet position
-        new_cash_position = {}
+
         if fund.var.currency_demand[c] > 0 and excess_demand > 0:
             new_cash_position[c] = fund.var_previous.currency[c] + fund.var.currency_demand[c] * piC[c]
             
