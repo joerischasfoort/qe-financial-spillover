@@ -26,6 +26,7 @@ parameters = {
     "risk_aversion": 1,
     # cb parameters
     "cb_country": 'domestic',
+    "cb_asset_target": 0,
     # initial values
     "init_asset_price" : 1,
     "init_exchange_rate": 1,
