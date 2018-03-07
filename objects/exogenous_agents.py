@@ -27,8 +27,8 @@ class ExoAgentParameters:
     """
     Holds the the agent parameters
     """
-    def __init__(self, nationality):
-        self.nationality = nationality
+    def __init__(self, country):
+        self.country = country
 
 
 class Central_Bank():
@@ -41,4 +41,4 @@ class Central_Bank():
         self.par = parameters
  
     def __repr__(self):
-        return 'central_bank_' + str(self.par.nationality)
+        return 'central_bank_' + str(self.par.country)

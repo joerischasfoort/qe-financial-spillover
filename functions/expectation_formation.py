@@ -45,8 +45,11 @@ def exp_return_cash(): #TODO equation 1.7
     pass
 
 
-def compute_covar(): #TODO equation 1.8
-    pass
+def compute_covar(x, previous_ewma_x, y, previous_ewma_y, previous_covar_ewma, memory_parameter): #TODO equation 1.8
+    """compute covar between x and y"""
+    covar1 = (x - compute_ewma(x, previous_ewma_x, memory_parameter)) * (y - compute_ewma(y, previous_ewma_y, memory_parameter))
+    covar2 = compute_ewma(covar1 , previous_covar_ewma, memory_parameter)
+    return covar2
 
 
 def compute_ewma(variable, previous_ewma, memory_parameter):

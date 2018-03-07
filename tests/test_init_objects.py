@@ -27,7 +27,7 @@ def parameters():
         "fx_memory": 2,
         "risk_aversion": 1,
         # cb parameters
-        "cb_nationality": 'domestic',
+        "cb_country": 'domestic',
         # initial values
         "init_asset_price": 1,
         "init_exchange_rate": 1,

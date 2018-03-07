@@ -52,4 +52,20 @@ def test_exp_default_probability(funds_and_assets):
 
 
 def test_compute_ewma():
-    pass
+    """Test if the ewma function produces a weighted average between actual value & previous ewma"""
+    x = 10
+    previous_ewma = 11
+    assert_equal(compute_ewma(x, previous_ewma, 0.5) < previous_ewma, True)
+    assert_equal(compute_ewma(x, previous_ewma, 0.5) > x, True)
+
+
+def test_compute_covar():
+    """Test if the compute covar function produces correct results"""
+    x = 10
+    previous_ewma_x = 11
+    y = 10
+    previous_ewma_y = 11
+    previous_covar_ewma = 1
+    #assert_equal(compute_covar(x, previous_ewma_x, y, previous_ewma_y, previous_covar_ewma, 0.5), True)
+
+test_compute_covar()

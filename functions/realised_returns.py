@@ -2,8 +2,6 @@
 import numpy as np
 
 
-
-
 def realised_returns(omega, V, P, P_tau, Q, rho, m, X=1):
     """
     Calculate realised returns for domestic or foreign asset equations (1.6-1.7)

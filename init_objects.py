@@ -20,14 +20,14 @@ def init_objects(parameters):
     # 1 initialize assets
     portfolios = []
     total_assets = parameters["n_domestic_assets"] + parameters["n_foreign_assets"]
-    asset_nationalities = ordered_list_of_countries(parameters["n_domestic_assets"], parameters["n_foreign_assets"])
+    asset_countries = ordered_list_of_countries(parameters["n_domestic_assets"], parameters["n_foreign_assets"])
     asset_return_variance = []
     asset_values = []
     default_rates = []
     returns = []
 
     for idx in range(total_assets):
-        asset_params = AssetParameters(asset_nationalities[idx], parameters["face_value"],
+        asset_params = AssetParameters(asset_countries[idx], parameters["face_value"],
                                        parameters["nominal_interest_rate"],
                                        parameters["maturity"], parameters["quantity"])
         init_asset_vars = AssetVariables(parameters["init_asset_price"], parameters["default_rate"])
@@ -44,9 +44,9 @@ def init_objects(parameters):
     # 2 Initialize currencies
     currencies = []
     total_currency = parameters["total_money"]
-    for idx, country in enumerate(set(asset_nationalities)):
+    for idx, country in enumerate(set(asset_countries)):
         currency_param = CurrencyParameters(country, parameters["currency_rate"],
-                                            np.divide(total_currency, len(set(asset_nationalities))))
+                                            np.divide(total_currency, len(set(asset_countries))))
         currencies.append(Currency(idx, currency_param))
         returns.append(parameters["currency_rate"])
 
@@ -62,13 +62,13 @@ def init_objects(parameters):
     # 4 Create funds
     funds = []
     total_funds = parameters["n_domestic_funds"] + parameters["n_foreign_funds"]
-    fund_nationalities = ordered_list_of_countries(parameters["n_domestic_funds"], parameters["n_foreign_funds"])
+    fund_countries = ordered_list_of_countries(parameters["n_domestic_funds"], parameters["n_foreign_funds"])
 
     def divide_by_funds(variable): return np.divide(variable, total_funds)
 
     for idx in range(total_funds):
         cov_matr = covariance_matrix.copy()
-        fund_params = AgentParameters(fund_nationalities[idx], parameters["price_memory"],
+        fund_params = AgentParameters(fund_countries[idx], parameters["price_memory"],
                                       parameters["fx_memory"], parameters["risk_aversion"],
                                       parameters["adaptive_param"])
         asset_portfolio = {asset: divide_by_funds(value) for (asset, value) in zip(portfolios, asset_values)}
@@ -81,7 +81,7 @@ def init_objects(parameters):
         currency_demand = {}
         for currency in currencies:
             currency_demand[currency] = parameters["init_currency_demand"]
-            if currency.par.country == fund_nationalities[idx]:
+            if currency.par.country == fund_countries[idx]:
                 # give this fund an initial amount of currency
                 currency_portfolio[currency] = divide_by_funds(parameters["total_money"])
             else:
@@ -125,14 +125,14 @@ def init_objects(parameters):
     cb_assets = {asset: 0 for asset in portfolios}
     cb_currency = {}
     for cur in currencies:
-        if cur.par.country == parameters["cb_nationality"]:
+        if cur.par.country == parameters["cb_country"]:
             cb_currency[cur] = sum(cb_assets.values())
         else:
             cb_currency[cur] = 0
 
     cb_variables = ExoAgentVariables(cb_assets, cb_currency, 0, 0)
     cb_previous = ExoAgentVariables(cb_assets.copy(), cb_currency.copy(), 0, 0)
-    central_bank = Central_Bank(cb_variables, cb_previous, ExoAgentParameters(parameters["cb_nationality"]))
+    central_bank = Central_Bank(cb_variables, cb_previous, ExoAgentParameters(parameters["cb_country"]))
 
     # 7 create underwriter agent
     underwriter_assets = {asset: 0 for asset in portfolios}
