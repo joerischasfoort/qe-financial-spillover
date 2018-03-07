@@ -46,8 +46,9 @@ class AgentExpectations:
     """
     Holds the agent expectations for several variables
     """
-    def __init__(self, returns, default_rates, exchange_rate, cash_returns):
+    def __init__(self, returns, default_rates, exchange_rates, exp_prices, cash_returns):
         self.returns = returns
         self.default_rates = default_rates
-        self.exchange_rate = exchange_rate
+        self.exchange_rates = exchange_rates
+        self.prices = exp_prices
         self.cash_returns = cash_returns

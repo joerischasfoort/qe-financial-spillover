@@ -100,7 +100,8 @@ def init_objects(parameters):
                                    cov_matr, parameters["init_payouts"], dict.fromkeys(assets))
         r = ewma_returns.copy()
         df_rates = {asset: default_rate for (asset, default_rate) in zip(portfolios, default_rates)}
-        fund_expectations = AgentExpectations(r, df_rates, parameters["init_exchange_rate"], parameters["currency_rate"])
+        exp_prices = {asset: asset.var.price for asset in portfolios}
+        fund_expectations = AgentExpectations(r, df_rates, parameters["init_exchange_rate"], exp_prices, parameters["currency_rate"])
         funds.append(Fund(idx, fund_vars,  copy_agent_variables(fund_vars), fund_params, fund_expectations))
 
     # 5 create environment with exchange rates
