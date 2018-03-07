@@ -1,7 +1,6 @@
 from math import log
-from math import exp, expm1
-import numpy as np
-from functions.weights import *
+from math import exp
+from functions.realised_returns import *
 
 
 def update_expectations():
@@ -15,29 +14,26 @@ def update_expectations():
     6) Use latest realised
     return and ewma mhat for covariance   Equation 1.4
     5) Calculate new ewma covariance Equation 1.3 continued
-    6) Plug it into portfolio optimisation Equation 1.7
-    7) get weights...phew!"""
+    """
 
     pass
 
 
-def exp_return_asset(asset, fund, rho, m, face_value, exp_omega, exp_price, actual_price, quantity):
-    """ # TODO equation 1.5 - 1.6
-    Method to calculate the expected returns of assets which go into portfolio optimisation Equation 1.5 - 1.6
-    :param asset:
-    :param fund:
-    :param rho: nominal interest rate of asset
-    :param m: maturity
-    :param face_value: face_value
-    :param exp_omega: expected default probability of the underlying asset
-    :param exp_price: expected price
-    :param actual_price: current price
-    :param quantity: global quantity of the asset
-    :return: float expected return of the asset
+def exp_return_asset(asset, fund, fx_matrix):
     """
-    exp_return = (1 - exp_omega) * (
-            ((expected_x * face_value) / (actual_x * actual_price * quantity)) * (rho + 1 - m) + (
-            (m * expected_x * exp_price / (actual_x * actual_price)) - 1) - exp_omega)
+    Equation 1.5 - 1.6 Method to calculate the expected returns of assets which go into portfolio optimisation
+    :param asset: object Asset over which the return is calculated
+    :param fund: object Fund which makes the calculation
+    :param fx_matrix: pandas DataFrame containing exchange rates
+    :return: float expected return for that asset
+    """
+    exp_return = (1 - fund.exp.default_rates[asset]) * (
+            ((fund.exp.exchange_rate[asset] * asset.par.face_value) / (
+                    fx_matrix.loc[fund.par.country][asset.par.country] * asset.var.price * fund.var.assets[asset])
+             ) * (asset.par.nominal_interest_rate + 1 - asset.par.maturity) +
+            ((asset.par.maturity * fund.exp.exchange_rates[asset] * fund.exp.prices[asset] / (
+                    fx_matrix.loc[fund.par.country][asset.par.country] * asset.var.price)
+              ) - 1) - fund.exp.default_rates[asset])
     return exp_return
 
 
@@ -50,7 +46,7 @@ def exp_return_cash(fund, currency, fx_matrix):
     :return: float expected return on currency of interest
     """
     expected_return = currency.par.nominal_interest_rate + (
-            fund.exp.exchange_rate[currency] / fx_matrix.loc[fund.par.country][currency.par.country] - 1)
+            fund.exp.exchange_rates[currency] / fx_matrix.loc[fund.par.country][currency.par.country] - 1)
     return expected_return
 
 
@@ -82,9 +78,9 @@ def compute_ewma(variable, previous_ewma, memory_parameter):
     return ewma
 
 
-def exp_default_rate(fund, asset, delta_news, std_noise): #TODO equation 1.10
+def exp_default_rate(fund, asset, delta_news, std_noise):
     """
-    For a fund, calculate the expected default rate of a certain asset
+    Equation 1.10 For a fund, calculate the expected default rate of a certain asset
     :param fund: Fund object which formes the expectation
     :param asset: Asset object about which the expectation is formed
     :param delta_news: float change in the news process about the asset
@@ -99,76 +95,15 @@ def exp_default_rate(fund, asset, delta_news, std_noise): #TODO equation 1.10
     return exp_default_rate
 
 
-def exp_price_or_fx(): # TODO equation 1.11
-    pass
-
-
-def exp_price(mhat, phi, last_price):
+def exp_price_or_fx(current_price, previous_price, previous_ewma_delta_price, memory_parameter):
     """
-    The new expected price is the old price times a growth factor. The growth factor is the
-    exponentially weighted moving average of past prices with a memory parameter
-    :param mhat: last exponentially weighted moving average
-    :param phi_p: Memory parameter. If phi_p is 1, only the last observation is considered
-    :return:
+    Equation 1.11 calculate expected price or exchange rate
+    :param current_price: float current price or exchange rate
+    :param previous_price: float previous price or exchange rate
+    :param previous_ewma_delta_price: float previous exponentially weighted moving average of delta price
+    :param memory_parameter: float agent memory
+    :return: float of the expected price or exchange rate
     """
-    exp_price_var = exp_weighted_moving_average( mhat, phi, last_price )  *  last_price  #Calls function from weights.py   Equation 1.6
-    return exp_price_var
-
-
-def exp_return_home_asset( ident,  rho, m, face_value, exp_omega, exp_price, actual_price, global_quantity):
-    """
-    Method to calculate the expected returns of home assets which go into portfolio optimisation
-    Equation 1.2
-
-    :param ident: asset identifier
-    :param rho: nominal interest rate of asset
-    :param m: constant repayment parameter
-    :param face_value:  face_value
-    :param exp_omega: expected default probability of the underlying asset (different for every fund)
-    :param exp_price: expected price (different for every fund)
-    :param actual_price: current price
-    :param global_quantity: global quantity of the asset
-    :return:
-    """
-    # Exclude cash
-    if not "cash" in ident:
-         # Returns of the asset = returns from interest payment, returns from price changes, returns from principal payment
-        var = (1 - exp_omega )  * (    (face_value/(actual_price * global_quantity)) * (rho + 1 -m) +    (  (m * exp_price / actual_price)  -1 )    -  exp_omega   )
-        return var
-    # if it's cash, expected return is 0
-    else:
-        return 0.0
-
-
-def exp_return_abroad_asset(ident, fund_region, rho, m, face_value, exp_omega, exp_price, actual_price, global_quantity, actual_x_rate, expected_x_rate):
-    "We need the actual and expected exchange rate "
-
-    # We exclude cash; not pretty but ok
-    if not "cash" in ident:
-        #We need to be careful if the fund_region is "home" or "abroad". According to the region,
-        # the exchange rate has to be taken as direct quote or indirect quote
-
-        #So we first take the "domestic" fund guys and DIRECT exchange rate quotation:
-        if "domestic" in fund_region:
-            # Assign the actual and expected direct xrate quotation
-            expected_x = expected_x_rate["x_domestic_to_foreign"]
-            actual_x = actual_x_rate["x_domestic_to_foreign"][-1]
-
-            var = (1 - exp_omega) * ((  (expected_x * face_value) / ( actual_x  * actual_price * global_quantity)) * (rho + 1 - m) + ((m * expected_x *  exp_price / (actual_x *actual_price) ) - 1) - exp_omega)
-            return var
-
-        # Now the  "foreign" fund guys which need INDIRECT  exchange rate quotation:
-        if "foreign" in fund_region:
-            # Assign the actual and expected indirect xrate quotation
-            expected_x = 1/ expected_x_rate["x_domestic_to_foreign"]
-            actual_x = 1/ actual_x_rate["x_domestic_to_foreign"][-1]
-
-            var = (1 - exp_omega) * (
-                    ((expected_x * face_value) / (actual_x * actual_price * global_quantity)) * (rho + 1 - m) + (
-                        (m * expected_x * exp_price / (actual_x * actual_price)) - 1) - exp_omega)
-
-            return var
-    # if it's cash, expected return is 0 (easy)
-    else:
-        return 0.0
-
+    delta_price = current_price / previous_price
+    exp_price = compute_ewma(delta_price, previous_ewma_delta_price, memory_parameter) * previous_price
+    return exp_price
