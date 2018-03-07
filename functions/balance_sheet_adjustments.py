@@ -29,13 +29,13 @@ def balance_sheet_adjustments(fund,funds, portfolios, currencies):
         
         #compute new balance sheet position
         if fund.var.asset_demand[a] > 0 and excess_demand > 0:
-            new_position[a] = a.par.maturity * fund.var_previous.assets[a] + fund.var.asset_demand[a] * pi[a]
+            new_position[a] = a.par.maturity * (1-a.var.default_rate) * fund.var_previous.assets[a] + fund.var.asset_demand[a] * pi[a]
             
         elif fund.var.asset_demand[a] < 0 and excess_demand < 0:
-            new_position[a] = a.par.maturity * fund.var_previous.assets[a] + fund.var.asset_demand[a] * nu[a]
+            new_position[a] = a.par.maturity * (1-a.var.default_rate) * fund.var_previous.assets[a] + fund.var.asset_demand[a] * nu[a]
         
         else :
-            new_position[a] = a.par.maturity * fund.var_previous.assets[a] + fund.var.asset_demand[a] 
+            new_position[a] = a.par.maturity * (1-a.var.default_rate) * fund.var_previous.assets[a] + fund.var.asset_demand[a] 
      
         
         

@@ -36,6 +36,7 @@ def spillover_model(assets, cash, funds, days, seed):
     
                 # compute demand for balance sheet positions
                 fund.var.asset_demand, fund.var.cash_demand = asset_demand(fund, assets, currencies)
+
     
                 
             #Price adjustment
