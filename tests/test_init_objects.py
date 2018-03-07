@@ -14,6 +14,7 @@ def parameters():
         "n_foreign_funds": 2,
         "days": 10,
         "p_change_intensity": 0.1,
+        "fx_change_intensity": 0.1,
         # asset parameters
         "face_value": 100,
         "default_rate": 0.012,
@@ -25,6 +26,8 @@ def parameters():
         "price_memory": 2,
         "fx_memory": 2,
         "risk_aversion": 1,
+        # cb parameters
+        "cb_nationality": 'domestic',
         # initial values
         "init_asset_price": 1,
         "init_exchange_rate": 1,
@@ -47,7 +50,7 @@ def parameters():
 
 
 def test_init_objects(parameters):
-    assets, currencies, funds = init_objects(parameters)
+    assets, currencies, funds, environment, exogeneous_agents = init_objects(parameters)
     # test 1 the function creates four assets and two funds
     assert_equal(len(assets), 5)
     assert_equal(len(funds), 5)

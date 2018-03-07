@@ -1,6 +1,8 @@
 from objects.fund import *
 from objects.asset import *
 from objects.currency import *
+from objects.environment import *
+from objects.exogenous_agents import *
 from functions.distribute import *
 from functions.stochasticprocess import *
 from functions.realised_returns import *
@@ -87,18 +89,6 @@ def init_objects(parameters):
                 # add to variance to covariance matrix
                 cov_matr.loc[currency][currency] = parameters["fx_shock_std"]
 
-        # init xfx vector
-        asset_xfx = {}
-        for asset in assets:
-            # set correct fx rate
-            fx = parameters["init_exchange_rate"]
-            if fund_nationalities[idx] == 'foreign':
-                fx = 1 / fx
-            if asset.par.country == fund_nationalities[idx]:
-                asset_xfx[asset] = 1
-            else:
-                asset_xfx[asset] = fx
-
         fund_vars = AgentVariables(asset_portfolio,
                                    currency_portfolio,
                                    sum(asset_portfolio.values()) + divide_by_funds(parameters["total_money"]),
@@ -107,14 +97,49 @@ def init_objects(parameters):
                                    ewma_returns,
                                    ewma_delta_prices,
                                    ewma_delta_fx,
-                                   cov_matr, parameters["init_payouts"], dict.fromkeys(assets),
-                                   asset_xfx)
+                                   cov_matr, parameters["init_payouts"], dict.fromkeys(assets))
         r = ewma_returns.copy()
         df_rates = {asset: default_rate for (asset, default_rate) in zip(portfolios, default_rates)}
         fund_expectations = AgentExpectations(r, df_rates, parameters["init_exchange_rate"], parameters["currency_rate"])
         funds.append(Fund(idx, fund_vars,  copy_agent_variables(fund_vars), fund_params, fund_expectations))
 
-    return portfolios, currencies, funds
+    # 5 create environment with exchange rates
+    fx_matrix = np.zeros([len(currencies), len(currencies)])
+    fx_matrix = pd.DataFrame(fx_matrix, index=currencies, columns=currencies)
+
+    for c1, c2 in zip(currencies, currencies[::-1]):
+        fx = parameters["init_exchange_rate"]
+        if c1.par.country == 'foreign':
+            fx = 1 / fx
+        fx_matrix.loc[c1, c2] = fx
+        fx_matrix.loc[c1, c1] = np.nan
+
+    environment = Environment(EnvironmentVariables(fx_matrix), EnvironmentVariables(fx_matrix.copy()),
+                              EnvironmentParameters(parameters))
+
+    # 6 create central bank
+    cb_assets = {asset: 0 for asset in portfolios}
+    cb_currency = {}
+    for cur in currencies:
+        if cur.par.country == parameters["cb_nationality"]:
+            cb_currency[cur] = sum(cb_assets.values())
+        else:
+            cb_currency[cur] = 0
+
+    cb_variables = ExoAgentVariables(cb_assets, cb_currency, 0, 0)
+    cb_previous = ExoAgentVariables(cb_assets.copy(), cb_currency.copy(), 0, 0)
+    central_bank = Central_Bank(cb_variables, cb_previous, ExoAgentParameters(parameters["cb_nationality"]))
+
+    # 7 create underwriter agent
+    underwriter_assets = {asset: 0 for asset in portfolios}
+    underwriter_currency = {currency: 0 for currency in currencies}
+    underwriter_variables = ExoAgentVariables(underwriter_assets, underwriter_currency, 0, 0)
+    underwriter_previous = ExoAgentVariables(underwriter_assets.copy(), underwriter_currency.copy(), 0, 0)
+    underwriter = Underwriter(underwriter_variables, underwriter_previous)
+
+    exogeneous_agents = {repr(central_bank): central_bank, repr(underwriter): underwriter}
+
+    return portfolios, currencies, funds, environment, exogeneous_agents
 
 
 def simulated_return_variance(asset, days, parameters):

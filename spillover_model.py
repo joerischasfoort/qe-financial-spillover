@@ -6,6 +6,7 @@ from functions.port_opt import *
 from functions.asset_demand import *
 from functions.balance_sheet_adjustments import *
 from functions.initialisation import * 
+from functions.market_mechanism import * 
 
 def spillover_model(assets, cash, funds, days, seed):
     """
@@ -35,13 +36,13 @@ def spillover_model(assets, cash, funds, days, seed):
     
                 # compute demand for balance sheet positions
                 fund.var.asset_demand, fund.var.cash_demand = asset_demand(fund, assets, currencies)
-    
+
     
                 
-                #Market mechanism  
-                #assets.var.price = lazy_wal_auction(assets, funds, imperfection_tolerance, gamma)
-        
-       #this is where intraday calculations end
+            #Price adjustment
+            assets.var.price = price_adjustment(funds, portfolios, exogenous_agents, p_change_intensity)
+      
+        #this is where intraday calculations end
         for fund in funds:
             fund.var.asset, fund.var.cash = balance_sheet_adjustments(fund, funds, portfolios, currencies)            
         

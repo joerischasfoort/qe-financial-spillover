@@ -11,6 +11,7 @@ parameters = {
     "n_foreign_funds": 2,
     "days": 10,
     "p_change_intensity": 0.1,
+    "fx_change_intensity": 0.1,
     # asset parameters
     "face_value": 100,
     "default_rate" : 0.012,
@@ -21,10 +22,12 @@ parameters = {
     # agent parameters
     "price_memory" : 2,
     "fx_memory" : 2,
-    "risk_aversion" : 1,
+    "risk_aversion": 1,
+    # cb parameters
+    "cb_nationality": 'domestic',
     # initial values
     "init_asset_price" : 1,
-    "init_exchange_rate" : 1,
+    "init_exchange_rate": 1,
     "total_money": 4000,
     "init_agent_ewma_delta_prices": 0,
     "init_ewma_delta_fx": 0,
@@ -42,8 +45,9 @@ parameters = {
 }
 
 # 2 initalise model objects
-portfolios, currencies, funds = init_objects(parameters)
-print(portfolios, currencies, funds)
+portfolios, currencies, funds, environment, exogeneous_agents = init_objects(parameters)
+print(portfolios, currencies, funds, environment, exogeneous_agents)
+
 # 3 simulate model
-# assets, funds = spillover_model(assets, funds, parameters.days, parameters.gamma)
+# assets, funds = spillover_model(assets, funds, parameters.days, parameters.p_change_intensity, parameters.fx_change_intensity )
 
