@@ -22,7 +22,7 @@ def update_expectations():
 
 
 def exp_return_asset(asset, fund, rho, m, face_value, exp_omega, exp_price, actual_price, quantity):
-    """ # TODO
+    """ # TODO equation 1.5 - 1.6
     Method to calculate the expected returns of assets which go into portfolio optimisation Equation 1.5 - 1.6
     :param asset:
     :param fund:
@@ -41,20 +41,38 @@ def exp_return_asset(asset, fund, rho, m, face_value, exp_omega, exp_price, actu
     return exp_return
 
 
-def exp_return_cash(): #TODO equation 1.7
-    pass
+def exp_return_cash(fund, currency, fx_matrix):
+    """
+    Equation 1.7 Expected return on a currency
+    :param fund: object Fund for which the expected return on cash is calculated
+    :param currency: object Currency about which the expected return is formed
+    :param fx_matrix: pandas DataFrame which contains current exchange rates
+    :return: float expected return on currency of interest
+    """
+    expected_return = currency.par.nominal_interest_rate + (
+            fund.exp.exchange_rate[currency] / fx_matrix.loc[fund.par.country][currency.par.country] - 1)
+    return expected_return
 
 
-def compute_covar(x, previous_ewma_x, y, previous_ewma_y, previous_covar_ewma, memory_parameter): #TODO equation 1.8
-    """compute covar between x and y"""
-    covar1 = (x - compute_ewma(x, previous_ewma_x, memory_parameter)) * (y - compute_ewma(y, previous_ewma_y, memory_parameter))
-    covar2 = compute_ewma(covar1 , previous_covar_ewma, memory_parameter)
-    return covar2
+def compute_covar(x, previous_ewma_x, y, previous_ewma_y, previous_covar, memory_parameter):
+    """
+    Equation 1.8 Compute covariance between x and y
+    :param x: float first variable
+    :param previous_ewma_x: float previous exponentially weighted average of x
+    :param y: float second variable
+    :param previous_ewma_y: float previous exponentially weighted average of y
+    :param previous_covar: float previous ewma covariance
+    :param memory_parameter: float agent memory paraemter
+    :return: float new expected weighted moving average covariance between x and y
+    """
+    covar = (x - compute_ewma(x, previous_ewma_x, memory_parameter)) * (y - compute_ewma(y, previous_ewma_y, memory_parameter))
+    ewma_covar = compute_ewma(covar , previous_covar, memory_parameter)
+    return ewma_covar
 
 
 def compute_ewma(variable, previous_ewma, memory_parameter):
     """
-    For a fund, calculate expected weighted moving average, equation 1.9
+    Equation 1.9 For a fund, calculate expected weighted moving average
     :param variable: float variable of interest
     :param previous_ewma: float previous exponentially weighted moving average
     :param memory_parameter: float the
