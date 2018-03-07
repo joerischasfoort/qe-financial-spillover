@@ -31,6 +31,16 @@ class ExoAgentParameters:
         self.country = country
 
 
+class CB_Variables:
+    """Holds the inital variables for the central bank"""
+    def __init__(self, assets, currency, asset_demand, currency_demand, asset_target):
+        self.assets = assets # The quantities of assets held
+        self.currency = currency # The quantities of currencies held
+        self.asset_demand = asset_demand
+        self.currency_demand = currency_demand
+        self.asset_target = asset_target
+
+
 class Central_Bank():
     """
     Class holding central bank properties

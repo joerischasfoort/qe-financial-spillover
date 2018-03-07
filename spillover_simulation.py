@@ -1,4 +1,5 @@
 """Simulation file used to run the model"""
+import pandas as pd
 
 from init_objects import *
 
@@ -14,19 +15,19 @@ parameters = {
     "fx_change_intensity": 0.1,
     # asset parameters
     "face_value": 100,
-    "default_rate" : 0.012,
+    "default_rate": 0.012,
     "nominal_interest_rate" : 0.003,
     "currency_rate": 0,
     "maturity" : 0.99,
     "quantity" : 5000,
     # agent parameters
-    "price_memory" : 2,
-    "fx_memory" : 2,
+    "price_memory": 2,
+    "fx_memory": 2,
     "risk_aversion": 1,
     # cb parameters
     "cb_country": 'domestic',
     # initial values
-    "init_asset_price" : 1,
+    "init_asset_price": 1,
     "init_exchange_rate": 1,
     "total_money": 4000,
     "init_agent_ewma_delta_prices": 0,
@@ -46,8 +47,9 @@ parameters = {
 
 # 2 initalise model objects
 portfolios, currencies, funds, environment, exogeneous_agents = init_objects(parameters)
-print(portfolios, currencies, funds, environment, exogeneous_agents)
+#print(portfolios, currencies, funds, environment, exogeneous_agents)
 
+print funds[0].var.weights
 # 3 simulate model
-# assets, funds = spillover_model(assets, funds, parameters.days, parameters.p_change_intensity, parameters.fx_change_intensity )
+# assets, funds = spillover_model(portfolios, currencies, environment, exogeneous_agents , funds,  seed )
 
