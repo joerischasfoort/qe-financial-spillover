@@ -8,7 +8,7 @@ from functions.balance_sheet_adjustments import *
 from functions.initialisation import * 
 from functions.market_mechanism import * 
 
-def spillover_model(assets, cash, funds, days, seed):
+def spillover_model(portfolios, currencies, environment, exogeneous_agents , funds, parameters.days, parameters.p_change_intensity, parameters.fx_change_intensity , seed):
     """
     Koziol, Riedler & Schasfoort Agent-based simulation model of financial spillovers
     :param assets: list of Asset objects
@@ -40,7 +40,7 @@ def spillover_model(assets, cash, funds, days, seed):
     
                 
             #Price adjustment
-            assets.var.price = price_adjustment(funds, portfolios, exogenous_agents, p_change_intensity)
+            assets.var.price = price_adjustment(portfolios, currencies, environment, exogeneous_agents , funds)
       
         #this is where intraday calculations end
         for fund in funds:
