@@ -130,7 +130,8 @@ def init_objects(parameters):
         else:
             cb_currency[cur] = 0
 
-    cb_variables = CB_Variables(cb_assets, cb_currency, 0, 0, parameters["cb_asset_target"])
+    asset_targets = {asset: 0 for asset in portfolios}
+    cb_variables = CB_Variables(cb_assets, cb_currency, 0, 0, asset_targets)
     cb_previous = ExoAgentVariables(cb_assets.copy(), cb_currency.copy(), 0, 0)
     central_bank = Central_Bank(cb_variables, cb_previous, ExoAgentParameters(parameters["cb_country"]))
 

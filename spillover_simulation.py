@@ -15,20 +15,19 @@ parameters = {
     "fx_change_intensity": 0.1,
     # asset parameters
     "face_value": 100,
-    "default_rate" : 0.012,
+    "default_rate": 0.012,
     "nominal_interest_rate" : 0.003,
     "currency_rate": 0,
-    "maturity" : 1,
-    "quantity" : 5000,
+    "maturity": 1,
+    "quantity": 5000,
     # agent parameters
-    "price_memory" : 2,
-    "fx_memory" : 2,
+    "price_memory": 2,
+    "fx_memory": 2,
     "risk_aversion": 1,
     # cb parameters
     "cb_country": 'domestic',
-    "cb_asset_target": 0,
     # initial values
-    "init_asset_price" : 1,
+    "init_asset_price": 1,
     "init_exchange_rate": 1,
     "total_money": 4000,
     "init_agent_ewma_delta_prices": 0,
