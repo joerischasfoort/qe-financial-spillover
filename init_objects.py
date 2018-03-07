@@ -112,7 +112,11 @@ def init_objects(parameters):
         if c1.par.country == 'foreign':
             fx = 1 / fx
         fx_matrix.loc[c1, c2] = fx
-        fx_matrix.loc[c1, c1] = np.nan
+        fx_matrix.loc[c1, c1] = 1
+
+    currency_countries = {c: c.par.country for c in currencies}
+    fx_matrix.rename(index=currency_countries, inplace=True)
+    fx_matrix.rename(columns=currency_countries, inplace=True)
 
     environment = Environment(EnvironmentVariables(fx_matrix), EnvironmentVariables(fx_matrix.copy()),
                               EnvironmentParameters(parameters))
