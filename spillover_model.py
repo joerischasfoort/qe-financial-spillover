@@ -38,7 +38,10 @@ def spillover_model(assets, cash, funds, days, seed):
                 fund.var.asset_demand, fund.var.cash_demand = asset_demand(fund, assets, currencies)
 
     
+            for ex in exogeneous_agents:
+                exogeneous_agent[ex].var.asset_demand = ex_agent_asset_demand(ex)
                 
+            
             #Price adjustment
             assets.var.price = price_adjustment(funds, portfolios, exogenous_agents, p_change_intensity)
       

@@ -17,7 +17,7 @@ parameters = {
     "default_rate" : 0.012,
     "nominal_interest_rate" : 0.003,
     "currency_rate": 0,
-    "maturity" : 1,
+    "maturity" : 0.99,
     "quantity" : 5000,
     # agent parameters
     "price_memory" : 2,
