@@ -1,7 +1,7 @@
 from __future__ import division
 
 
-def balance_sheet_adjustments(fund,funds, portfolios, currencies):
+def balance_sheet_adjustments(fund,funds, portfolios, currencies, exogeneous_agents):
     
   
     #compute correcting factors for portfolios of assets

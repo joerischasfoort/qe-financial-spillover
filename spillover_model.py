@@ -49,7 +49,7 @@ def spillover_model(portfolios, currencies, environment, exogeneous_agents , fun
       
         #this is where intraday calculations end
         for fund in funds:
-            fund.var.asset, fund.var.cash = balance_sheet_adjustments(fund, funds, portfolios, currencies)            
+            fund.var.asset, fund.var.cash = balance_sheet_adjustments(fund, funds, portfolios, currencies, exogeneous_agents)            
         
         underwriter.inventory = update_underwriter(assets, funds)    
 
