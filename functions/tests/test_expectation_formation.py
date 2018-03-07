@@ -36,12 +36,20 @@ def funds_and_assets():
 
 
 def test_exp_default_probability(funds_and_assets):
+    """Test if the expectations about default probability are formed correctly"""
     fund1, fund2 = funds_and_assets[0]
     asset0, asset1 = funds_and_assets[1], funds_and_assets[1]
     # if the actual default rate was bigger than previous expectations the next expecation will be higher
-    previous_value = 0.0007
-    fund1.exp.default_rates[asset0] = previous_value
+    previous_expectation = 0.0007
+    fund1.exp.default_rates[asset0] = previous_expectation
     asset0.var.default_rate = 0.001
-    assert_equal(exp_default_rate(fund1, asset0, delta_news=0, std_noise=0)> previous_value, True)
+    assert_equal(exp_default_rate(fund1, asset0, delta_news=0, std_noise=0)> previous_expectation, True)
+    # if the default rate was equal to expectations but the news process is positive (higher likelyhood of default)
+    # the default probability will go up
+    previous_expectation = 0.001
+    fund1.exp.default_rates[asset0] = previous_expectation
+    assert_equal(exp_default_rate(fund1, asset0, delta_news=2, std_noise=0) > previous_expectation, True)
 
-test_exp_default_probability(funds_and_assets())
+
+def test_compute_ewma():
+    pass

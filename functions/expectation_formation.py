@@ -49,8 +49,16 @@ def compute_covar(): #TODO equation 1.8
     pass
 
 
-def compute_ewma(): #TODO equation 1.9
-    pass
+def compute_ewma(variable, previous_ewma, memory_parameter):
+    """
+    For a fund, calculate expected weighted moving average, equation 1.9
+    :param variable: float variable of interest
+    :param previous_ewma: float previous exponentially weighted moving average
+    :param memory_parameter: float the
+    :return: estimate of the exponentially weighted moving average of the variable
+    """
+    ewma = (1 - memory_parameter) * previous_ewma + memory_parameter * variable
+    return ewma
 
 
 def exp_default_rate(fund, asset, delta_news, std_noise): #TODO equation 1.10
@@ -84,31 +92,6 @@ def exp_price(mhat, phi, last_price):
     """
     exp_price_var = exp_weighted_moving_average( mhat, phi, last_price )  *  last_price  #Calls function from weights.py   Equation 1.6
     return exp_price_var
-
-
-def exp_default_probability(omega, delta_news, theta, current_exp_omega, std_noise):   #Equation 1.10
-    """
-    Function to calculate the new expected default probability
-
-    :param omega: default probability of last period per asset
-    :param delta_news: change in the news process underlying the default probability of the asset
-    :param theta: asset specific correction parameter
-    :param current_exp_omega: last  expected default probability per fund
-    :param std_noise: fund specific noise influencing the evaluation of news
-    :param day: t
-    :return: new expected default probability of the underlying asset (float)
-    """
-    #Fund specific noise parameter
-    noise = np.random.normal(0,std_noise)
-    # log of (last period expected omega) + evaluation of news +  past_error_correction
-    log_omega =  log(current_exp_omega) + delta_news + noise + theta*(log(omega) - log(current_exp_omega))
-    # take the inverse exponent
-    exp_omega_var = exp(log_omega)
-    return exp_omega_var
-
-
-
-
 
 
 def exp_return_home_asset( ident,  rho, m, face_value, exp_omega, exp_price, actual_price, global_quantity):
