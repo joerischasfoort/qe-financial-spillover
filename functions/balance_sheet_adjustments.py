@@ -1,7 +1,7 @@
 from __future__ import division
 
 
-def asset_excess_demand_and_correction_factors(fund,funds, portfolios, currencies, exogeneous_agents):
+def asset_excess_demand_and_correction_factors(funds, portfolios, currencies, exogeneous_agents):
     
   
     #compute correcting factors for portfolios of assets
@@ -82,7 +82,7 @@ def ex_asset_adjustments(ex, portfolios, excess_demand, pi, nu):
         
         
         
-def fund_cash_adjustments(fund,funds, portfolios, currencies, exogeneous_agents):
+def cash_excess_demand_and_correction_factors(funds, portfolios, currencies, exogeneous_agents):
         
     #compute correcting factors for portfolios of assets
     piC = {}
@@ -91,6 +91,30 @@ def fund_cash_adjustments(fund,funds, portfolios, currencies, exogeneous_agents)
     for c in currencies:
         set_of_positive = 0
         set_of_negative = 0
+        
+        cb_excess_cash={c:0 for c in currencies}
+        underwriter_excess_cash={c:0 for c in currencies}
+        for ex in exogeneous_agents:
+            aux = {}
+            if ex == "central_bank_domestic":
+                for a in portfolios:
+                    aux[a]=(exogeneous_agents[ex].var.assets[a]-a.par.maturity * (1-a.var.default_rate) * exogeneous_agents[ex].var_previous.assets[a]) * a.var.price
+                    for c in currencies:
+                        if exogeneous_agents[ex].par.country == a.par.country and a.par.country == c.par.country :
+                            cb_excess_cash[c] = cb_excess_cash[c] + aux[a]
+
+            if ex == "underwriter":
+                for a in portfolios:
+                    aux[a]=(exogeneous_agents[ex].var.assets[a] - (-exogeneous_agents[ex].var.asset_demand[a])) * a.var.price
+                    print a, a.par.country, a.par.quantity, exogeneous_agents[ex].var.asset_demand[a]
+                    for c in currencies:
+                        if a.par.country == c.par.country :
+                            underwriter_excess_cash[c] = underwriter_excess_cash[c] + aux[a]
+                            #print underwriter_excess_cash[c]
+
+        
+        
+        
         for f in funds:
             if f.var.currency_demand[c] > 0:
                 set_of_positive = set_of_positive + f.var.currency_demand[c]
