@@ -1,7 +1,7 @@
 from __future__ import division
 
 
-def asset_demand(fund, portfolios, currencies):
+def asset_demand(fund, portfolios, currencies, environment):
     aux = {}
     a_demand = {}
     cash_from_matured_assets = {c:0 for c in currencies} #when assets mature, the principal is payed out in cash

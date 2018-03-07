@@ -6,7 +6,8 @@ from functions.port_opt import *
 from functions.asset_demand import *
 from functions.balance_sheet_adjustments import *
 from functions.initialisation import * 
-from functions.market_mechanism import * 
+#from functions.market_mechanism import * 
+from functions.payouts_and_share_value import *
 
 def spillover_model(portfolios, currencies, environment, exogeneous_agents , funds, parameters.days, parameters.p_change_intensity, parameters.fx_change_intensity , seed):
     """
@@ -26,7 +27,7 @@ def spillover_model(portfolios, currencies, environment, exogeneous_agents , fun
             
             for fund in funds:
                 # update the value of redeemable shares and payouts to share holders
-                fund.var.redeemable_shares, fund.var.payouts = payouts_and_share_value(assets, currencies, fund)
+                fund.var.redeemable_shares, fund.var.payouts = payouts_and_share_value(portfolios, currencies, fund, environment)
                 
                 #fund.expected_vars = update_expectations(fund, assets, assets.exchange_rate, tau)
                 
@@ -35,7 +36,7 @@ def spillover_model(portfolios, currencies, environment, exogeneous_agents , fun
                 
     
                 # compute demand for balance sheet positions
-                fund.var.asset_demand, fund.var.cash_demand = asset_demand(fund, assets, currencies)
+                fund.var.asset_demand, fund.var.cash_demand = asset_demand(fund, portfolios, currencies, environment)
 
     
             for ex in exogeneous_agents:
