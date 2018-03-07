@@ -4,6 +4,7 @@ import random
 
 from functions.port_opt import *
 from functions.asset_demand import *
+from functions.ex_agent_asset_demand import *
 from functions.balance_sheet_adjustments import *
 from functions.initialisation import * 
 #from functions.market_mechanism import * 
@@ -40,7 +41,7 @@ def spillover_model(portfolios, currencies, environment, exogeneous_agents , fun
 
     
             for ex in exogeneous_agents:
-                exogeneous_agent[ex].var.asset_demand = ex_agent_asset_demand(ex)
+                exogeneous_agents[ex].var.asset_demand = ex_agent_asset_demand(ex, exogeneous_agents, portfolios )
                 
             
             #Price adjustment

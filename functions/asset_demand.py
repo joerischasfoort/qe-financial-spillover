@@ -24,4 +24,5 @@ def asset_demand(fund, portfolios, currencies, environment):
     
     
     return  a_demand, c_demand
-    
+
+
