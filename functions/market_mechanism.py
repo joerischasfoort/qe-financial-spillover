@@ -43,56 +43,50 @@ def fx_adjustment(portfolios, currencies, environment, exogeneous_agents , funds
         row=0
      
     while row<column:
-        combination_tuple = (row, column)
+        combination_tuple = (environment.var.fx_rates.index[row], environment.var.fx_rates.columns[column])
         row =row + 1
         combinations.append(combination_tuple)
-    
-    print combinations
+        
+        
     fx_demand = 0 # respective exchange demand
-    fx_rate =  0 # respective exchange rate
+    fx_rate =  0 # respective exchange demand
     
     
     for el in combinations:
-        
-        weight_df = 0 # This is the sum of weights per fund DEMANDING a currency (the first sum in equation 1.22)
-        weight_fd = 0 # This is the sum of  weights per fund from the other perspective (the second term in the nominator term inequation 1.22 )
-
-        
+         
+        weight_df = 0 # This is the sum of   weights per fund DEMANDING a currency (the first sum in equation 1.22)
         aux = 0 #helper variable 
+        
+        weight_fd = 0 # This is the sum of   weights per fund from the other perspective (the second term in the nominator term inequation 1.22 )
         aux_2 = 0 # helper variable
         
         for fund in funds:
             #we look for all demand of the "from" country, e.g. the first element of the tuple in the list of combinations
             if fund.par.country == el[0]: 
-                
                 for weight in fund.var.weights:
- 
                 # Then we look for all weights that are outside of the fund's own country
                     if fund.par.country != weight.par.country:  
-                        print "hello"
+ 
                         weight_df += fund.var.weights[weight]
                         
                 aux = (fund.var.redeemable_shares/environment.var.fx_rates[el[0]][el[1]]) * weight_df
             
             #then look for all supply of the "to" country, e.g. the second element of the tuple in the list of combinations
+            
             if fund.par.country == el[1]: 
+ 
                 for weight in fund.var.weights:
-                     if fund.par.country != weight.asset.country:  
-                         weight_fd += weight
-                         
-                aux_2 = (fund.var.redeemable_shares) * weight
-        
-         
-        # Division by 0 not possible
-        if aux + aux_2 != 0:
-            fx_demand = (aux - aux_2)/(aux + aux_2)
-        else:
-            fx_demand = 0
+                     if fund.par.country !=  weight.par.country:  
+                         weight_fd += fund.var.weights[weight]
+                aux_2 = (fund.var.redeemable_shares) * weight_fd
+
+                     
+        fx_demand = (aux - aux_2)/(aux + aux_2)
         
         #Generate noise
         market_noise = np.random.normal(0, 0.1)  # We get the random noise 
     
-        log_new_fx_rate = log(environment.var.fx_rates[el[0]][el[1]]) +  environment.par.fx_change_intensity *  fx_demand  + market_noise
+        log_new_fx_rate = log(environment.var.fx_rates[el[0]][el[1]]) +  environment.par.global_parameters[fx_change_intensity] *  fx_demand  + market_noise
         fx_rate = exp(log_new_fx_rate)
             
         environment.var.fx_rates[el[0]][el[1]] =  fx_rate
