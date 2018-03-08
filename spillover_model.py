@@ -51,5 +51,5 @@ def spillover_model(portfolios, currencies, environment, exogeneous_agents , fun
         for fund in funds:
             fund.var.asset, fund.var.cash = balance_sheet_adjustments(fund, funds, portfolios, currencies, exogeneous_agents)            
         
-        underwriter.inventory = update_underwriter(assets, funds)    
+      
 

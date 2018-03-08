@@ -10,7 +10,7 @@ def price_adjustment(portfolios, currencies, environment, exogeneous_agents , fu
     """
  
     #Equation 1.20 : Get aggregate demand 
-    total_demand = {}
+    total_demand = {a:0 for a in portfolios}
     
     # collect total demand from agents per asset
     for a in portfolios:
@@ -18,7 +18,7 @@ def price_adjustment(portfolios, currencies, environment, exogeneous_agents , fu
             total_demand[a] +=  fund.var.asset_demand[a]
         
         #exit the fund loop and take into account underwriter and central bank demand
-        total_demand[a] = total_demand[a] + exogenous_agents["underwriter"] + exogenous["central_bank_domestic"]
+        total_demand[a] = total_demand[a] + exogeneous_agents["underwriter"].var.asset_demand[a] + exogeneous_agents["central_bank_domestic"].var.asset_demand[a]
         
   
     #Equation 1.19 : price adjustment 
@@ -43,7 +43,7 @@ def price_adjustment(portfolios, currencies, environment, exogeneous_agents , fu
     combinations = []
     
     for column in range(len(environment.var.fx_rates.index)):
-    row=0
+        row=0
      
     while row<column:
         combination_tuple = (row, column)
@@ -72,9 +72,9 @@ def price_adjustment(portfolios, currencies, environment, exogeneous_agents , fu
 
                 for weight in fund.var.weights:
                 # Then we look for all weights that are outside of the fund's own country
-                    if fund.par.country != weight.asset.country:  #ask Joeri or Jesper!!
+                    if fund.par.country != weight.par.country:  #ask Joeri or Jesper!!
                         
-                        foreign_weight += weight
+                        foreign_weight += fund.var.weights[weight]
                         
                 aux = (fund.var.redeemable_shares/environment.var.fx_rates[el[0]][el[1]]) * foreign_weight
             
