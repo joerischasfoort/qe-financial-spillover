@@ -7,7 +7,7 @@ from functions.asset_demand import *
 from functions.ex_agent_asset_demand import *
 from functions.balance_sheet_adjustments import *
 from functions.initialisation import * 
-#from functions.market_mechanism import * 
+from functions.market_mechanism import * 
 from functions.payouts_and_share_value import *
 
 def spillover_model(portfolios, currencies, environment, exogeneous_agents , funds,  seed):
@@ -37,16 +37,17 @@ def spillover_model(portfolios, currencies, environment, exogeneous_agents , fun
                 
     
                 # compute demand for balance sheet positions
-                fund.var.asset_demand, fund.var.cash_demand = asset_demand(fund, portfolios, currencies, environment)
+                fund.var.asset_demand, fund.var.currency_demand = asset_demand(fund, portfolios, currencies, environment)
 
     
             for ex in exogeneous_agents:
                 exogeneous_agents[ex].var.asset_demand = ex_agent_asset_demand(ex, exogeneous_agents, portfolios )
-                
             
-            #Price adjustment
-            assets.var.price = price_adjustment(portfolios, currencies, environment, exogeneous_agents , funds)
-      
+            for a in portfolios:
+                a.var.price = price_adjustment(portfolios, currencies, environment, exogeneous_agents , funds, a)
+                        
+            environment.par.fx_rates = fx_adjustment(portfolios, currencies, environment, exogeneous_agents , funds) 
+            
         #this is where intraday calculations end
         for fund in funds:
             fund.var.asset, fund.var.cash = balance_sheet_adjustments(fund, funds, portfolios, currencies, exogeneous_agents)            
