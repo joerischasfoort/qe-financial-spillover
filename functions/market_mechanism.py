@@ -81,7 +81,7 @@ def price_adjustment(portfolios, currencies, environment, exogeneous_agents , fu
             #then look for all supply of the "to" country, e.g. the second element of the tuple in the list of combinations
             if fund.par.country == el[1]: 
                 for weight in fund.var.weights:
-                     if fund.par.country != weight.asset.country:  #ask Joeri or Jesper!!
+                     if fund.par.country != weight.asset.country:  
                          foreign_weight_2 += weight
                          
                  aux_2 = (fund.var.redeemable_shares) * weight
@@ -98,5 +98,3 @@ def price_adjustment(portfolios, currencies, environment, exogeneous_agents , fu
   
     
      
-    
- 

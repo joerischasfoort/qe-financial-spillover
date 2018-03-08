@@ -10,7 +10,7 @@ from functions.initialisation import *
 #from functions.market_mechanism import * 
 from functions.payouts_and_share_value import *
 
-def spillover_model(portfolios, currencies, environment, exogeneous_agents , funds, parameters.days, parameters.p_change_intensity, parameters.fx_change_intensity , seed):
+def spillover_model(portfolios, currencies, environment, exogeneous_agents , funds,  seed):
     """
     Koziol, Riedler & Schasfoort Agent-based simulation model of financial spillovers
     :param assets: list of Asset objects
