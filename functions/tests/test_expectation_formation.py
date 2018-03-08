@@ -43,7 +43,7 @@ def funds_and_assets():
                                               {currencies[0]: 1, currencies[1]:1}, {obj1: 1.0, obj2: 1.0}, 0)
         funds.append(Fund(idx, fund_vars, copy_agent_variables(fund_vars), fund_params, fund_expectations))
 
-    # 5 create environment with exchange rates
+    # 5 create fx matrix
     fx_matrix = np.zeros([len(currencies), len(currencies)])
     fx_matrix = pd.DataFrame(fx_matrix, index=currencies, columns=currencies)
 
@@ -58,7 +58,14 @@ def funds_and_assets():
     fx_matrix.rename(index=currency_countries, inplace=True)
     fx_matrix.rename(columns=currency_countries, inplace=True)
 
-    return funds, obj1, obj2, currencies, fx_matrix
+    # 6 create covar matrix
+    total_assets = portfolios + currencies
+    covs = np.zeros((len(total_assets), len(total_assets)))
+
+    assets = portfolios + currencies
+    covariance_matrix = pd.DataFrame(covs, index=assets, columns=assets)
+
+    return funds, obj1, obj2, currencies, fx_matrix, covariance_matrix
 
 
 def test_exp_default_probability(funds_and_assets):
@@ -108,5 +115,13 @@ def test_exp_return_cash(funds_and_assets):
     # TODO test direction
 
 
+def test_update_expectations(funds_and_assets):
+    fund1, fund2 = funds_and_assets[0]
+    asset0, asset1 = funds_and_assets[1], funds_and_assets[2]
+    currency1, currency2 = funds_and_assets[3]
+    fx_matrix = funds_and_assets[4]
+    prices_tau = {asset0: 1.01, asset1: 0.99}
+    print(update_expectations(fund1,fx_matrix, prices_tau))
 
-test_exp_return_cash(funds_and_assets())
+
+test_update_expectations(funds_and_assets())

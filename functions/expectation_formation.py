@@ -3,20 +3,44 @@ from math import exp
 from functions.realised_returns import *
 
 
-def update_expectations():
+def update_expectations(fund, fx_matrix, prices_tau):
     """
     Method to update expected asset attributes for the next iteration
-    1) New expected default probability Equation 1.6
-    2) New expected prices, exchange rates Equation 1.7
-    3) New expected returns Equation 1.1
-    4) Get realised returns for covariance variance matrix  Equation 1.3
-    5) Compute new ewma (Mhat) for realised returns   Equation 1.5
-    6) Use latest realised
-    return and ewma mhat for covariance   Equation 1.4
-    5) Calculate new ewma covariance Equation 1.3 continued
+    The agent forms its expectations about:
+    1) Calculate hypothetical realised returns?
+    2) Calculate ewma's
+    3) Calculate covariance realised returns
+    4) Calculate expected default probability
+    5) Calculate Expected Price
+    6) Calculate Expected Exchange rate
+    7) Calculate expected return on cash
+    8) Calculate expected returns on assets
     """
+    # 1 calculate hypothetical realised returns vis a vis previous turn
+    realised_rets = {}
+    for asset in fund.var.assets:
+        realised_rets[asset] = realised_returns(asset.var.default_rate,
+                                                asset.par.face_value,
+                                                asset.var.price,
+                                                prices_tau[asset],
+                                                fund.var.assets[asset],
+                                                asset.par.nominal_interest_rate,
+                                                asset.par.maturity,
+                                                fx_matrix.loc[fund.par.country][asset.par.country])
 
-    pass
+        # 2 calcultate ewmas
+        fund.var.ewma_returns[asset] = compute_ewma(realised_rets[asset], fund.var.ewma_returns[asset], fund.par.price_memory)
+        #TODO add delta price: fund.var.ewma_delta_prices[asset] = compute_ewma()
+
+        # 3 calculate covariance realised returns
+        # fund.var.covariance_matrix[asset] = compute_covar(x, previous_ewma_x,
+        #                                                   y, previous_ewma_y,
+        #                                                   previous_covar, memory_parameter)
+
+
+    #TODO add delta fx fund.var.ewma_delta_fx =
+
+
 
 
 def exp_return_asset(asset, fund, fx_matrix):
