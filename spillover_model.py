@@ -46,7 +46,7 @@ def spillover_model(portfolios, currencies, environment, exogeneous_agents , fun
             for a in portfolios:
                 a.var.price = price_adjustment(portfolios, currencies, environment, exogeneous_agents , funds, a)
                         
-            environment.par.fx_rates = fx_adjustment(portfolios, currencies, environment, exogeneous_agents , funds) 
+            environment.var.fx_rates = fx_adjustment(portfolios, currencies, environment, exogeneous_agents , funds) 
             
         #this is where intraday calculations end
         for fund in funds:
