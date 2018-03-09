@@ -4,6 +4,7 @@ from functions.supercopy import *
 from objects.currency import *
 from objects.fund import *
 from objects.asset import *
+from init_objects import *
 import pytest
 import pandas as pd
 import numpy as np
@@ -68,6 +69,54 @@ def funds_and_assets():
     return funds, obj1, obj2, currencies, fx_matrix, covariance_matrix
 
 
+@pytest.fixture
+def params():
+    """Returns global parameter which indicates there are four assets"""
+    # 1 setup parameters
+    parameters = {
+        # global parameters
+        "n_domestic_assets": 2,
+        "n_foreign_assets": 3,
+        "n_domestic_funds": 3,
+        "n_foreign_funds": 2,
+        "days": 10,
+        "p_change_intensity": 0.1,
+        "fx_change_intensity": 0.1,
+        # asset parameters
+        "face_value": 100,
+        "default_rate": 0.012,
+        "nominal_interest_rate": 0.003,
+        "currency_rate": 0,
+        "maturity": 1,
+        "quantity": 5000,
+        # agent parameters
+        "price_memory": 2,
+        "fx_memory": 2,
+        "risk_aversion": 1,
+        "news_evaluation_error": 0.001,
+        # cb parameters
+        "cb_country": 'domestic',
+        # initial values
+        "init_asset_price": 1,
+        "init_exchange_rate": 1,
+        "total_money": 4000,
+        "init_agent_ewma_delta_prices": 0,
+        "init_ewma_delta_fx": 0,
+        "init_asset_demand": 0,
+        "init_currency_demand": 0,
+        "init_payouts": 0,
+        # shock processes parameters
+        "fx_shock_mu": 0.0,
+        "fx_shock_std": 0.001,
+        "default_rate_mu": 10e-7,
+        "default_rate_std": 0.125,
+        "default_rate_mean_reversion": 0.99,
+        "default_rate_delta_t": 0.003968253968253968,
+        "adaptive_param": 0.5
+    }
+    return parameters
+
+
 def test_exp_default_probability(funds_and_assets):
     """Test if the expectations about default probability are formed correctly"""
     fund1, fund2 = funds_and_assets[0]
@@ -115,14 +164,11 @@ def test_exp_return_cash(funds_and_assets):
     # TODO test direction
 
 
-def test_update_expectations(funds_and_assets):
-    fund1, fund2 = funds_and_assets[0]
-    asset0, asset1 = funds_and_assets[1], funds_and_assets[2]
-    currency1, currency2 = funds_and_assets[3]
-    fx_matrix = funds_and_assets[4]
-    fund1.var.covariance_matrix, fund2.var.covariance_matrix = funds_and_assets[5], funds_and_assets[5]
-    prices_tau = {asset0: 1.01, asset1: 0.99}
-    #print(update_expectations(fund1, fx_matrix, prices_tau))
+def test_update_expectations(params):
+    portfolios, currencies, funds, environment, exogeneous_agents = init_objects(params)
+    prices_tau = {portfolio: 1.01 for portfolio in portfolios}
+    delta_news = 2
+    print(update_expectations(funds[0], environment, prices_tau, delta_news))
 
 
-test_update_expectations(funds_and_assets())
+test_update_expectations(params())
