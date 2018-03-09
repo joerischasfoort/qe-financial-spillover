@@ -6,15 +6,15 @@ from init_objects import *
 # 1 setup parameters
 parameters = {
     # global parameters
-    "n_domestic_assets": 2,
-    "n_foreign_assets": 3,
-    "n_domestic_funds": 3,
-    "n_foreign_funds": 2,
+    "n_domestic_assets": 1,
+    "n_foreign_assets": 1,
+    "n_domestic_funds": 1,
+    "n_foreign_funds": 1,
     "days": 10,
     "p_change_intensity": 0.1,
     "fx_change_intensity": 0.1,
     # asset parameters
-    "face_value": 100,
+    "face_value": 5000,
     "default_rate": 0.012,
     "nominal_interest_rate" : 0.003,
     "currency_rate": 0,
