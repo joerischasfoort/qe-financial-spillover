@@ -30,7 +30,6 @@ def update_expectations(fund, environment, prices_tau, delta_news):
 
         # 2 calcultate ewmas
         fund.var.ewma_returns[asset] = compute_ewma(realised_rets[asset], fund.var.ewma_returns[asset], fund.par.price_memory)
-        #TODO add delta price: fund.var.ewma_delta_prices[asset] = compute_ewma()
         realised_dp = asset.var.price - asset.var_previous.price
         fund.var.ewma_delta_prices[asset] = compute_ewma(realised_dp, fund.var.ewma_delta_prices[asset], fund.par.price_memory)
 
@@ -50,9 +49,18 @@ def update_expectations(fund, environment, prices_tau, delta_news):
         fund.exp.prices[asset] = exp_price_or_fx(asset.var.price, asset.var_previous.price,
                                                  fund.var.ewma_delta_prices[asset], fund.par.price_memory)
 
-
-
-    #TODO add delta fx fund.var.ewma_delta_fx =
+    for currency in fund.var.currency:
+        # add delta fx ewma
+        current_fx = environment.var.fx_rates.loc[fund.par.country][currency.par.country]
+        previous_fx = environment.var_previous.fx_rates.loc[fund.par.country][currency.par.country]
+        realised_dfx =current_fx - previous_fx
+        fund.var.ewma_delta_fx[currency] = compute_ewma(realised_dfx, fund.var.ewma_delta_fx[currency],
+                                                        fund.par.fx_memory)
+        # calculate expected fx price
+        fund.exp.exchange_rates[currency] = exp_price_or_fx(current_fx, previous_fx,
+                                                            fund.var.ewma_delta_fx[currency], fund.par.fx_memory)
+        # calculate expected return on fx??
+        fund.exp.cash_returns[currency] = 2
 
 
 

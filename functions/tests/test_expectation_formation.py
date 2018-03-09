@@ -171,4 +171,5 @@ def test_update_expectations(params):
     print(update_expectations(funds[0], environment, prices_tau, delta_news))
 
 
-test_update_expectations(params())
+test_exp_return_cash(funds_and_assets())
+#test_update_expectations(params())

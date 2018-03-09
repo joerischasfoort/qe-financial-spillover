@@ -75,7 +75,7 @@ def init_objects(parameters):
         asset_demand = {asset: parameters["init_asset_demand"] for asset, value in zip(portfolios, asset_values)}
         ewma_returns = {asset: rt for (asset, rt) in zip(assets, returns)}
         ewma_delta_prices = {asset: parameters["init_agent_ewma_delta_prices"] for (asset, rt) in zip(portfolios, returns)}
-        ewma_delta_fx = parameters["init_ewma_delta_fx"]
+        ewma_delta_fx = {currency: parameters["init_ewma_delta_fx"] for currency in currencies}
 
         currency_portfolio = {}
         currency_demand = {}
@@ -101,7 +101,9 @@ def init_objects(parameters):
         r = ewma_returns.copy()
         df_rates = {asset: default_rate for (asset, default_rate) in zip(portfolios, default_rates)}
         exp_prices = {asset: asset.var.price for asset in portfolios}
-        fund_expectations = AgentExpectations(r, df_rates, parameters["init_exchange_rate"], exp_prices, parameters["currency_rate"])
+        exp_fx = {currency: parameters["init_exchange_rate"] for currency in currencies}
+        exp_fx_returns = {currency: parameters["currency_rate"] for currency in currencies}
+        fund_expectations = AgentExpectations(r, df_rates, exp_fx, exp_prices, exp_fx_returns)
         funds.append(Fund(idx, fund_vars,  copy_agent_variables(fund_vars), fund_params, fund_expectations))
 
     # 5 create environment with exchange rates
