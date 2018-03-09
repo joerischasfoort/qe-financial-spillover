@@ -24,6 +24,7 @@ parameters = {
     "price_memory": 2,
     "fx_memory": 2,
     "risk_aversion": 1,
+    "news_evaluation_error": 0.001,
     # cb parameters
     "cb_country": 'domestic',
     # initial values

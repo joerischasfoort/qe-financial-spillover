@@ -22,6 +22,8 @@ def spillover_model(portfolios, currencies, environment, exogeneous_agents , fun
     random.seed(seed)
     np.random.seed(seed)
 
+    #TODO calculate news process
+
     for day in range(days-1):
         
         for tau in range(100): #this needs to be rewritten into a while loop when stopping criteria are defined

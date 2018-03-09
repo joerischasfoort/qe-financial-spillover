@@ -38,7 +38,7 @@ def funds_and_assets():
                                ewma_delta_fx={currencies[0]: 2, currencies[0]: 2},
                                covariance_matrix=pd.DataFrame({obj1: [1, 2], obj2: [0, 2]}),
                                payouts={obj1: 2, obj2: 2}, weights={obj1: 2, obj2: 3})
-        fund_params = AgentParameters(fund_nationalities[idx], 2, 2, 1, 0.5)
+        fund_params = AgentParameters(fund_nationalities[idx], 2, 2, 1, 0.5, 0.001)
         fund_expectations = AgentExpectations({obj1: 0.003, obj2: 0.002}, {obj1: 0.0007, obj2: 0.001},
                                               {currencies[0]: 1, currencies[1]:1}, {obj1: 1.0, obj2: 1.0}, 0)
         funds.append(Fund(idx, fund_vars, copy_agent_variables(fund_vars), fund_params, fund_expectations))
@@ -122,7 +122,7 @@ def test_update_expectations(funds_and_assets):
     fx_matrix = funds_and_assets[4]
     fund1.var.covariance_matrix, fund2.var.covariance_matrix = funds_and_assets[5], funds_and_assets[5]
     prices_tau = {asset0: 1.01, asset1: 0.99}
-    print(update_expectations(fund1, fx_matrix, prices_tau))
+    #print(update_expectations(fund1, fx_matrix, prices_tau))
 
 
 test_update_expectations(funds_and_assets())

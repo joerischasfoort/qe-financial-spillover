@@ -3,7 +3,7 @@ from math import exp
 from functions.realised_returns import *
 
 
-def update_expectations(fund, fx_matrix, prices_tau):
+def update_expectations(fund, environment, prices_tau, delta_news):
     """
     Method to update expected asset attributes for the next iteration
     The agent forms its expectations about:
@@ -26,7 +26,7 @@ def update_expectations(fund, fx_matrix, prices_tau):
                                                 fund.var.assets[asset],
                                                 asset.par.nominal_interest_rate,
                                                 asset.par.maturity,
-                                                fx_matrix.loc[fund.par.country][asset.par.country])
+                                                environment.var.fx_rates.loc[fund.par.country][asset.par.country])
 
         # 2 calcultate ewmas
         fund.var.ewma_returns[asset] = compute_ewma(realised_rets[asset], fund.var.ewma_returns[asset], fund.par.price_memory)
@@ -41,8 +41,12 @@ def update_expectations(fund, fx_matrix, prices_tau):
                                                                        fund.var.covariance_matrix.loc[asset_x][asset_y],
                                                                        fund.par.price_memory)
 
-    # 4 Calculate expected default probability
-
+    # 4 Calculate expected default probability & price
+    for asset in fund.var.assets:
+        fund.exp.default_rates[asset] = exp_default_rate(fund, asset, delta_news,
+                                                         environment.par.global_parameters[std_noise])
+        fund.exp.prices[asset] = exp_price_or_fx(asset.var.price, asset.var_previous.price,
+                                                 previous_ewma_delta_price, memory_parameter)
 
 
 
