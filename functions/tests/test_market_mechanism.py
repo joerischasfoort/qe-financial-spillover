@@ -95,6 +95,7 @@ def asset():
 
 
 def price_adjustment(portfolios, currencies, environment, exogeneous_agents , funds, asset_object):
+    pass
     
     
     

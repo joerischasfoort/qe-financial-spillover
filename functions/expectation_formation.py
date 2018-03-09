@@ -32,10 +32,17 @@ def update_expectations(fund, fx_matrix, prices_tau):
         fund.var.ewma_returns[asset] = compute_ewma(realised_rets[asset], fund.var.ewma_returns[asset], fund.par.price_memory)
         #TODO add delta price: fund.var.ewma_delta_prices[asset] = compute_ewma()
 
-        # 3 calculate covariance realised returns
-        # fund.var.covariance_matrix[asset] = compute_covar(x, previous_ewma_x,
-        #                                                   y, previous_ewma_y,
-        #                                                   previous_covar, memory_parameter)
+    # 3 calculate covariance realised returns
+    for asset_x, asset_y in zip(fund.var.assets.keys(), fund.var.assets.keys()[::-1]):
+        fund.var.covariance_matrix.loc[asset_x][asset_y] = compute_covar(realised_rets[asset_x],
+                                                                       fund.var.ewma_returns[asset_x],
+                                                                       realised_rets[asset_y],
+                                                                       fund.var.ewma_returns[asset_y],
+                                                                       fund.var.covariance_matrix.loc[asset_x][asset_y],
+                                                                       fund.par.price_memory)
+
+        # 4 Calculate expected default probability
+
 
 
     #TODO add delta fx fund.var.ewma_delta_fx =

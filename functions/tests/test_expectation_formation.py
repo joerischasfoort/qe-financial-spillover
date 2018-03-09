@@ -76,7 +76,7 @@ def test_exp_default_probability(funds_and_assets):
     previous_expectation = 0.0007
     fund1.exp.default_rates[asset0] = previous_expectation
     asset0.var.default_rate = 0.001
-    assert_equal(exp_default_rate(fund1, asset0, delta_news=0, std_noise=0)> previous_expectation, True)
+    assert_equal(exp_default_rate(fund1, asset0, delta_news=0, std_noise=0) > previous_expectation, True)
     # if the default rate was equal to expectations but the news process is positive (higher likelyhood of default)
     # the default probability will go up
     previous_expectation = 0.001
@@ -120,8 +120,9 @@ def test_update_expectations(funds_and_assets):
     asset0, asset1 = funds_and_assets[1], funds_and_assets[2]
     currency1, currency2 = funds_and_assets[3]
     fx_matrix = funds_and_assets[4]
+    fund1.var.covariance_matrix, fund2.var.covariance_matrix = funds_and_assets[5], funds_and_assets[5]
     prices_tau = {asset0: 1.01, asset1: 0.99}
-    print(update_expectations(fund1,fx_matrix, prices_tau))
+    print(update_expectations(fund1, fx_matrix, prices_tau))
 
 
 test_update_expectations(funds_and_assets())
