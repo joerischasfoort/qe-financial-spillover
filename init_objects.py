@@ -86,7 +86,7 @@ def init_objects(parameters):
                 currency_portfolio[currency] = divide_by_funds(parameters["total_money"])
             else:
                 currency_portfolio[currency] = 0
-                # add to variance to covariance matrix
+                # add the variance to covariance matrix
                 cov_matr.loc[currency][currency] = parameters["fx_shock_std"]
 
         fund_vars = AgentVariables(asset_portfolio,
