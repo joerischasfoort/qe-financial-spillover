@@ -37,13 +37,13 @@ def spillover_model(portfolios, currencies, environment, exogeneous_agents , fun
                 
     
                 # compute demand for balance sheet positions
-                fund.var.asset_demand, fund.var.cash_demand = asset_demand(fund, portfolios, currencies, environment)
+                fund.var.asset_demand, fund.var.currency_demand = asset_demand(fund, portfolios, currencies, environment)
 
     
             for ex in exogeneous_agents:
                 exogeneous_agents[ex].var.asset_demand = ex_agent_asset_demand(ex, exogeneous_agents, portfolios )
                 
-            
+
             #Price adjustment
             assets.var.price = price_adjustment(portfolios, currencies, environment, exogeneous_agents , funds)
       
