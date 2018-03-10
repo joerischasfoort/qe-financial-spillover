@@ -23,7 +23,8 @@ def copy_agent_variables(fund_var_object):
                          ewma_delta_prices=new_variables['ewma_delta_prices'],
                          ewma_delta_fx=new_variables['ewma_delta_fx'],
                          covariance_matrix=new_variables['covariance_matrix'],
-                         payouts=new_variables['payouts'], weights=new_variables['weights'])
+                         payouts=new_variables['payouts'], weights=new_variables['weights'],
+                         realised_returns=new_variables['realised_returns'])
     return obj
 
 
