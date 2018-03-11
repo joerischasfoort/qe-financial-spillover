@@ -3,71 +3,6 @@ from math import exp
 from functions.realised_returns import *
 
 
-def update_expectations(fund, environment, prices_tau, delta_news):
-    """
-    Method to update expected asset attributes for the next iteration
-    The agent forms its expectations about:
-    1) Calculate hypothetical realised returns?
-    2) Calculate ewma's
-    3) Calculate covariance realised returns
-    4) Calculate expected default probability
-    5) Calculate Expected Price
-    6) Calculate Expected Exchange rate
-    7) Calculate expected return on cash
-    8) Calculate expected returns on assets
-    """
-    # 1 calculate hypothetical realised returns vis a vis previous turn
-    realised_rets = {}
-    for asset in fund.var.assets:
-        realised_rets[asset] = realised_returns(asset.var.default_rate,
-                                                asset.par.face_value,
-                                                asset.var.price,
-                                                prices_tau[asset],
-                                                fund.var.assets[asset],
-                                                asset.par.nominal_interest_rate,
-                                                asset.par.maturity,
-                                                environment.var.fx_rates.loc[fund.par.country][asset.par.country])
-
-        # 2 calcultate ewmas
-        fund.var.ewma_returns[asset] = compute_ewma(realised_rets[asset], fund.var.ewma_returns[asset], fund.par.price_memory)
-        realised_dp = asset.var.price - asset.var_previous.price
-        fund.var.ewma_delta_prices[asset] = compute_ewma(realised_dp, fund.var.ewma_delta_prices[asset], fund.par.price_memory)
-
-    # 3 calculate covariance realised returns
-    for asset_x, asset_y in zip(list(fund.var.assets), list(fund.var.assets)[::-1]):
-        fund.var.covariance_matrix.loc[asset_x][asset_y] = compute_covar(realised_rets[asset_x],
-                                                                       fund.var.ewma_returns[asset_x],
-                                                                       realised_rets[asset_y],
-                                                                       fund.var.ewma_returns[asset_y],
-                                                                       fund.var.covariance_matrix.loc[asset_x][asset_y],
-                                                                       fund.par.price_memory)
-
-    # 4 Calculate expected default probability & price
-    for asset in fund.var.assets:
-        fund.exp.default_rates[asset] = exp_default_rate(fund, asset, delta_news,
-                                                         environment.par.global_parameters["news_evaluation_error"])
-        fund.exp.prices[asset] = exp_price_or_fx(asset.var.price, asset.var_previous.price,
-                                                 fund.var.ewma_delta_prices[asset], fund.par.price_memory)
-
-    for currency in fund.var.currency:
-        # add delta fx ewma
-        current_fx = environment.var.fx_rates.loc[fund.par.country][currency.par.country]
-        previous_fx = environment.var_previous.fx_rates.loc[fund.par.country][currency.par.country]
-        realised_dfx =current_fx - previous_fx
-        fund.var.ewma_delta_fx[currency] = compute_ewma(realised_dfx, fund.var.ewma_delta_fx[currency],
-                                                        fund.par.fx_memory)
-        # calculate expected fx price
-        fund.exp.exchange_rates[currency] = exp_price_or_fx(current_fx, previous_fx,
-                                                            fund.var.ewma_delta_fx[currency], fund.par.fx_memory)
-        # calculate expected return on fx??
-        fund.exp.cash_returns[currency] = 2
-
-
-def hypothetical_returns():
-    """Calculate hypothetical returns on asset portfolio"""
-    pass
-
-
 def asset_ewma(fund):
     """
     Update exponentially weighted moving average on asset delta prices and returns
@@ -83,6 +18,7 @@ def asset_ewma(fund):
         ewma_delta_prices[asset] = compute_ewma(realised_dp, fund.var.ewma_delta_prices[asset],
                                                          fund.par.price_memory)
     return ewma_returns, ewma_delta_prices
+
 
 def asset_covariances(fund):
     """
@@ -140,14 +76,17 @@ def currency_expectation(fund, fx_rates, previous_fx_rates):
         exp_exchange_rates[currency] = exp_price_or_fx(current_fx, previous_fx,
                                                             fund.var.ewma_delta_fx[currency], fund.par.fx_memory)
         # calculate expected return on fx??
-        exp_cash_returns[currency] = 2 # TODO add this
+        exp_cash_returns[currency] = exp_return_cash(fund, currency, fx_rates) # TODO fx rates or previous?
 
     return ewma_delta_fx, exp_exchange_rates, exp_cash_returns
 
 
-def asset_return_expectations(fund, assets):
+def asset_return_expectations(fund, fx_rates):
     """Update expectations for asset returns"""
     asset_ret_expectations = {}
+    for asset in fund.var.assets:
+        asset_ret_expectations[asset] = exp_return_asset(asset, fund, fx_rates)
+
     return asset_ret_expectations
 
 def exp_return_asset(asset, fund, fx_matrix):
