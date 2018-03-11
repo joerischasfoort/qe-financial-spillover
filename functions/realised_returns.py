@@ -6,28 +6,50 @@ def hypothetical_asset_returns(fund, prices_tau, fx_rates):
     """Calculate hypothetical returns on asset portfolio"""
     realised_rets = {}
     for asset in fund.var.assets:
-        realised_rets[asset] = realised_returns(asset.var.default_rate,
-                                                asset.par.face_value,
-                                                asset.var.price,
-                                                prices_tau[asset],
-                                                fund.var.assets[asset],
-                                                asset.par.nominal_interest_rate,
-                                                asset.par.maturity,
-                                                fx_rates.loc[fund.par.country][asset.par.country])
+        realised_rets[asset] = realised_profits_asset(asset.var.default_rate,
+                                                      asset.par.face_value,
+                                                      asset.var.price,
+                                                      prices_tau[asset],
+                                                      fund.var.assets[asset],
+                                                      asset.par.nominal_interest_rate,
+                                                      asset.par.maturity,
+                                                      fx_rates.loc[fund.par.country][asset.par.country])
 
 
-def realised_returns(omega, V, P, P_tau, Q, rho, m, X=1):
+def realised_profits_asset(default_rate, face_value, previous_price, price, quantity,
+                           interest_rate, maturity, previous_exchange_rate=1, exchange_rate=1):
     """
-    Calculate realised returns for domestic or foreign asset equations (1.6-1.7)
-    :param omega: default probability
-    :param V: Face value
-    :param P: Last price
-    :param P_tau: Market maker price
-    :param Q: Asset quantity
-    :param rho: interest rate
-    :param m: maturity
-    :param X: float exchange rate calculated as X^{FD}= 1 / X^{DF}, standard no exchange rate X = 1
-    :return: float realised return
+    Equation 1.1 - 1.2 Calculate realised returns for domestic or foreign asset
+    :param default_rate: float default rate
+    :param face_value: float Face value
+    :param previous_price: float Last price
+    :param price: float current price
+    :param quantity: float asset quantity #TODO average or last? total? but then also total face value?
+    :param interest_rate: float nominal interest rate
+    :param maturity: float maturity
+    :param previous_exchange_rate: float exchange rate calculated as previous_exchange_rate^{FD}= 1 / previous_exchange_rate^{DF}, standard no exchange rate previous_exchange_rate = 1
+    :param exchange_rate: float new exchange rate
+    :return: float realised return on asset
     """
-    realised_return = (1 - omega) * (np.divide(X * V, X* P * Q) * (rho + 1 - m) + np.divide(X* m * P_tau, X * P) - 1) - omega
-    return realised_return
+    out = maturity * (1 - default_rate)
+    mat = (1 - maturity) * (1 - default_rate)
+    all = out + mat
+    repayment_effect = mat * (previous_exchange_rate * np.divide(face_value, quantity) - previous_exchange_rate * previous_price)
+    price_effect = out * (exchange_rate * price - previous_exchange_rate * previous_price)
+    interest_effect = all * exchange_rate * np.divide(face_value, quantity) * interest_rate
+    default_effect = default_rate * previous_exchange_rate * previous_price
+    realised_profit = repayment_effect + price_effect + interest_effect - default_effect
+    return realised_profit
+
+
+def realised_profits_cash(interest_rate, previous_exchange_rate, exchange_rate):
+    """
+    Equations 1.3 Calculate realised returns on currency, if home currency, exchange rates are 1 and realised profits
+    are equal to the interest rate.
+    :param interest_rate: float nominal interest rate on currency
+    :param previous_exchange_rate: float previous exchange rate
+    :param exchange_rate: float current exchange rate
+    :return: float realised profit on one unit of currency
+    """
+    realised_profit = exchange_rate * interest_rate + exchange_rate - previous_exchange_rate
+    return realised_profit

@@ -36,10 +36,10 @@ def init_objects(parameters):
         asset_return_variance.append(simulated_return_variance(portfolios[-1], parameters["days"], parameters))
         asset_values.append(portfolios[idx].var.price * portfolios[idx].par.quantity)
         default_rates.append(portfolios[idx].var.default_rate)
-        returns.append(realised_returns(portfolios[idx].var.default_rate, portfolios[idx].par.face_value,
-                                        portfolios[idx].var.price, portfolios[idx].var.price,
-                                        portfolios[idx].par.quantity, portfolios[idx].par.nominal_interest_rate,
-                                        portfolios[idx].par.maturity))
+        returns.append(realised_profits_asset(portfolios[idx].var.default_rate, portfolios[idx].par.face_value,
+                                              portfolios[idx].var.price, portfolios[idx].var.price,
+                                              portfolios[idx].par.quantity, portfolios[idx].par.nominal_interest_rate,
+                                              portfolios[idx].par.maturity))
 
     # 2 Initialize currencies
     currencies = []
@@ -164,8 +164,8 @@ def simulated_return_variance(asset, days, parameters):
                                                         parameters["default_rate_std"],
                                                         parameters["default_rate_mean_reversion"],
                                                         parameters["default_rate_mu"])
-    simulated_returns = [realised_returns(df, V=asset.par.face_value, P=1,
-                                                   P_tau=1, Q=asset.par.quantity,
-                                                   rho=asset.par.nominal_interest_rate,
-                                                   m=asset.par.maturity) for df in simulated_default_rates]
+    simulated_returns = [realised_profits_asset(df, face_value=asset.par.face_value, previous_price=1,
+                                                price=1, quantity=asset.par.quantity,
+                                                interest_rate=asset.par.nominal_interest_rate,
+                                                maturity=asset.par.maturity) for df in simulated_default_rates]
     return np.var(simulated_returns)
