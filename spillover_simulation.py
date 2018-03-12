@@ -2,6 +2,7 @@
 import pandas as pd
 
 from init_objects import *
+from spillover_model import *
 
 # 1 setup parameters
 parameters = {
@@ -52,5 +53,5 @@ portfolios, currencies, funds, environment, exogeneous_agents = init_objects(par
 
 print funds[0].var.weights
 # 3 simulate model
-# assets, funds = spillover_model(portfolios, currencies, environment, exogeneous_agents , funds,  seed )
+spillover_model(portfolios, currencies, environment, exogeneous_agents, funds,  seed=1)
 

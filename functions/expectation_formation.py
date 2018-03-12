@@ -24,7 +24,7 @@ def asset_covariances(fund):
     """
     Update covariance matrix of assets
     :param fund: object Fund for which to calculate new covariance matrix
-    :return: pandas DataFrame of coriance between asset returns
+    :return: pandas DataFrame of covariance between asset returns
     """
     new_covariance_matrix = fund.var.covariance_matrix.copy()
     for asset_x, asset_y in zip(list(fund.var.assets), list(fund.var.assets)[::-1]):

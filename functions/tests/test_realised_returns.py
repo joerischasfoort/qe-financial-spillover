@@ -1,5 +1,6 @@
 from numpy.testing import assert_equal, assert_almost_equal
 from functions.realised_returns import *
+from init_objects import *
 import pytest
 
 
@@ -13,6 +14,61 @@ def init_params():
     interest_rate = 0.004
     maturity = 1
     return default_probability, previous_price, face_value, quantity, price, interest_rate, maturity
+
+
+@pytest.fixture
+def params():
+    """Returns global parameter which indicates there are four assets"""
+    # 1 setup parameters
+    parameters = {
+        # global parameters
+        "n_domestic_assets": 2,
+        "n_foreign_assets": 3,
+        "n_domestic_funds": 3,
+        "n_foreign_funds": 2,
+        "days": 10,
+        "p_change_intensity": 0.1,
+        "fx_change_intensity": 0.1,
+        # asset parameters
+        "face_value": 100,
+        "default_rate": 0.012,
+        "nominal_interest_rate": 0.003,
+        "currency_rate": 0,
+        "maturity": 1,
+        "quantity": 5000,
+        # agent parameters
+        "price_memory": 2,
+        "fx_memory": 2,
+        "risk_aversion": 1,
+        "news_evaluation_error": 0.001,
+        # cb parameters
+        "cb_country": 'domestic',
+        # initial values
+        "init_asset_price": 1,
+        "init_exchange_rate": 1,
+        "total_money": 4000,
+        "init_agent_ewma_delta_prices": 0,
+        "init_ewma_delta_fx": 0,
+        "init_asset_demand": 0,
+        "init_currency_demand": 0,
+        "init_payouts": 0,
+        # shock processes parameters
+        "fx_shock_mu": 0.0,
+        "fx_shock_std": 0.001,
+        "default_rate_mu": 10e-7,
+        "default_rate_std": 0.125,
+        "default_rate_mean_reversion": 0.99,
+        "default_rate_delta_t": 0.003968253968253968,
+        "adaptive_param": 0.5
+    }
+    return parameters
+
+
+def test_hypothetical_asset_returns(params):
+    portfolios, currencies, funds, environment, exogeneous_agents = init_objects(params)
+    prices_tau = {portfolio: portfolio.var.price for portfolio in portfolios}
+    assert_equal(len(hypothetical_asset_returns(funds[0], prices_tau, environment.var.fx_rates)), 5)
+    # TODO right more rigorous logical tests
 
 
 def test_realised_profits_assets(init_params):

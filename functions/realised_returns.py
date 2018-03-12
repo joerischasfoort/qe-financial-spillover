@@ -6,7 +6,7 @@ def hypothetical_asset_returns(fund, prices_tau, fx_rates):
     """Calculate hypothetical returns on asset portfolio"""
     realised_rets = {}
     for asset in fund.var.assets:
-        realised_rets[asset] = realised_profits_asset(asset.var.default_rate,
+        realised_profit = realised_profits_asset(asset.var.default_rate,
                                                       asset.par.face_value,
                                                       asset.var.price,
                                                       prices_tau[asset],
@@ -14,6 +14,9 @@ def hypothetical_asset_returns(fund, prices_tau, fx_rates):
                                                       asset.par.nominal_interest_rate,
                                                       asset.par.maturity,
                                                       fx_rates.loc[fund.par.country][asset.par.country])
+        realised_rets[asset] = realised_returns_asset(realised_profit, prices_tau[asset],
+                                                      fx_rates.loc[fund.par.country][asset.par.country])
+    return realised_rets
 
 
 def realised_returns_asset(realised_profit, price, exchange_rate=1):
@@ -55,9 +58,9 @@ def realised_profits_asset(default_rate, face_value, previous_price, price, quan
     out = maturity * (1 - default_rate)
     mat = (1 - maturity) * (1 - default_rate)
     all = out + mat
-    repayment_effect = mat * (previous_exchange_rate * np.divide(face_value, quantity) - previous_exchange_rate * previous_price)
+    repayment_effect = mat * (previous_exchange_rate * np.divide(face_value, float(quantity)) - previous_exchange_rate * previous_price)
     price_effect = out * (exchange_rate * price - previous_exchange_rate * previous_price)
-    interest_effect = all * exchange_rate * np.divide(face_value, quantity) * interest_rate
+    interest_effect = all * exchange_rate * np.divide(face_value, float(quantity)) * interest_rate
     default_effect = default_rate * previous_exchange_rate * previous_price
     realised_profit = repayment_effect + price_effect + interest_effect - default_effect
     return realised_profit

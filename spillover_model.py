@@ -3,14 +3,16 @@ import numpy as np
 import random
 
 from functions.port_opt import *
-from functions.asset_demand import *
-from functions.ex_agent_asset_demand import *
+from functions.asset_demands import *
+from functions.ex_agent_asset_demands import *
 from functions.balance_sheet_adjustments import *
-from functions.initialisation import * 
-from functions.market_mechanism import * 
+from functions.initialisation import *
+from functions.market_mechanism import *
 from functions.payouts_and_share_value import *
+from functions.realised_returns import *
 
-def spillover_model(portfolios, currencies, environment, exogeneous_agents , funds,  seed):
+
+def spillover_model(portfolios, currencies, environment, exogeneous_agents, funds,  seed):
     """
     Koziol, Riedler & Schasfoort Agent-based simulation model of financial spillovers
     :param assets: list of Asset objects
@@ -24,11 +26,17 @@ def spillover_model(portfolios, currencies, environment, exogeneous_agents , fun
 
     #TODO calculate news process
 
-    for day in range(days-1):
+    for day in range(environment.par.global_parameters["days"]-1):
+        # initialise intraday prices at current price
+        prices_tau = {portfolio: portfolio.var.price for portfolio in portfolios}
         
-        for tau in range(100): #this needs to be rewritten into a while loop when stopping criteria are defined
+        for tau in range(100): #TODO this needs to be rewritten into a while loop when stopping criteria are defined
             
             for fund in funds:
+                # 1 Expectation formation
+                fund.hypothetical_returns = hypothetical_asset_returns(fund, prices_tau, environment.var.fx_rates)
+
+
                 # update the value of redeemable shares and payouts to share holders
                 fund.var.redeemable_shares, fund.var.payouts = payouts_and_share_value(portfolios, currencies, fund, environment)
                 
@@ -52,8 +60,8 @@ def spillover_model(portfolios, currencies, environment, exogeneous_agents , fun
             environment.var.fx_rates = fx_adjustment(portfolios, currencies, environment, exogeneous_agents , funds) 
             
         #this is where intraday calculations end
-        for fund in funds:
-            fund.var.asset, fund.var.cash = balance_sheet_adjustments(fund, funds, portfolios, currencies, exogeneous_agents)            
+        #for fund in funds:
+            #fund.var.asset, fund.var.cash = balance_sheet_adjustment(funds, portfolios, currencies, exogeneous_agents)
         
       
 

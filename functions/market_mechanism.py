@@ -80,13 +80,12 @@ def fx_adjustment(portfolios, currencies, environment, exogeneous_agents , funds
                          weight_fd += fund.var.weights[weight]
                 aux_2 = (fund.var.redeemable_shares) * weight_fd
 
-                     
-        fx_demand = (aux - aux_2)/(aux + aux_2)
+        fx_demand = np.divide(aux - aux_2, aux + aux_2)
         
         #Generate noise
         market_noise = np.random.normal(0, 0.1)  # We get the random noise 
     
-        log_new_fx_rate = log(environment.var.fx_rates[el[0]][el[1]]) +  environment.par.global_parameters[fx_change_intensity] *  fx_demand  + market_noise
+        log_new_fx_rate = log(environment.var.fx_rates[el[0]][el[1]]) + environment.par.global_parameters["fx_change_intensity"] * fx_demand + market_noise
         fx_rate = exp(log_new_fx_rate)
             
         environment.var.fx_rates[el[0]][el[1]] =  fx_rate

@@ -1,6 +1,6 @@
 from __future__ import division
 
-def balance_sheet_adjustments(funds, portfolios, currencies, exogeneous_agents):
+def balance_sheet_adjustment(funds, portfolios, currencies, exogeneous_agents):
     
     excess_demand, pi, nu = asset_excess_demand_and_correction_factors(funds, portfolios, currencies, exogeneous_agents)
     
