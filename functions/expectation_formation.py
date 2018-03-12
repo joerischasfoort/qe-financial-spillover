@@ -98,7 +98,7 @@ def exp_return_asset(asset, fund, fx_matrix):
     :return: float expected return for that asset
     """
     exp_return = (1 - fund.exp.default_rates[asset]) * (
-            ((fund.exp.exchange_rate[asset] * asset.par.face_value) / (
+            ((fund.exp.exchange_rates[asset] * asset.par.face_value) / (
                     fx_matrix.loc[fund.par.country][asset.par.country] * asset.var.price * fund.var.assets[asset])
              ) * (asset.par.nominal_interest_rate + 1 - asset.par.maturity) +
             ((asset.par.maturity * fund.exp.exchange_rates[asset] * fund.exp.prices[asset] / (

@@ -45,6 +45,11 @@ def spillover_model(portfolios, currencies, environment, exogeneous_agents, fund
                 fund.var.covariance_matrix = asset_covariances(fund)
                 fund.exp.default_rates, fund.exp.prices = asset_expectations(fund, delta_news)
 
+                fund.var.ewma_delta_fx, fund.exp.exchange_rates, \
+                fund.exp.cash_returns = currency_expectation(fund, environment.var.fx_rates,
+                                                             environment.var_previous.fx_rates)
+
+                fund.exp.asset_returns = asset_return_expectations(fund, environment.var.fx_rates)
 
 
                 # update the value of redeemable shares and payouts to share holders
