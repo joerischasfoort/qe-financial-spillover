@@ -37,6 +37,8 @@ def spillover_model(portfolios, currencies, environment, exogeneous_agents, fund
                 # 1 Expectation formation
                 fund.hypothetical_returns = hypothetical_asset_returns(fund, prices_tau, environment.var.fx_rates)
                 fund.var.ewma_returns, fund.var.ewma_delta_prices = asset_ewma(fund)
+                fund.var.covariance_matrix = asset_covariances(fund)
+
 
 
                 # update the value of redeemable shares and payouts to share holders
