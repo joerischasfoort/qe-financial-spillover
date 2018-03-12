@@ -25,11 +25,16 @@ def spillover_model(portfolios, currencies, environment, exogeneous_agents, fund
     random.seed(seed)
     np.random.seed(seed)
 
-    #TODO calculate news process
+    news_process = ornstein_uhlenbeck_levels(environment.par.global_parameters["days"],
+                                             environment.par.global_parameters["default_rate_mu"],
+                                             environment.par.global_parameters["default_rate_delta_t"],
+                                             environment.par.global_parameters["default_rate_std"],
+                                             environment.par.global_parameters["default_rate_mean_reversion"])
 
-    for day in range(environment.par.global_parameters["days"]-1):
+    for day in range(1, environment.par.global_parameters["days"]):
         # initialise intraday prices at current price
         prices_tau = {portfolio: portfolio.var.price for portfolio in portfolios}
+        delta_news = news_process[day] - news_process[day-1]
         
         for tau in range(100): #TODO this needs to be rewritten into a while loop when stopping criteria are defined
             
@@ -38,6 +43,7 @@ def spillover_model(portfolios, currencies, environment, exogeneous_agents, fund
                 fund.hypothetical_returns = hypothetical_asset_returns(fund, prices_tau, environment.var.fx_rates)
                 fund.var.ewma_returns, fund.var.ewma_delta_prices = asset_ewma(fund)
                 fund.var.covariance_matrix = asset_covariances(fund)
+                fund.exp.default_rates, fund.exp.prices = asset_expectations(fund, delta_news)
 
 
 

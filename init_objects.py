@@ -162,8 +162,7 @@ def simulated_return_variance(asset, days, parameters):
     simulated_default_rates = ornstein_uhlenbeck_levels(days, parameters["default_rate_mu"],
                                                         parameters["default_rate_delta_t"],
                                                         parameters["default_rate_std"],
-                                                        parameters["default_rate_mean_reversion"],
-                                                        parameters["default_rate_mu"])
+                                                        parameters["default_rate_mean_reversion"])
     simulated_returns = [realised_profits_asset(df, face_value=asset.par.face_value, previous_price=1,
                                                 price=1, quantity=asset.par.quantity,
                                                 interest_rate=asset.par.nominal_interest_rate,
