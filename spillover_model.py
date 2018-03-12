@@ -7,6 +7,7 @@ from functions.asset_demands import *
 from functions.ex_agent_asset_demands import *
 from functions.balance_sheet_adjustments import *
 from functions.initialisation import *
+from functions.expectation_formation import *
 from functions.market_mechanism import *
 from functions.payouts_and_share_value import *
 from functions.realised_returns import *
@@ -35,6 +36,7 @@ def spillover_model(portfolios, currencies, environment, exogeneous_agents, fund
             for fund in funds:
                 # 1 Expectation formation
                 fund.hypothetical_returns = hypothetical_asset_returns(fund, prices_tau, environment.var.fx_rates)
+                fund.var.ewma_returns, fund.var.ewma_delta_prices = asset_ewma(fund)
 
 
                 # update the value of redeemable shares and payouts to share holders

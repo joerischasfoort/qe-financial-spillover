@@ -12,7 +12,7 @@ def asset_ewma(fund):
     ewma_returns = {}
     ewma_delta_prices = {}
     for asset in fund.var.assets:
-        ewma_returns[asset] = compute_ewma(fund.var.realised_returns[asset], fund.var.ewma_returns[asset],
+        ewma_returns[asset] = compute_ewma(fund.var.hypothetical_returns[asset], fund.var.ewma_returns[asset],
                                                     fund.par.price_memory)
         realised_dp = asset.var.price - asset.var_previous.price
         ewma_delta_prices[asset] = compute_ewma(realised_dp, fund.var.ewma_delta_prices[asset],
@@ -28,9 +28,9 @@ def asset_covariances(fund):
     """
     new_covariance_matrix = fund.var.covariance_matrix.copy()
     for asset_x, asset_y in zip(list(fund.var.assets), list(fund.var.assets)[::-1]):
-        new_covariance_matrix.loc[asset_x][asset_y] = compute_covar(fund.var.realised_returns[asset_x],
+        new_covariance_matrix.loc[asset_x][asset_y] = compute_covar(fund.var.hypothetical_returns[asset_x],
                                                                     fund.var.ewma_returns[asset_x],
-                                                                    fund.var.realised_returns[asset_y],
+                                                                    fund.var.hypothetical_returns[asset_y],
                                                                     fund.var.ewma_returns[asset_y],
                                                                     fund.var.covariance_matrix.loc[asset_x][asset_y],
                                                                     fund.par.price_memory)
