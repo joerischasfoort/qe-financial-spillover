@@ -53,7 +53,6 @@ parameters = {
 portfolios, currencies, funds, environment, exogeneous_agents = init_objects(parameters)
 #print(portfolios, currencies, funds, environment, exogeneous_agents)
 
-print funds[0].var.weights
 # 3 simulate model
 spillover_model(portfolios, currencies, environment, exogeneous_agents, funds,  seed=1)
 

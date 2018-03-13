@@ -1,14 +1,17 @@
 def calculate_current_value_of_shares(fund, fx_matrix):
-    """"""
-    # for all assets , price X exchange rate, for all currencies the same?
+    """
+    Calculate total value of all assets to determine the value of shares
+    :param fund: Fund object for which the value of shares is to be calculated
+    :param fx_matrix: pandas DataFrame containing current exchange rates
+    :return: float total value of all shares
+    """
     value_of_shares = 0
     for asset in fund.var.assets:
-        value_of_shares += fund.var.assets * asset.var.price * fx_matrix.loc[fund.par.country][asset.par.country]
+        value_of_shares += fund.var.assets[asset] * asset.var.price * fx_matrix.loc[fund.par.country][asset.par.country]
     for currency in fund.var.currency:
-        value_of_shares += currency
+        value_of_shares += fund.var.currency[currency] * fx_matrix.loc[fund.par.country][currency.par.country]
 
     return value_of_shares
-
 
 
 def payout_to_shareholders(fund):
@@ -18,7 +21,7 @@ def payout_to_shareholders(fund):
     :return: float the value of redeemable shares
     """
     # obtain previous share value
-    previous_shares_value = fund.previous_var.redeemable_shares
+    previous_shares_value = fund.var_previous.redeemable_shares
     # calculate current share target
     shares_target_value = previous_shares_value * (1 + fund.par.target_growth)
     # obtain realised profits

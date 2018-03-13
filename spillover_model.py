@@ -35,14 +35,19 @@ def spillover_model(portfolios, currencies, environment, exogeneous_agents, fund
         # initialise intraday prices at current price
         prices_tau = {portfolio: portfolio.var.price for portfolio in portfolios}
         delta_news = news_process[day] - news_process[day-1]
-        
-        for tau in range(100): #TODO this needs to be rewritten into a while loop when stopping criteria are defined
+
+        # determine value and payouts to shareholders
+        for fund in funds:
+            fund.var.total_profits = hypothetical_asset_returns(fund, prices_tau, environment.var.fx_rates)[1]
+            fund.var.redeemable_shares = calculate_current_value_of_shares(fund, environment.var.fx_rates)
+            fund.var.redeemable_shares = payout_to_shareholders(fund)
+
+
+        for tau in range(10): #TODO this needs to be rewritten into a while loop when stopping criteria are defined
             
             for fund in funds:
                 # 1 Expectation formation
-                fund.var.hypothetical_returns, fund.var.total_profits = hypothetical_asset_returns(fund,
-                                                                                                   prices_tau,
-                                                                                                   environment.var.fx_rates)
+                fund.var.hypothetical_returns = hypothetical_asset_returns(fund, prices_tau, environment.var.fx_rates)[0]
                 fund.var.ewma_returns, fund.var.ewma_delta_prices = asset_ewma(fund)
                 fund.var.covariance_matrix = asset_covariances(fund)
                 fund.exp.default_rates, fund.exp.prices = asset_expectations(fund, delta_news)
@@ -60,21 +65,21 @@ def spillover_model(portfolios, currencies, environment, exogeneous_agents, fund
                 #fund.expected_vars = update_expectations(fund, assets, assets.exchange_rate, tau)
                 
                 # compute the weights of optimal balance sheet positions
-                fund.var.weights = portfolio_optimization(fund) 
+                #fund.var.weights = portfolio_optimization(fund)
                 
     
                 # compute demand for balance sheet positions
-                fund.var.asset_demand, fund.var.currency_demand = asset_demand(fund, portfolios, currencies, environment)
+                #fund.var.asset_demand, fund.var.currency_demand = asset_demand(fund, portfolios, currencies, environment)
 
     
-            for ex in exogeneous_agents:
-                exogeneous_agents[ex].var.asset_demand = ex_agent_asset_demand(ex, exogeneous_agents, portfolios )
-
-            
-            for a in portfolios:
-                a.var.price = price_adjustment(portfolios, currencies, environment, exogeneous_agents , funds, a)
-                        
-            environment.var.fx_rates = fx_adjustment(portfolios, currencies, environment, exogeneous_agents , funds) 
+            # for ex in exogeneous_agents:
+            #     exogeneous_agents[ex].var.asset_demand = ex_agent_asset_demand(ex, exogeneous_agents, portfolios )
+            #
+            #
+            # for a in portfolios:
+            #     a.var.price = price_adjustment(portfolios, currencies, environment, exogeneous_agents , funds, a)
+            #
+            # environment.var.fx_rates = fx_adjustment(portfolios, currencies, environment, exogeneous_agents , funds)
             
         #this is where intraday calculations end
         #for fund in funds:
