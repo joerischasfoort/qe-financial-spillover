@@ -63,17 +63,17 @@ def currency_expectation(fund, fx_rates, previous_fx_rates):
     expected exchange rates and expected returns on currencies
     """
     ewma_delta_fx = {}
-    exp_exchange_rates = {}
+    exp_exchange_rates = fx_rates.copy()
     exp_cash_returns = {}
     for currency in fund.var.currency:
         # add delta fx ewma
         current_fx = fx_rates.loc[fund.par.country][currency.par.country]
         previous_fx = previous_fx_rates.loc[fund.par.country][currency.par.country]
-        realised_dfx =current_fx - previous_fx
+        realised_dfx = current_fx - previous_fx
         ewma_delta_fx[currency] = compute_ewma(realised_dfx, fund.var.ewma_delta_fx[currency],
                                                         fund.par.fx_memory)
         # calculate expected fx price
-        exp_exchange_rates[currency] = exp_price_or_fx(current_fx, previous_fx,
+        exp_exchange_rates.loc[fund.par.country][currency.par.country] = exp_price_or_fx(current_fx, previous_fx,
                                                             fund.var.ewma_delta_fx[currency], fund.par.fx_memory)
         # calculate expected return on fx??
         exp_cash_returns[currency] = exp_return_cash(fund, currency, fx_rates) # TODO fx rates or previous?
@@ -98,10 +98,10 @@ def exp_return_asset(asset, fund, fx_matrix):
     :return: float expected return for that asset
     """
     exp_return = (1 - fund.exp.default_rates[asset]) * (
-            ((fund.exp.exchange_rates[asset] * asset.par.face_value) / (
+            ((fund.exp.exchange_rates.loc[fund.par.country][asset.par.country] * asset.par.face_value) / (
                     fx_matrix.loc[fund.par.country][asset.par.country] * asset.var.price * fund.var.assets[asset])
              ) * (asset.par.nominal_interest_rate + 1 - asset.par.maturity) +
-            ((asset.par.maturity * fund.exp.exchange_rates[asset] * fund.exp.prices[asset] / (
+            ((asset.par.maturity * fund.exp.exchange_rates.loc[fund.par.country][asset.par.country] * fund.exp.prices[asset] / (
                     fx_matrix.loc[fund.par.country][asset.par.country] * asset.var.price)
               ) - 1) - fund.exp.default_rates[asset])
     return exp_return
@@ -116,7 +116,7 @@ def exp_return_cash(fund, currency, fx_matrix):
     :return: float expected return on currency of interest
     """
     expected_return = currency.par.nominal_interest_rate + (
-            fund.exp.exchange_rates[currency] / fx_matrix.loc[fund.par.country][currency.par.country] - 1)
+            fund.exp.exchange_rates.loc[fund.par.country][currency.par.country] / fx_matrix.loc[fund.par.country][currency.par.country] - 1)
     return expected_return
 
 

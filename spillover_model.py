@@ -6,7 +6,7 @@ from functions.port_opt import *
 from functions.asset_demands import *
 from functions.ex_agent_asset_demands import *
 from functions.balance_sheet_adjustments import *
-from functions.initialisation import *
+from functions.stochasticprocess import *
 from functions.expectation_formation import *
 from functions.market_mechanism import *
 from functions.payouts_and_share_value import *

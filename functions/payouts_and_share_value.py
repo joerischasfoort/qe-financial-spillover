@@ -1,6 +1,14 @@
-def calculate_current_value_of_shares(fund):
+def calculate_current_value_of_shares(fund, fx_matrix):
     """"""
-    pass
+    # for all assets , price X exchange rate, for all currencies the same?
+    value_of_shares = 0
+    for asset in fund.var.assets:
+        value_of_shares += fund.var.assets * asset.var.price * fx_matrix.loc[fund.par.country][asset.par.country]
+    for currency in fund.var.currency:
+        value_of_shares += currency
+
+    return value_of_shares
+
 
 
 def payout_to_shareholders(fund):

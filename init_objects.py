@@ -59,7 +59,25 @@ def init_objects(parameters):
     assets = portfolios + currencies
     covariance_matrix = pd.DataFrame(covs, index=assets, columns=assets)
 
-    # 4 Create funds
+    # 4 create environment with exchange rates
+    fx_matrix = np.zeros([len(currencies), len(currencies)])
+    fx_matrix = pd.DataFrame(fx_matrix, index=currencies, columns=currencies)
+
+    for c1, c2 in zip(currencies, currencies[::-1]):
+        fx = parameters["init_exchange_rate"]
+        if c1.par.country == 'foreign':
+            fx = 1 / fx
+        fx_matrix.loc[c1, c2] = fx
+        fx_matrix.loc[c1, c1] = 1
+
+    currency_countries = {c: c.par.country for c in currencies}
+    fx_matrix.rename(index=currency_countries, inplace=True)
+    fx_matrix.rename(columns=currency_countries, inplace=True)
+
+    environment = Environment(EnvironmentVariables(fx_matrix), EnvironmentVariables(fx_matrix.copy()),
+                              EnvironmentParameters(parameters))
+
+    # 5 Create funds
     funds = []
     total_funds = parameters["n_domestic_funds"] + parameters["n_foreign_funds"]
     fund_countries = ordered_list_of_countries(parameters["n_domestic_funds"], parameters["n_foreign_funds"])
@@ -104,28 +122,11 @@ def init_objects(parameters):
         r = ewma_returns.copy()
         df_rates = {asset: default_rate for (asset, default_rate) in zip(portfolios, default_rates)}
         exp_prices = {asset: asset.var.price for asset in portfolios}
-        exp_fx = {currency: parameters["init_exchange_rate"] for currency in currencies}
+        exp_fx = fx_matrix.copy()
         exp_fx_returns = {currency: parameters["currency_rate"] for currency in currencies}
         fund_expectations = AgentExpectations(r, df_rates, exp_fx, exp_prices, exp_fx_returns)
         funds.append(Fund(idx, fund_vars,  copy_agent_variables(fund_vars), fund_params, fund_expectations))
 
-    # 5 create environment with exchange rates
-    fx_matrix = np.zeros([len(currencies), len(currencies)])
-    fx_matrix = pd.DataFrame(fx_matrix, index=currencies, columns=currencies)
-
-    for c1, c2 in zip(currencies, currencies[::-1]):
-        fx = parameters["init_exchange_rate"]
-        if c1.par.country == 'foreign':
-            fx = 1 / fx
-        fx_matrix.loc[c1, c2] = fx
-        fx_matrix.loc[c1, c1] = 1
-
-    currency_countries = {c: c.par.country for c in currencies}
-    fx_matrix.rename(index=currency_countries, inplace=True)
-    fx_matrix.rename(columns=currency_countries, inplace=True)
-
-    environment = Environment(EnvironmentVariables(fx_matrix), EnvironmentVariables(fx_matrix.copy()),
-                              EnvironmentParameters(parameters))
 
     # 6 create central bank
     cb_assets = {asset: 0 for asset in portfolios}
