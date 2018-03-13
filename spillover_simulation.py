@@ -26,6 +26,7 @@ parameters = {
     "fx_memory": 0.6,
     "risk_aversion": 1,
     "news_evaluation_error": 0.001,
+    "fund_target_growth": 0.0,
     # cb parameters
     "cb_country": 'domestic',
     # initial values
@@ -37,6 +38,7 @@ parameters = {
     "init_asset_demand": 0,
     "init_currency_demand": 0,
     "init_payouts": 0,
+    "init_profits": 0,
     # shock processes parameters
     "fx_shock_mu": 0.0,
     "fx_shock_std": 0.001,

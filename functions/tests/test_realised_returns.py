@@ -30,17 +30,18 @@ def params():
         "p_change_intensity": 0.1,
         "fx_change_intensity": 0.1,
         # asset parameters
-        "face_value": 100,
+        "face_value": 5000,
         "default_rate": 0.012,
         "nominal_interest_rate": 0.003,
         "currency_rate": 0,
-        "maturity": 1,
+        "maturity": 0.99,
         "quantity": 5000,
         # agent parameters
-        "price_memory": 2,
-        "fx_memory": 2,
+        "price_memory": 0.6,
+        "fx_memory": 0.6,
         "risk_aversion": 1,
         "news_evaluation_error": 0.001,
+        "fund_target_growth": 0.0,
         # cb parameters
         "cb_country": 'domestic',
         # initial values
@@ -52,6 +53,7 @@ def params():
         "init_asset_demand": 0,
         "init_currency_demand": 0,
         "init_payouts": 0,
+        "init_profits": 0,
         # shock processes parameters
         "fx_shock_mu": 0.0,
         "fx_shock_std": 0.001,
@@ -67,7 +69,7 @@ def params():
 def test_hypothetical_asset_returns(params):
     portfolios, currencies, funds, environment, exogeneous_agents = init_objects(params)
     prices_tau = {portfolio: portfolio.var.price for portfolio in portfolios}
-    assert_equal(len(hypothetical_asset_returns(funds[0], prices_tau, environment.var.fx_rates)), 5)
+    assert_equal(len(hypothetical_asset_returns(funds[0], prices_tau, environment.var.fx_rates)[0]), 5)
     # TODO right more rigorous logical tests
 
 

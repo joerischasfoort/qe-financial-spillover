@@ -10,25 +10,26 @@ def params():
     # 1 setup parameters
     parameters = {
         # global parameters
-        "n_domestic_assets": 2,
-        "n_foreign_assets": 3,
-        "n_domestic_funds": 3,
-        "n_foreign_funds": 2,
+        "n_domestic_assets": 1,
+        "n_foreign_assets": 1,
+        "n_domestic_funds": 1,
+        "n_foreign_funds": 1,
         "days": 10,
         "p_change_intensity": 0.1,
         "fx_change_intensity": 0.1,
         # asset parameters
-        "face_value": 100,
+        "face_value": 5000,
         "default_rate": 0.012,
         "nominal_interest_rate": 0.003,
         "currency_rate": 0,
-        "maturity": 1,
+        "maturity": 0.99,
         "quantity": 5000,
         # agent parameters
-        "price_memory": 2,
-        "fx_memory": 2,
+        "price_memory": 0.6,
+        "fx_memory": 0.6,
         "risk_aversion": 1,
         "news_evaluation_error": 0.001,
+        "fund_target_growth": 0.0,
         # cb parameters
         "cb_country": 'domestic',
         # initial values
@@ -40,6 +41,7 @@ def params():
         "init_asset_demand": 0,
         "init_currency_demand": 0,
         "init_payouts": 0,
+        "init_profits": 0,
         # shock processes parameters
         "fx_shock_mu": 0.0,
         "fx_shock_std": 0.001,

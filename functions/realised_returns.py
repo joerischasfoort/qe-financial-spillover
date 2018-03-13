@@ -5,8 +5,9 @@ import numpy as np
 def hypothetical_asset_returns(fund, prices_tau, fx_rates):
     """Calculate hypothetical returns on asset portfolio"""
     realised_rets = {}
+    realised_profits = {}
     for asset in fund.var.assets:
-        realised_profit = realised_profits_asset(asset.var.default_rate,
+        realised_profits[asset] = realised_profits_asset(asset.var.default_rate,
                                                       asset.par.face_value,
                                                       asset.var.price,
                                                       prices_tau[asset],
@@ -14,9 +15,10 @@ def hypothetical_asset_returns(fund, prices_tau, fx_rates):
                                                       asset.par.nominal_interest_rate,
                                                       asset.par.maturity,
                                                       fx_rates.loc[fund.par.country][asset.par.country])
-        realised_rets[asset] = realised_returns_asset(realised_profit, prices_tau[asset],
+        realised_rets[asset] = realised_returns_asset(realised_profits[asset], prices_tau[asset],
                                                       fx_rates.loc[fund.par.country][asset.par.country])
-    return realised_rets
+    total_realised_profits = sum(realised_profits.values())
+    return realised_rets, total_realised_profits
 
 
 def realised_returns_asset(realised_profit, price, exchange_rate=1):

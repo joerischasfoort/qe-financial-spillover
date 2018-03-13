@@ -70,7 +70,8 @@ def init_objects(parameters):
         cov_matr = covariance_matrix.copy()
         fund_params = AgentParameters(fund_countries[idx], parameters["price_memory"],
                                       parameters["fx_memory"], parameters["risk_aversion"],
-                                      parameters["adaptive_param"], parameters["news_evaluation_error"])
+                                      parameters["adaptive_param"], parameters["news_evaluation_error"],
+                                      parameters["fund_target_growth"])
         asset_portfolio = {asset: divide_by_funds(value) for (asset, value) in zip(portfolios, asset_values)}
         asset_demand = {asset: parameters["init_asset_demand"] for asset, value in zip(portfolios, asset_values)}
         ewma_returns = {asset: rt for (asset, rt) in zip(assets, returns)}
@@ -98,7 +99,8 @@ def init_objects(parameters):
                                    ewma_returns,
                                    ewma_delta_prices,
                                    ewma_delta_fx,
-                                   cov_matr, parameters["init_payouts"], dict.fromkeys(assets), realised_rets)
+                                   cov_matr, parameters["init_payouts"], dict.fromkeys(assets),
+                                   realised_rets, parameters["init_profits"])
         r = ewma_returns.copy()
         df_rates = {asset: default_rate for (asset, default_rate) in zip(portfolios, default_rates)}
         exp_prices = {asset: asset.var.price for asset in portfolios}

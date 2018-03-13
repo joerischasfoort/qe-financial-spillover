@@ -1,13 +1,23 @@
+def calculate_current_value_of_shares(fund):
+    """"""
+    pass
+
+
 def payout_to_shareholders(fund):
-    # calculate current share target
-    shares_target_value = 1
+    """
+    Calculate the amount a fund wants to payout to shareholders
+    :param fund: object Fund for which the payout is calculated
+    :return: float the value of redeemable shares
+    """
     # obtain previous share value
-    previous_shares_value = 1
+    previous_shares_value = fund.previous_var.redeemable_shares
+    # calculate current share target
+    shares_target_value = previous_shares_value * (1 + fund.par.target_growth)
     # obtain realised profits
-    profits = 1
+    profits = fund.var.total_profits
     # calculate wanted shares value
     wanted_shares_value = wanted_value_shares(shares_target_value, previous_shares_value, profits)
-    current_shares_value = 1 # TODO sum of assets + currencies
+    current_shares_value = fund.var.redeemable_shares
     # calculate current value of redeemable shares
     payouts = payout(current_shares_value, wanted_shares_value)
     redeemable_shares = current_shares_value - payouts
