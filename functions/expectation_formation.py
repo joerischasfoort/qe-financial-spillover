@@ -11,13 +11,11 @@ def exp_return_asset(asset, fund, fx_matrix):
     :param fx_matrix: pandas DataFrame containing exchange rates
     :return: float expected return for that asset
     """
-    exp_return = (1 - fund.exp.default_rates[asset]) * (
-            ((fund.exp.exchange_rates.loc[fund.par.country][asset.par.country] * asset.par.face_value) / (
-                    fx_matrix.loc[fund.par.country][asset.par.country] * asset.var.price * fund.var.assets[asset])
-             ) * (asset.par.nominal_interest_rate + 1 - asset.par.maturity) +
-            ((asset.par.maturity * fund.exp.exchange_rates.loc[fund.par.country][asset.par.country] * fund.exp.prices[asset] / (
-                    fx_matrix.loc[fund.par.country][asset.par.country] * asset.var.price)
-              ) - 1) - fund.exp.default_rates[asset])
+    exp_return = realised_profits_asset(fund.exp.default_rates[asset], asset.par.face_value,
+                                        asset.var.price, fund.exp.prices[asset], asset.par.quantity,
+                                        asset.par.nominal_interest_rate, asset.par.maturity,
+                                        fx_matrix.loc[fund.par.country][asset.par.country],
+                                        fund.exp.exchange_rates.loc[fund.par.country][asset.par.country])
     return exp_return
 
 

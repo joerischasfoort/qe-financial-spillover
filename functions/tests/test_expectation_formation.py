@@ -5,10 +5,16 @@ from tests.test_init_objects import parameters
 import pytest
 
 
+def test_exp_return_asset(parameters):
+    """Test the expected retrun on asset function"""
+    portfolios, currencies, funds, environment, exogeneous_agents = init_objects(parameters)
+    exp_return_asset(portfolios[0], funds[0], environment.var.fx_rates)
+
+
 def test_exp_default_probability(parameters):
     """Test if the expectations about default probability are formed correctly"""
     portfolios, currencies, funds, environment, exogeneous_agents = init_objects(parameters)
-    # if the actual default rate was bigger than previous expectations the next expecation will be higher
+    # if the actual default rate was bigger than previous expectations the next expectation will be higher
     previous_expectation = 0.0007
     funds[0].exp.default_rates[portfolios[0]] = previous_expectation
     portfolios[0].var.default_rate = 0.001
