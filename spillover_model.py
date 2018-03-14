@@ -61,11 +61,9 @@ def spillover_model(portfolios, currencies, environment, exogeneous_agents, fund
 
                 # update the value of redeemable shares and payouts to share holders
                 #fund.var.redeemable_shares = payouts_and_share_value(portfolios, currencies, fund, environment)
-                
-                #fund.expected_vars = update_expectations(fund, assets, assets.exchange_rate, tau)
-                
+                                
                 # compute the weights of optimal balance sheet positions
-                #fund.var.weights = portfolio_optimization(fund)
+                fund.var.weights = portfolio_optimization(fund)
                 
     
                 # compute demand for balance sheet positions
