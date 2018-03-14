@@ -57,33 +57,37 @@ def asset_excess_demand_and_correction_factors(funds, portfolios, currencies, ex
 
 
 def fund_asset_adjustments(fund, portfolios, excess_demand, pi, nu):
+    
+    out=a.par.maturity * (1-a.var.default_rate)
     new_position = {}
     for a in portfolios:
+        out=a.par.maturity * (1-a.var.default_rate)
         #compute new balance sheet position of funds
         if fund.var.asset_demand[a] > 0 and excess_demand[a] > 0:
-            new_position[a] = a.par.maturity * (1-a.var.default_rate) * fund.var_previous.assets[a] + fund.var.asset_demand[a] * pi[a]
+            new_position[a] = out * fund.var_previous.assets[a] + fund.var.asset_demand[a] * pi[a]
             
         elif fund.var.asset_demand[a] < 0 and excess_demand[a] < 0:
-            new_position[a] = a.par.maturity * (1-a.var.default_rate) * fund.var_previous.assets[a] + fund.var.asset_demand[a] * nu[a]
+            new_position[a] = out * fund.var_previous.assets[a] + fund.var.asset_demand[a] * nu[a]
         
         else :
-            new_position[a] = a.par.maturity * (1-a.var.default_rate) * fund.var_previous.assets[a] + fund.var.asset_demand[a] 
+            new_position[a] = out * fund.var_previous.assets[a] + fund.var.asset_demand[a] 
     
     return new_position
         
 def ex_asset_adjustments(ex, portfolios, excess_demand, pi, nu, exogeneous_agents):
     new_position = {}
     for a in portfolios:
+        out=a.par.maturity * (1-a.var.default_rate)
         if ex == "central_bank_domestic":
             #compute new balance sheet position of exogenous agent
             if exogeneous_agents[ex].var.asset_demand[a] > 0 and excess_demand[a] > 0:
-                new_position[a] = a.par.maturity * (1-a.var.default_rate) * exogeneous_agents[ex].var_previous.assets[a] + exogeneous_agents[ex].var.asset_demand[a] * pi[a]
+                new_position[a] = out * exogeneous_agents[ex].var_previous.assets[a] + exogeneous_agents[ex].var.asset_demand[a] * pi[a]
                 
             elif exogeneous_agents[ex].var.asset_demand[a] < 0 and excess_demand[a] < 0:
-                new_position[a] = a.par.maturity * (1-a.var.default_rate) * exogeneous_agents[ex].var_previous.assets[a] + exogeneous_agents[ex].var.asset_demand[a] * nu[a]
+                new_position[a] = out * exogeneous_agents[ex].var_previous.assets[a] + exogeneous_agents[ex].var.asset_demand[a] * nu[a]
             
             else :
-                new_position[a] = a.par.maturity * (1-a.var.default_rate) * exogeneous_agents[ex].var_previous.assets[a] + exogeneous_agents[ex].var.asset_demand[a]     
+                new_position[a] = out * exogeneous_agents[ex].var_previous.assets[a] + exogeneous_agents[ex].var.asset_demand[a]     
         
         if ex == "underwriter":
             #compute new balance sheet position of exogenous agent
@@ -103,20 +107,21 @@ def cash_excess_demand_and_correction_factors(funds, portfolios, currencies, exo
     cb_cash_supply={c:0 for c in currencies}
     underwriter_cash_supply={c:0 for c in currencies}
     for ex in exogeneous_agents:
-        aux = {}
-        if ex == "central_bank_domestic":
-            for a in portfolios:
-                aux[a]=(exogeneous_agents[ex].var.assets[a]-a.par.maturity * (1-a.var.default_rate) * exogeneous_agents[ex].var_previous.assets[a]) * a.var.price
+        auxCB = {}
+        auxU = {}
+        for a in portfolios:
+            out=a.par.maturity * (1-a.var.default_rate)    
+            if ex == "central_bank_domestic":
+                auxCB[a]=(exogeneous_agents[ex].var.assets[a]- out * exogeneous_agents[ex].var_previous.assets[a]) * a.var.price
                 for c in currencies:
                     if exogeneous_agents[ex].par.country == a.par.country and a.par.country == c.par.country :
-                        cb_cash_supply[c] = cb_cash_supply[c] + aux[a]
+                        cb_cash_supply[c] = cb_cash_supply[c] + auxCB[a]
 
-        if ex == "underwriter":
-            for a in portfolios:
-                aux[a]=(exogeneous_agents[ex].var.assets[a] - (-exogeneous_agents[ex].var.asset_demand[a])) * a.var.price
+            if ex == "underwriter":
+                auxU[a]=(exogeneous_agents[ex].var.assets[a] - (-exogeneous_agents[ex].var.asset_demand[a])) * a.var.price
                 for c in currencies:
                     if a.par.country == c.par.country :
-                        underwriter_cash_supply[c] = underwriter_cash_supply[c] + aux[a]
+                        underwriter_cash_supply[c] = underwriter_cash_supply[c] + auxU[a]
 
         
     #compute correcting factors for portfolios of assets
@@ -163,25 +168,16 @@ def cash_excess_demand_and_correction_factors(funds, portfolios, currencies, exo
 def fund_cash_adjustments(nuC, piC, excess_demandC, currencies, fund, portfolios):       
     new_cash_position = {}
     aux = {}
-    cash_from_matured_assets = {c:0 for c in currencies} #when assets mature, the principal is payed out in cash
     
-    for a in portfolios:
-        aux[a] = (1-a.var.default_rate) * (1-a.par.maturity) *fund.var_previous.assets[a] * (a.par.face_value / a.par.quantity)
-        for c in currencies:
-            if a.par.country == c.par.country:
-                cash_from_matured_assets[c] = cash_from_matured_assets[c] + aux[a]
-
-
-
     for c in currencies:    
         if fund.var.currency_demand[c] > 0 and excess_demandC[c] > 0:
-            new_cash_position[c] = fund.var_previous.currency[c] + cash_from_matured_assets[c] + fund.var.currency_demand[c] * piC[c]
+            new_cash_position[c] = fund.var.cash_inventory[c] + fund.var.currency_demand[c] * piC[c]
             
         elif fund.var.currency_demand[c] < 0 and excess_demandC[c] < 0:
-            new_cash_position[c] = fund.var_previous.currency[c] + cash_from_matured_assets[c] + fund.var.currency_demand[c] * nuC[c]
+            new_cash_position[c] = fund.var.cash_inventory[c] + fund.var.currency_demand[c] * nuC[c]
         
         else :
-            new_cash_position[c] = fund.var_previous.currency[c] + cash_from_matured_assets[c] + fund.var.currency_demand[c] 
+            new_cash_position[c] = fund.var.cash_inventory[c] + fund.var.currency_demand[c] 
             print fund.var.currency_demand[c], fund.var.weights[c], fund.var_previous.currency[c] + cash_from_matured_assets[c]
     
     
