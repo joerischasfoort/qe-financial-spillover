@@ -36,10 +36,10 @@ def init_objects(parameters):
         asset_return_variance.append(simulated_return_variance(portfolios[-1], parameters["days"], parameters))
         asset_values.append(portfolios[idx].var.price * portfolios[idx].par.quantity)
         default_rates.append(portfolios[idx].var.default_rate)
-        returns.append(realised_returns(portfolios[idx].var.default_rate, portfolios[idx].par.face_value,
-                                        portfolios[idx].var.price, portfolios[idx].var.price,
-                                        portfolios[idx].par.quantity, portfolios[idx].par.nominal_interest_rate,
-                                        portfolios[idx].par.maturity))
+        returns.append(realised_profits_asset(portfolios[idx].var.default_rate, portfolios[idx].par.face_value,
+                                              portfolios[idx].var.price, portfolios[idx].var.price,
+                                              portfolios[idx].par.quantity, portfolios[idx].par.nominal_interest_rate,
+                                              portfolios[idx].par.maturity))
 
     # 2 Initialize currencies
     currencies = []
@@ -59,7 +59,25 @@ def init_objects(parameters):
     assets = portfolios + currencies
     covariance_matrix = pd.DataFrame(covs, index=assets, columns=assets)
 
-    # 4 Create funds
+    # 4 create environment with exchange rates
+    fx_matrix = np.zeros([len(currencies), len(currencies)])
+    fx_matrix = pd.DataFrame(fx_matrix, index=currencies, columns=currencies)
+
+    for c1, c2 in zip(currencies, currencies[::-1]):
+        fx = parameters["init_exchange_rate"]
+        if c1.par.country == 'foreign':
+            fx = 1 / fx
+        fx_matrix.loc[c1, c2] = fx
+        fx_matrix.loc[c1, c1] = 1
+
+    currency_countries = {c: c.par.country for c in currencies}
+    fx_matrix.rename(index=currency_countries, inplace=True)
+    fx_matrix.rename(columns=currency_countries, inplace=True)
+
+    environment = Environment(EnvironmentVariables(fx_matrix), EnvironmentVariables(fx_matrix.copy()),
+                              EnvironmentParameters(parameters))
+
+    # 5 Create funds
     funds = []
     total_funds = parameters["n_domestic_funds"] + parameters["n_foreign_funds"]
     fund_countries = ordered_list_of_countries(parameters["n_domestic_funds"], parameters["n_foreign_funds"])
@@ -70,12 +88,14 @@ def init_objects(parameters):
         cov_matr = covariance_matrix.copy()
         fund_params = AgentParameters(fund_countries[idx], parameters["price_memory"],
                                       parameters["fx_memory"], parameters["risk_aversion"],
-                                      parameters["adaptive_param"])
+                                      parameters["adaptive_param"], parameters["news_evaluation_error"],
+                                      parameters["fund_target_growth"])
         asset_portfolio = {asset: divide_by_funds(value) for (asset, value) in zip(portfolios, asset_values)}
         asset_demand = {asset: parameters["init_asset_demand"] for asset, value in zip(portfolios, asset_values)}
         ewma_returns = {asset: rt for (asset, rt) in zip(assets, returns)}
         ewma_delta_prices = {asset: parameters["init_agent_ewma_delta_prices"] for (asset, rt) in zip(portfolios, returns)}
-        ewma_delta_fx = parameters["init_ewma_delta_fx"]
+        ewma_delta_fx = {currency: parameters["init_ewma_delta_fx"] for currency in currencies}
+        realised_rets = {asset: 0 for asset in assets}
 
         currency_portfolio = {}
         currency_demand = {}
@@ -97,30 +117,16 @@ def init_objects(parameters):
                                    ewma_returns,
                                    ewma_delta_prices,
                                    ewma_delta_fx,
-                                   cov_matr, parameters["init_payouts"], dict.fromkeys(assets))
+                                   cov_matr, parameters["init_payouts"], dict.fromkeys(assets),
+                                   realised_rets, parameters["init_profits"])
         r = ewma_returns.copy()
         df_rates = {asset: default_rate for (asset, default_rate) in zip(portfolios, default_rates)}
         exp_prices = {asset: asset.var.price for asset in portfolios}
-        fund_expectations = AgentExpectations(r, df_rates, parameters["init_exchange_rate"], exp_prices, parameters["currency_rate"])
+        exp_fx = fx_matrix.copy()
+        exp_fx_returns = {currency: parameters["currency_rate"] for currency in currencies}
+        fund_expectations = AgentExpectations(r, df_rates, exp_fx, exp_prices, exp_fx_returns)
         funds.append(Fund(idx, fund_vars,  copy_agent_variables(fund_vars), fund_params, fund_expectations))
 
-    # 5 create environment with exchange rates
-    fx_matrix = np.zeros([len(currencies), len(currencies)])
-    fx_matrix = pd.DataFrame(fx_matrix, index=currencies, columns=currencies)
-
-    for c1, c2 in zip(currencies, currencies[::-1]):
-        fx = parameters["init_exchange_rate"]
-        if c1.par.country == 'foreign':
-            fx = 1 / fx
-        fx_matrix.loc[c1, c2] = fx
-        fx_matrix.loc[c1, c1] = 1
-
-    currency_countries = {c: c.par.country for c in currencies}
-    fx_matrix.rename(index=currency_countries, inplace=True)
-    fx_matrix.rename(columns=currency_countries, inplace=True)
-
-    environment = Environment(EnvironmentVariables(fx_matrix), EnvironmentVariables(fx_matrix.copy()),
-                              EnvironmentParameters(parameters))
 
     # 6 create central bank
     cb_assets = {asset: 0 for asset in portfolios}
@@ -159,10 +165,9 @@ def simulated_return_variance(asset, days, parameters):
     simulated_default_rates = ornstein_uhlenbeck_levels(days, parameters["default_rate_mu"],
                                                         parameters["default_rate_delta_t"],
                                                         parameters["default_rate_std"],
-                                                        parameters["default_rate_mean_reversion"],
-                                                        parameters["default_rate_mu"])
-    simulated_returns = [realised_returns(df, V=asset.par.face_value, P=1,
-                                                   P_tau=1, Q=asset.par.quantity,
-                                                   rho=asset.par.nominal_interest_rate,
-                                                   m=asset.par.maturity) for df in simulated_default_rates]
+                                                        parameters["default_rate_mean_reversion"])
+    simulated_returns = [realised_profits_asset(df, face_value=asset.par.face_value, previous_price=1,
+                                                price=1, quantity=asset.par.quantity,
+                                                interest_rate=asset.par.nominal_interest_rate,
+                                                maturity=asset.par.maturity) for df in simulated_default_rates]
     return np.var(simulated_returns)

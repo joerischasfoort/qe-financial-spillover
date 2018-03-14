@@ -2,6 +2,7 @@
 import pandas as pd
 
 from init_objects import *
+from spillover_model import *
 
 # 1 setup parameters
 parameters = {
@@ -15,15 +16,17 @@ parameters = {
     "fx_change_intensity": 0.1,
     # asset parameters
     "face_value": 5000,
-    "default_rate": 0.012,
+    "default_rate": 0.0021,
     "nominal_interest_rate" : 0.003,
     "currency_rate": 0,
     "maturity" : 0.99,
     "quantity" : 5000,
     # agent parameters
-    "price_memory": 2,
-    "fx_memory": 2,
+    "price_memory": 0.6,
+    "fx_memory": 0.6,
     "risk_aversion": 1,
+    "news_evaluation_error": 0.001,
+    "fund_target_growth": 0.0,
     # cb parameters
     "cb_country": 'domestic',
     # initial values
@@ -35,6 +38,7 @@ parameters = {
     "init_asset_demand": 0,
     "init_currency_demand": 0,
     "init_payouts": 0,
+    "init_profits": 0,
     # shock processes parameters
     "fx_shock_mu": 0.0,
     "fx_shock_std": 0.001,
@@ -49,7 +53,6 @@ parameters = {
 portfolios, currencies, funds, environment, exogeneous_agents = init_objects(parameters)
 #print(portfolios, currencies, funds, environment, exogeneous_agents)
 
-print funds[0].var.weights
 # 3 simulate model
-# assets, funds = spillover_model(portfolios, currencies, environment, exogeneous_agents , funds,  seed )
+spillover_model(portfolios, currencies, environment, exogeneous_agents, funds,  seed=1)
 

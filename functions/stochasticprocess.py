@@ -3,7 +3,7 @@ import numpy.random as nrand
 
 
 def ornstein_uhlenbeck_levels(time=500, init_level=10e-7, rate_of_time = 0.003968253968253968, sigma=0.125,
-                              mean_reversion=0.99, long_run_average_level=10e-7):
+                              mean_reversion=0.99):
     """
     This function returns news about the as a mean-reverting ornstein uhlenbeck process.
     :param init_level: starting point of the default probability
@@ -14,6 +14,7 @@ def ornstein_uhlenbeck_levels(time=500, init_level=10e-7, rate_of_time = 0.00396
     :param long_run_average_level:
     :return: list : simulatated default probability simulated over time
     """
+    long_run_average_level = init_level
     default_probability = [init_level]
     sqrt_delta_sigma = math.sqrt(rate_of_time) * sigma
 

@@ -1,22 +1,60 @@
-from __future__ import division
+def calculate_current_value_of_shares(fund, fx_matrix):
+    """
+    Calculate total value of all assets to determine the value of shares
+    :param fund: Fund object for which the value of shares is to be calculated
+    :param fx_matrix: pandas DataFrame containing current exchange rates
+    :return: float total value of all shares
+    """
+    value_of_shares = 0
+    for asset in fund.var.assets:
+        value_of_shares += fund.var.assets[asset] * asset.var.price * fx_matrix.loc[fund.par.country][asset.par.country]
+    for currency in fund.var.currency:
+        value_of_shares += fund.var.currency[currency] * fx_matrix.loc[fund.par.country][currency.par.country]
 
-def payouts_and_share_value(portfolios, currencies, fund, environment):
-    payout = {}
-    valuation_change = {}
-    repayment_effect = {}
-    price_effect = {}
-    for a in portfolios:
-        payout[a] = environment.var.fx_rates.loc[fund.par.country,a.par.country] * fund.var_previous.assets[a] * ((1-a.var.default_rate) * (a.par.face_value / a.par.quantity) * a.par.nominal_interest_rate - a.var.default_rate * a.var.price)
-        repayment_effect[a] = (1-a.par.maturity) * (environment.var.fx_rates.loc[fund.par.country,a.par.country] * (a.par.face_value / a.par.quantity) - environment.var_previous.fx_rates.loc[fund.par.country,a.par.country] * a.var_previous.price)
-        price_effect[a] = a.par.maturity * (environment.var.fx_rates.loc[fund.par.country,a.par.country] * a.var.price - environment.var_previous.fx_rates.loc[fund.par.country,a.par.country] * a.var_previous.price)
-        valuation_change[a] = fund.var_previous.assets[a] * (1- a.var.default_rate) * (repayment_effect[a] + price_effect[a])
-        
-    for c in currencies:
-        payout[c] = environment.var.fx_rates.loc[fund.par.country,c.par.country] * fund.var_previous.currency[c] * c.par.nominal_interest_rate
-        valuation_change[c] = fund.var.currency[c] * (environment.var.fx_rates.loc[fund.par.country,c.par.country] - environment.var.fx_rates.loc[fund.par.country,c.par.country])
-    
+    return value_of_shares
 
-        
-    redeemable_shares =  fund.var.redeemable_shares + sum(valuation_change.values())   
-    
-    return redeemable_shares, sum(payout.values())
+
+def payout_to_shareholders(fund):
+    """
+    Calculate the amount a fund wants to payout to shareholders
+    :param fund: object Fund for which the payout is calculated
+    :return: float the value of redeemable shares
+    """
+    # obtain previous share value
+    previous_shares_value = fund.var_previous.redeemable_shares
+    # calculate current share target
+    shares_target_value = previous_shares_value * (1 + fund.par.target_growth)
+    # obtain realised profits
+    profits = fund.var.total_profits
+    # calculate wanted shares value
+    wanted_shares_value = wanted_value_shares(shares_target_value, previous_shares_value, profits)
+    current_shares_value = fund.var.redeemable_shares
+    # calculate current value of redeemable shares
+    payouts = payout(current_shares_value, wanted_shares_value)
+    redeemable_shares = current_shares_value - payouts
+    return redeemable_shares
+
+
+def wanted_value_shares(shares_target_value, previous_shares_value, profits):
+    """
+    Equation 1.4 the wanted share value for a fund
+    :param shares_target_value: float target value of shares
+    :param previous_shares_value: float previous actual value of shares
+    :param profits: float this periods profits
+    :return: float the desired level of shares
+    """
+    wanted_shares_value = min(shares_target_value, previous_shares_value + profits)
+    return wanted_shares_value
+
+
+def payout(shares_value, wanted_shares_value):
+    """
+    Given the wanted shares value the fund pays out, or asks share holders to commit extra funds
+    :param shares_value: float current value of shares
+    :param wanted_shares_value: float the desired value of shares
+    :return: float payout to shareholders, when negative this amounts to a bail-in by shareholders
+    """
+    payout = shares_value - wanted_shares_value
+    return payout
+
+
