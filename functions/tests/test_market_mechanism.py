@@ -30,12 +30,9 @@ def funds_and_assets(n_d, n_f,    ):
     print portfolios
  
 
-<<<<<<< Updated upstream
 def price_adjustment(portfolios, currencies, environment, exogeneous_agents , funds, asset_object):
     pass
-=======
->>>>>>> Stashed changes
-    
+
     
 funds_and_assets(2, 2 )
 
