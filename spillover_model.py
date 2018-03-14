@@ -63,13 +63,14 @@ def spillover_model(portfolios, currencies, environment, exogeneous_agents, fund
                 #fund.var.redeemable_shares = payouts_and_share_value(portfolios, currencies, fund, environment)
                                 
                 # compute the weights of optimal balance sheet positions
+
                 fund.var.weights = portfolio_optimization(fund)
                 
     
                 # compute demand for balance sheet positions
                 fund.var.asset_demand, fund.var.currency_demand = asset_demand(fund, portfolios, currencies, environment, tau, day)
 
-    
+
             # for ex in exogeneous_agents:
             #     exogeneous_agents[ex].var.asset_demand = ex_agent_asset_demand(ex, exogeneous_agents, portfolios )
             #
