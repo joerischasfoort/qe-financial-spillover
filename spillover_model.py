@@ -67,7 +67,7 @@ def spillover_model(portfolios, currencies, environment, exogeneous_agents, fund
                 
     
                 # compute demand for balance sheet positions
-                #fund.var.asset_demand, fund.var.currency_demand = asset_demand(fund, portfolios, currencies, environment)
+                fund.var.asset_demand, fund.var.currency_demand = asset_demand(fund, portfolios, currencies, environment, tau, day)
 
     
             # for ex in exogeneous_agents:
