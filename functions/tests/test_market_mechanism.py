@@ -27,7 +27,7 @@ def funds_and_assets(n_d, n_f,    ):
         portfolios.append(Asset(idx, init_asset_vars, previous_assets_vars, asset_params))
     
 
-    print portfolios
+    print(portfolios)
  
 
 def price_adjustment(portfolios, currencies, environment, exogeneous_agents , funds, asset_object):
