@@ -39,7 +39,7 @@ def spillover_model(portfolios, currencies, environment, exogeneous_agents, fund
         # determine value and payouts to shareholders
         for fund in funds:
             fund.exp.default_rates = default_rate_expectations(fund, portfolios, delta_news)
-            #fund.var.total_profits = hypothetical_asset_returns(fund, prices_tau, environment.var.fx_rates)[1]
+            #fund.var.profits = hypothetical_asset_returns(fund, prices_tau, environment.var.fx_rates)[1]
             #fund.var.redeemable_shares = calculate_current_value_of_shares(fund, environment.var.fx_rates)
             #fund.var.redeemable_shares = payout_to_shareholders(fund)
             
@@ -52,7 +52,9 @@ def spillover_model(portfolios, currencies, environment, exogeneous_agents, fund
                 
 
                 # shareholder dividends and fund profits (returns)
-                fund.var.profits, fund.var.redeemable_shares, fund.var.payouts = profit_and_payout(fund, assets, currencies, environment)
+                fund.var.profits, \
+                fund.var.redeemable_shares, \
+                fund.var.payouts = profit_and_payout(fund, portfolios, currencies, environment)
                 
                 # 1 Expectation formation
                 fund.var.ewma_delta_prices, \

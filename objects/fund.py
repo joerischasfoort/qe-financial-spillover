@@ -17,7 +17,7 @@ class AgentVariables:
     """
     def __init__(self, assets, currency, redeemable_shares, asset_demand, currency_demand,
                  ewma_returns, ewma_delta_prices, ewma_delta_fx, covariance_matrix, payouts,
-                 weights, hypothetical_returns, total_profits, size_target):
+                 weights, hypothetical_returns, profits, size_target):
         self.assets = assets
         self.currency = currency
         self.redeemable_shares = redeemable_shares
@@ -30,7 +30,7 @@ class AgentVariables:
         self.weights = weights
         self.payouts = payouts
         self.hypothetical_returns = hypothetical_returns
-        self.total_profits = total_profits
+        self.profits = profits
         self.size_target = size_target
 
 
