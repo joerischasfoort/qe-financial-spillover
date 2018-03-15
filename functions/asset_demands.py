@@ -23,7 +23,18 @@ def asset_demand(fund, portfolios, currencies, environment):
     return a_demand, c_demand
 
 
-def cash_inventory(fund, portfolios, currencies, environment):
+def cash_inventory(fund, portfolios, currencies):
     
     for c in currencies:
         cash_inv[c] = fund.var_previous.currency[c] * (1 + c.par.nominal_interest_rate)
+        
+        for a in portfolios:
+            if a.par.country == fund.par.country
+            mat= (1-a.par.maturity) * (1 - a.var.default_rate)
+            all = (1 - a.var.default_rate)
+            cash_inv[c] = cash_inv[c] + (mat + all * a.par.nominal_interest_rate) * fund.var.assets[a] * a.par.face_value / a.par.quantity
+            
+        if c.par.country == fund.par.country:
+            cash_inv[c] = cash_inv[c] + fund.var.payouts
+    
+    return cash_inv
