@@ -1,7 +1,7 @@
 from __future__ import division
 
 
-def asset_demand(fund, portfolios, currencies, environment, tau, day):
+def asset_demand(fund, portfolios, currencies, environment):
     
     
     a_demand = {} 
