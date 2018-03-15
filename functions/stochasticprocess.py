@@ -25,4 +25,4 @@ def ornstein_uhlenbeck_levels(time=500, init_level=10e-7, rate_of_time = 0.00396
         randomness = brownian_motion_returns[t - 1]
         default_probability.append(default_probability[t - 1] + drift + randomness)
 
-    return default_probability
+    return [max(0, dp) for dp in default_probability]

@@ -31,9 +31,9 @@ def init_objects(parameters):
                                        parameters["nominal_interest_rate"],
                                        parameters["maturity"], parameters["quantity"])
         init_asset_vars = AssetVariables(parameters["init_asset_price"],
-                                         parameters["default_rate"])
+                                         parameters["default_rate_mu"])
         previous_assets_vars = AssetVariables(parameters["init_asset_price"],
-                                              parameters["default_rate"])
+                                              parameters["default_rate_mu"])
         portfolios.append(Asset(idx, init_asset_vars, previous_assets_vars, asset_params))
         asset_return_variance.append(simulated_return_variance(portfolios[-1], parameters["days"], parameters))
         asset_values.append(portfolios[idx].var.price * portfolios[idx].par.quantity)

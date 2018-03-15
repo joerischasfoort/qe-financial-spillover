@@ -61,40 +61,40 @@ def test_realised_profits_assets(init_params):
                                                previous_price, price, quantity,
                                                interest_rate, maturity), -default_probability, 4)
 
-
-def test_realised_profits_cash():
-    """Test if the function works according to equation 1.3"""
-    # for domestic assets the return is equal to the interest rate
-    interest_rate = 0.004
-    assert_almost_equal(realised_profits_cash(interest_rate, 1.0, 1.0), interest_rate, 4)
-    # when the interest rate is zero this still applies
-    interest_rate = 0.0
-    assert_almost_equal(realised_profits_cash(interest_rate, 1.0, 1.0), interest_rate, 4)
-    # also when it is negative
-    interest_rate = -0.000001
-    assert_almost_equal(realised_profits_cash(interest_rate, 1.0, 1.0), interest_rate, 4)
-
-
-def test_realised_return_cash():
-    """Test realised returns on cash function"""
-    interest_rate = 0.0
-    assert_almost_equal(realised_return_cash(interest_rate), interest_rate, 3)
-    # if the exchange rate is 2 the interest rate should be halved
-    interest_rate = 0.04
-    assert_almost_equal(realised_return_cash(interest_rate, exchange_rate=2), interest_rate / 2.0, 3)
-
-
-def test_realised_return():
-    """Test realised returns on asset function"""
-    realised_profit = 0.04
-    price = 2.0
-    assert_almost_equal(realised_returns_asset(realised_profit, price, exchange_rate=1), 0.02, 2)
-    # if the exchange rate doubles, the returns half
-    assert_almost_equal(realised_returns_asset(realised_profit, price, exchange_rate=2), 0.01, 3)
-
-
-def test_hypothetical_asset_returns(parameters):
-    portfolios, currencies, funds, environment, exogeneous_agents = init_objects(parameters)
-    prices_tau = {portfolio: portfolio.var.price for portfolio in portfolios}
-    assert_equal(len(hypothetical_asset_returns(funds[0], prices_tau, environment.var.fx_rates)[0]), 2)
-    assert_equal(type(hypothetical_asset_returns(funds[0], prices_tau, environment.var.fx_rates)[0]), dict)
+#
+# def test_realised_profits_cash():
+#     """Test if the function works according to equation 1.3"""
+#     # for domestic assets the return is equal to the interest rate
+#     interest_rate = 0.004
+#     assert_almost_equal(realised_profits_cash(interest_rate, 1.0, 1.0), interest_rate, 4)
+#     # when the interest rate is zero this still applies
+#     interest_rate = 0.0
+#     assert_almost_equal(realised_profits_cash(interest_rate, 1.0, 1.0), interest_rate, 4)
+#     # also when it is negative
+#     interest_rate = -0.000001
+#     assert_almost_equal(realised_profits_cash(interest_rate, 1.0, 1.0), interest_rate, 4)
+#
+#
+# def test_realised_return_cash():
+#     """Test realised returns on cash function"""
+#     interest_rate = 0.0
+#     assert_almost_equal(realised_return_cash(interest_rate), interest_rate, 3)
+#     # if the exchange rate is 2 the interest rate should be halved
+#     interest_rate = 0.04
+#     assert_almost_equal(realised_return_cash(interest_rate, exchange_rate=2), interest_rate / 2.0, 3)
+#
+#
+# def test_realised_return():
+#     """Test realised returns on asset function"""
+#     realised_profit = 0.04
+#     price = 2.0
+#     assert_almost_equal(realised_returns_asset(realised_profit, price, exchange_rate=1), 0.02, 2)
+#     # if the exchange rate doubles, the returns half
+#     assert_almost_equal(realised_returns_asset(realised_profit, price, exchange_rate=2), 0.01, 3)
+#
+#
+# def test_hypothetical_asset_returns(parameters):
+#     portfolios, currencies, funds, environment, exogeneous_agents = init_objects(parameters)
+#     prices_tau = {portfolio: portfolio.var.price for portfolio in portfolios}
+#     assert_equal(len(hypothetical_asset_returns(funds[0], prices_tau, environment.var.fx_rates)[0]), 2)
+#     assert_equal(type(hypothetical_asset_returns(funds[0], prices_tau, environment.var.fx_rates)[0]), dict)

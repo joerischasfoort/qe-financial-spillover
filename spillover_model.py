@@ -10,7 +10,7 @@ from functions.stochasticprocess import *
 from functions.expectation_formation import *
 from functions.market_mechanism import *
 from functions.profits_and_payouts import *
-from functions.realised_returns import *
+#from functions.realised_returns import *
 
 
 def spillover_model(portfolios, currencies, environment, exogeneous_agents, funds,  seed):
@@ -38,13 +38,11 @@ def spillover_model(portfolios, currencies, environment, exogeneous_agents, fund
 
         # determine value and payouts to shareholders
         for fund in funds:
-            fund.exp.default_rates = default_rate_expectations(fund, portfolios, delta_news)
+            fund.exp.default_rates = dr_expectations(fund, portfolios, delta_news)
             
         for tau in range(10): #TODO this needs to be rewritten into a while loop when stopping criteria are defined
 
-
-            for fund in funds:            
-
+            for fund in funds:
                 # shareholder dividends and fund profits 
                 fund.var.profits, \
                 fund.var.redeemable_shares, \
@@ -56,21 +54,9 @@ def spillover_model(portfolios, currencies, environment, exogeneous_agents, fund
                 fund.exp.prices, \
                 fund.exp.exchange_rates = price_fx_expectations(fund, portfolios, currencies, environment)
 
-                fund.exp.asset_returns, fund.exp.cash_returns = return_expectations(fund, portfolios, environment)
-                covariance, fund.var.ewma_returns = covariance_estimate(fund, assets, environment)
-                
-                
-                fund.var.hypothetical_returns = hypothetical_asset_returns(fund, prices_tau, environment.var.fx_rates)[0]
-                fund.var.ewma_returns, fund.var.ewma_delta_prices = asset_ewma(fund)
-                fund.var.covariance_matrix = asset_covariances(fund)
-                fund.exp.default_rates, fund.exp.prices = asset_expectations(fund, delta_news)
+                fund.exp.asset_returns, fund.exp.cash_returns = return_expectations(fund, portfolios, currencies, environment)
 
-                fund.var.ewma_delta_fx, fund.exp.exchange_rates, \
-                fund.exp.cash_returns = currency_expectation(fund, environment.var.fx_rates,
-                                                             environment.var_previous.fx_rates)
-
-                fund.exp.asset_returns = asset_return_expectations(fund, environment.var.fx_rates)
-
+                fund.var.ewma_returns, fund.var.covariance_matrix = covariance_estimate(fund, portfolios)
 
                 # update the value of redeemable shares and payouts to share holders
                 #fund.var.redeemable_shares = payouts_and_share_value(portfolios, currencies, fund, environment)
