@@ -16,7 +16,7 @@ def asset_demand(fund, portfolios, currencies, environment):
  
     c_demand = {}   
     for c in currencies:  #   
-        c_demand[c] = ((fund.var.weights[c] * fund.var.redeemable_shares) / environment.var.fx_rates.loc[fund.par.country,c.par.country] ) - fund.var.cash_inventory[c]
+        c_demand[c] = ((fund.var.weights[c] * fund.var.redeemable_shares) / environment.var.fx_rates.loc[fund.par.country,c.par.country] ) - fund.var.currency_inventory[c]
         
 
     
@@ -35,6 +35,6 @@ def cash_inventory(fund, portfolios, currencies):
                 cash_inv[c] = cash_inv[c] + (mat + all * a.par.nominal_interest_rate) * fund.var.assets[a] * a.par.face_value / a.par.quantity
                 
         if c.par.country == fund.par.country:
-            cash_inv[c] = cash_inv[c] + fund.var.payouts
+            cash_inv[c] = cash_inv[c] - fund.var.payouts
     
     return cash_inv
