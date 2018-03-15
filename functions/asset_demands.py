@@ -25,3 +25,5 @@ def asset_demand(fund, portfolios, currencies, environment):
 
 def cash_inventory(fund, portfolios, currencies, environment):
     
+    for c in currencies:
+        cash_inv[c] = fund.var_previous.currency[c] * (1 + c.par.nominal_interest_rate)
