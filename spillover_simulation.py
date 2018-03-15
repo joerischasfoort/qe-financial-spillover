@@ -26,10 +26,10 @@ parameters = {
     "fx_memory": 0.6,
     "risk_aversion": 1,
     "news_evaluation_error": 0.001,
-    "fund_target_growth": 0.0,
     # cb parameters
     "cb_country": 'domestic',
     # initial values
+    "fund_size_target": 2000,
     "init_asset_price": 1,
     "init_exchange_rate": 1,
     "total_money": 4000,

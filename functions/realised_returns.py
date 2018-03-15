@@ -62,6 +62,11 @@ def realised_return_cash(realised_profit, exchange_rate=1):
     return realised_profit / exchange_rate
 
 
+def realised_asset_profit(fund, assets):
+    """"""
+
+
+
 def hypothetical_asset_returns(fund, prices_tau, fx_rates):
     """Calculate hypothetical returns on asset portfolio"""
     realised_rets = {}
