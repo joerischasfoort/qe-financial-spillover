@@ -19,7 +19,34 @@ def default_rate_expectations(fund, assets, delta_news):
 
 def price_fx_expectations(fund, portfolios, currencies, environment):
     """"""
-    return
+    ewma_delta_prices = {}
+    expected_prices ={}
+    for asset in portfolios:
+        realised_dp = asset.var.price - asset.var_previous.price #TODO this is wrong
+        ewma_delta_prices[asset] = compute_ewma(realised_dp, fund.var.ewma_delta_prices[asset],
+                                                fund.par.price_memory)
+        expected_prices[asset] = exp_price_or_fx(asset.var.price, asset.var_previous.price,
+                                                 fund.var.ewma_delta_prices[asset], fund.par.price_memory)
+
+    ewma_delta_fx = {}
+    exp_exchange_rates = environment.var.fx_rates.copy()
+    exp_cash_returns = {}
+    for currency in currencies:
+        # add delta fx ewma
+        current_fx = environment.var.fx_rates.loc[fund.par.country][currency.par.country]
+        previous_fx = environment.var_previous.fx_rates.loc[fund.par.country][currency.par.country]
+        realised_dfx = current_fx - previous_fx
+        ewma_delta_fx[currency] = compute_ewma(realised_dfx, fund.var.ewma_delta_fx[currency],
+                                               fund.par.fx_memory)
+        # calculate expected fx price
+        exp_exchange_rates.loc[fund.par.country][currency.par.country] = exp_price_or_fx(current_fx, previous_fx,
+                                                                                         fund.var.ewma_delta_fx[
+                                                                                             currency],
+                                                                                         fund.par.fx_memory)
+        # calculate expected return on fx??
+        exp_cash_returns[currency] = exp_return_cash(fund, currency, environment.var.fx_rates)  # TODO fx rates or prev?
+
+    return ewma_delta_prices, ewma_delta_fx, expected_prices, exp_exchange_rates
 
 
 
