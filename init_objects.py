@@ -30,8 +30,10 @@ def init_objects(parameters):
         asset_params = AssetParameters(asset_countries[idx], parameters["face_value"],
                                        parameters["nominal_interest_rate"],
                                        parameters["maturity"], parameters["quantity"])
-        init_asset_vars = AssetVariables(parameters["init_asset_price"], parameters["default_rate"])
-        previous_assets_vars = AssetVariables(parameters["init_asset_price"], parameters["default_rate"])
+        init_asset_vars = AssetVariables(parameters["init_asset_price"],
+                                         parameters["default_rate"])
+        previous_assets_vars = AssetVariables(parameters["init_asset_price"],
+                                              parameters["default_rate"])
         portfolios.append(Asset(idx, init_asset_vars, previous_assets_vars, asset_params))
         asset_return_variance.append(simulated_return_variance(portfolios[-1], parameters["days"], parameters))
         asset_values.append(portfolios[idx].var.price * portfolios[idx].par.quantity)
@@ -88,8 +90,7 @@ def init_objects(parameters):
         cov_matr = covariance_matrix.copy()
         fund_params = AgentParameters(fund_countries[idx], parameters["price_memory"],
                                       parameters["fx_memory"], parameters["risk_aversion"],
-                                      parameters["adaptive_param"], parameters["news_evaluation_error"],
-                                      parameters["fund_target_growth"])
+                                      parameters["adaptive_param"], parameters["news_evaluation_error"])
         asset_portfolio = {asset: divide_by_funds(value) for (asset, value) in zip(portfolios, asset_values)}
         asset_demand = {asset: parameters["init_asset_demand"] for asset, value in zip(portfolios, asset_values)}
         ewma_returns = {asset: rt for (asset, rt) in zip(assets, returns)}
@@ -118,7 +119,8 @@ def init_objects(parameters):
                                    ewma_delta_prices,
                                    ewma_delta_fx,
                                    cov_matr, parameters["init_payouts"], dict.fromkeys(assets),
-                                   realised_rets, parameters["init_profits"])
+                                   realised_rets, parameters["init_profits"],
+                                   parameters["fund_size_target"])
         r = ewma_returns.copy()
         df_rates = {asset: default_rate for (asset, default_rate) in zip(portfolios, default_rates)}
         exp_prices = {asset: asset.var.price for asset in portfolios}
