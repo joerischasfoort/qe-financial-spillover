@@ -42,9 +42,7 @@ def spillover_model(portfolios, currencies, environment, exogeneous_agents, fund
             
         for tau in range(10): #TODO this needs to be rewritten into a while loop when stopping criteria are defined
 
-
-            for fund in funds:            
-
+            for fund in funds:
                 # shareholder dividends and fund profits 
                 fund.var.profits, \
                 fund.var.redeemable_shares, \
@@ -57,6 +55,7 @@ def spillover_model(portfolios, currencies, environment, exogeneous_agents, fund
                 fund.exp.exchange_rates = price_fx_expectations(fund, portfolios, currencies, environment)
 
                 fund.exp.asset_returns, fund.exp.cash_returns = return_expectations(fund, portfolios, environment)
+
                 covariance, fund.var.ewma_returns = covariance_estimate(fund, assets, environment)
                 
                 

@@ -81,16 +81,15 @@ def return_expectations(fund, portfolios, currencies, environment):
                 ] / environment.var.fx_rates.loc[fund.par.country][currency.par.country] - 1)
 
     asset_ret_expectations = {}
-    for asset in fund.var.assets:
-        asset_ret_expectations[asset] = realised_profits_asset(fund.exp.default_rates[asset], asset.par.face_value,
-                                                               asset.var.price, fund.exp.prices[asset],
-                                                               asset.par.quantity,
-                                                               asset.par.nominal_interest_rate, asset.par.maturity,
-                                                               environment.var.fx_rates.loc[fund.par.country][asset.par.country],
-                                                               fund.exp.exchange_rates.loc[fund.par.country][asset.par.country])
+    for asset in portfolios:
+        exp_profit = expected_profits_asset(fund.exp.default_rates[asset], asset.par.face_value,
+                                            asset.var.price, fund.exp.prices[asset], asset.par.quantity,
+                                            asset.par.nominal_interest_rate, asset.par.maturity,
+                                            environment.var.fx_rates.loc[fund.par.country][asset.par.country],
+                                            fund.exp.exchange_rates.loc[fund.par.country][asset.par.country])
+        asset_ret_expectations[asset] = exp_profit / asset.var.price * environment.var.fx_rates.loc[fund.par.country][asset.par.country]
 
-    #TODO expected_profits_asset
-    return exp_returns, exp_cash_returns
+    return asset_ret_expectations, exp_cash_returns
 
 
 
