@@ -48,7 +48,7 @@ def price_fx_expectations(fund, portfolios, currencies, environment):
     ewma_delta_prices = {}
     expected_prices ={}
     for asset in portfolios:
-        realised_dp = asset.var.price - asset.var_previous.price #TODO this is wrong
+        realised_dp = asset.var.price / asset.var_previous.price
         ewma_delta_prices[asset] = compute_ewma(realised_dp, fund.var.ewma_delta_prices[asset],
                                                 fund.par.price_memory)
         expected_prices[asset] = exp_price_or_fx(asset.var.price, asset.var_previous.price,
@@ -92,6 +92,30 @@ def return_expectations(fund, portfolios, currencies, environment):
     return asset_ret_expectations, exp_cash_returns
 
 
+def covariance_estimate(fund, portfolios):
+    """"""
+    ewma_returns = {}
+    for asset in fund.var.assets:
+        ewma_returns[asset] = compute_ewma(fund.var.hypothetical_returns[asset], fund.var.ewma_returns[asset],
+                                           fund.par.price_memory)
+
+    new_covariance_matrix = fund.var.covariance_matrix.copy()
+    for idx_x, asset_x in enumerate(portfolios):
+        for idx_y, asset_y in enumerate(portfolios):
+            if idx_x <= idx_y:
+                covar = (fund.var.hypothetical_returns[asset_x] - compute_ewma(
+                    fund.var.hypothetical_returns[asset_x],
+                    fund.var.ewma_returns[asset_x],
+                    fund.par.price_memory)) * (
+                        fund.var.hypothetical_returns[asset_y] - compute_ewma(
+                    fund.var.hypothetical_returns[asset_y],
+                    fund.var.ewma_returns[asset_y],
+                    fund.par.price_memory))
+                ewma_covar = compute_ewma(covar, fund.var.covariance_matrix.loc[asset_x][asset_y], fund.par.price_memory)
+
+                new_covariance_matrix.loc[asset_x][asset_y] = ewma_covar
+
+    return ewma_returns, new_covariance_matrix
 
 
 def exp_return_asset(asset, fund, fx_matrix):
