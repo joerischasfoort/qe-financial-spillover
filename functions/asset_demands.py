@@ -23,3 +23,5 @@ def asset_demand(fund, portfolios, currencies, environment):
     return a_demand, c_demand
 
 
+def cash_inventory(fund, portfolios, currencies, environment):
+    
