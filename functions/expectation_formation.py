@@ -29,18 +29,18 @@ def expected_profits_asset(exp_default_rate, face_value, price, exp_price, quant
     return expected_profit
 
 
-def default_rate_expectations(fund, assets, delta_news):
+def dr_expectations(fund, assets, delta_news):
     """"""
-    expected_default_rates = {}
+    expected_dr = {}
     for asset in assets:
         previously_exp_dr = fund.exp.default_rates[asset]
         default_rate = asset.var.default_rate
         noise = np.random.normal(0, fund.par.news_evaluation_error)
-        log_exp_default_rate = log(previously_exp_dr) + delta_news + noise + fund.par.adaptive_param * (
+        log_exp_dr= log(previously_exp_dr) + delta_news + noise + fund.par.adaptive_param * (
                 log(default_rate) - log(previously_exp_dr))
-        exp_default_rate[asset] = exp(log_exp_default_rate)
+        expected_dr[asset] = exp(log_exp_dr)
 
-    return expected_default_rates
+    return expected_dr
 
 
 def price_fx_expectations(fund, portfolios, currencies, environment):

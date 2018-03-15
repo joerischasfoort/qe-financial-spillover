@@ -38,7 +38,7 @@ def spillover_model(portfolios, currencies, environment, exogeneous_agents, fund
 
         # determine value and payouts to shareholders
         for fund in funds:
-            fund.exp.default_rates = default_rate_expectations(fund, portfolios, delta_news)
+            fund.exp.default_rates = dr_expectations(fund, portfolios, delta_news)
             
         for tau in range(10): #TODO this needs to be rewritten into a while loop when stopping criteria are defined
 
@@ -54,9 +54,9 @@ def spillover_model(portfolios, currencies, environment, exogeneous_agents, fund
                 fund.exp.prices, \
                 fund.exp.exchange_rates = price_fx_expectations(fund, portfolios, currencies, environment)
 
-                fund.exp.asset_returns, fund.exp.cash_returns = return_expectations(fund, portfolios, environment)
+                fund.exp.asset_returns, fund.exp.cash_returns = return_expectations(fund, portfolios, currencies, environment)
 
-                fund.var.covariance_matrix, fund.var.ewma_returns = covariance_estimate(fund, portfolios)
+                fund.var.ewma_returns, fund.var.covariance_matrix = covariance_estimate(fund, portfolios)
 
                 # update the value of redeemable shares and payouts to share holders
                 #fund.var.redeemable_shares = payouts_and_share_value(portfolios, currencies, fund, environment)
