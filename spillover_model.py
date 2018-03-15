@@ -86,9 +86,9 @@ def spillover_model(portfolios, currencies, environment, exogeneous_agents, fund
                 fund.var.asset_demand, fund.var.currency_demand = asset_demand(fund, portfolios, currencies, environment)
 
 
-            # for ex in exogeneous_agents:
-            #     exogeneous_agents[ex].var.asset_demand = ex_agent_asset_demand(ex, exogeneous_agents, portfolios )
-            #
+            for ex in exogeneous_agents:
+                exogeneous_agents[ex].var.asset_demand = ex_agent_asset_demand(ex, exogeneous_agents, portfolios )
+            
             #
             # for a in portfolios:
             #     a.var.price = price_adjustment(portfolios, currencies, environment, exogeneous_agents , funds, a)
@@ -96,8 +96,20 @@ def spillover_model(portfolios, currencies, environment, exogeneous_agents, fund
             # environment.var.fx_rates = fx_adjustment(portfolios, currencies, environment, exogeneous_agents , funds)
             
         #this is where intraday calculations end
-        #for fund in funds:
-            #fund.var.asset, fund.var.cash = balance_sheet_adjustment(funds, portfolios, currencies, exogeneous_agents)
         
+        #computing new asset and cash positions
+        excess_demand, pi, nu = asset_excess_demand_and_correction_factors(funds, portfolios, currencies, exogeneous_agents)
+    
+        for fund in funds:
+            fund.var.assets = fund_asset_adjustments(fund, portfolios, excess_demand, pi, nu)
+        
+        for ex in exogeneous_agents:
+            exogeneous_agents[ex].var.assets = ex_asset_adjustments(ex, portfolios, excess_demand, pi, nu, exogeneous_agents)
+        
+        nuC, piC, excess_demandC = cash_excess_demand_and_correction_factors(funds, portfolios, currencies, exogeneous_agents)
+        
+        for fund in funds:
+            fund.var.currency = fund_cash_adjustments(nuC, piC, excess_demandC, currencies, fund, portfolios)
+
       
 

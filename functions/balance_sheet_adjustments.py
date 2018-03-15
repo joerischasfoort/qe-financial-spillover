@@ -5,15 +5,15 @@ def balance_sheet_adjustment(funds, portfolios, currencies, exogeneous_agents):
     excess_demand, pi, nu = asset_excess_demand_and_correction_factors(funds, portfolios, currencies, exogeneous_agents)
     
     for fund in funds:
-        fund.var.assets = fund_asset_adjustments(fund, portfolios, excess_demand, pi, nu)
+        fund_assets = fund_asset_adjustments(fund, portfolios, excess_demand, pi, nu)
     
     for ex in exogeneous_agents:
-        exogeneous_agents[ex].var.assets = ex_asset_adjustments(ex, portfolios, excess_demand, pi, nu, exogeneous_agents)
+        ex_assets = ex_asset_adjustments(ex, portfolios, excess_demand, pi, nu, exogeneous_agents)
     
     excess_demandC, piC, nuC = cash_excess_demand_and_correction_factors(funds, portfolios, currencies, exogeneous_agents)
     
     for fund in funds:
-        fund.var.currencies = fund_cash_adjustments(nuC, piC, excess_demandC, currencies, fund, portfolios)
+        fund_cash = fund_cash_adjustments(nuC, piC, excess_demandC, currencies, fund, portfolios)
 
     
     
@@ -58,7 +58,6 @@ def asset_excess_demand_and_correction_factors(funds, portfolios, currencies, ex
 
 def fund_asset_adjustments(fund, portfolios, excess_demand, pi, nu):
     
-    out=a.par.maturity * (1-a.var.default_rate)
     new_position = {}
     for a in portfolios:
         out=a.par.maturity * (1-a.var.default_rate)
@@ -104,24 +103,24 @@ def ex_asset_adjustments(ex, portfolios, excess_demand, pi, nu, exogeneous_agent
 def cash_excess_demand_and_correction_factors(funds, portfolios, currencies, exogeneous_agents):
                 
     #computing cash supply (after asset transactions have been made) of exogenous agents
-    cb_cash_supply={c:0 for c in currencies}
-    underwriter_cash_supply={c:0 for c in currencies}
+    cb_cash_demand={c:0 for c in currencies}
+    underwriter_cash_demand={c:0 for c in currencies}
     for ex in exogeneous_agents:
         auxCB = {}
         auxU = {}
         for a in portfolios:
             out=a.par.maturity * (1-a.var.default_rate)    
             if ex == "central_bank_domestic":
-                auxCB[a]=(exogeneous_agents[ex].var.assets[a]- out * exogeneous_agents[ex].var_previous.assets[a]) * a.var.price
+                auxCB[a]=((out * exogeneous_agents[ex].var_previous.assets[a]-exogeneous_agents[ex].var.assets[a]) * a.var.price)
                 for c in currencies:
                     if exogeneous_agents[ex].par.country == a.par.country and a.par.country == c.par.country :
-                        cb_cash_supply[c] = cb_cash_supply[c] + auxCB[a]
+                        cb_cash_demand[c] = cb_cash_demand[c] + auxCB[a]
 
             if ex == "underwriter":
-                auxU[a]=(exogeneous_agents[ex].var.assets[a] - (-exogeneous_agents[ex].var.asset_demand[a])) * a.var.price
+                auxU[a]=((-exogeneous_agents[ex].var.asset_demand[a]) - exogeneous_agents[ex].var.assets[a]) * a.var.price
                 for c in currencies:
                     if a.par.country == c.par.country :
-                        underwriter_cash_supply[c] = underwriter_cash_supply[c] + auxU[a]
+                        underwriter_cash_demand[c] = underwriter_cash_demand[c] + auxU[a]
 
         
     #compute correcting factors for portfolios of assets
@@ -132,14 +131,14 @@ def cash_excess_demand_and_correction_factors(funds, portfolios, currencies, exo
     set_of_negative = {c:0 for c in currencies}
         
     for c in currencies:
-        if underwriter_cash_supply[c] > 0:
-            set_of_positive[c] = set_of_positive[c] + underwriter_cash_supply[c]
-        if underwriter_cash_supply[c] < 0:
-            set_of_negative[c] = set_of_negative[c] + underwriter_cash_supply[c]
-        if cb_cash_supply[c] > 0:
-            set_of_positive[c] = set_of_positive[c] + cb_cash_supply[c]
-        if cb_cash_supply[c] < 0:
-            set_of_negative[c] = set_of_negative[c] + cb_cash_supply[c]
+        if underwriter_cash_demand[c] > 0:
+            set_of_positive[c] = set_of_positive[c] + underwriter_cash_demand[c]
+        if underwriter_cash_demand[c] < 0:
+            set_of_negative[c] = set_of_negative[c] + underwriter_cash_demand[c]
+        if cb_cash_demand[c] > 0:
+            set_of_positive[c] = set_of_positive[c] + cb_cash_demand[c]
+        if cb_cash_demand[c] < 0:
+            set_of_negative[c] = set_of_negative[c] + cb_cash_demand[c]
 
 
         # computing excess cash demand for investor agents (independent)
@@ -167,19 +166,18 @@ def cash_excess_demand_and_correction_factors(funds, portfolios, currencies, exo
 
 def fund_cash_adjustments(nuC, piC, excess_demandC, currencies, fund, portfolios):       
     new_cash_position = {}
-    aux = {}
     
     for c in currencies:    
         if fund.var.currency_demand[c] > 0 and excess_demandC[c] > 0:
-            new_cash_position[c] = fund.var.cash_inventory[c] + fund.var.currency_demand[c] * piC[c]
+            new_cash_position[c] = fund.var.currency_inventory[c] + fund.var.currency_demand[c] * piC[c]
             
         elif fund.var.currency_demand[c] < 0 and excess_demandC[c] < 0:
-            new_cash_position[c] = fund.var.cash_inventory[c] + fund.var.currency_demand[c] * nuC[c]
+            new_cash_position[c] = fund.var.currency_inventory[c] + fund.var.currency_demand[c] * nuC[c]
         
         else :
-            new_cash_position[c] = fund.var.cash_inventory[c] + fund.var.currency_demand[c] 
+            new_cash_position[c] = fund.var.currency_inventory[c] + fund.var.currency_demand[c] 
    
-    
+    print new_cash_position
     return new_cash_position
         
         
