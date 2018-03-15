@@ -21,13 +21,13 @@ def profit_and_payout(fund, assets, currencies, environment):
         
         profit_per_asset[a] = repayment_effect + price_effect + interest_effect - default_effect
         
-        total_profit = total_profit + profit_per_assets[a] * fund.var.asset[a]
+        total_profit = total_profit + profit_per_asset[a] * fund.var.assets[a]
         
     for c in currencies:
         
         profit_per_asset[c] = c.par.nominal_interest_rate * environment.var.fx_rates.loc[fund.par.country,c.par.country] + environment.var.fx_rates.loc[fund.par.country,c.par.country] -  environment.var_previous.fx_rates.loc[fund.par.country,c.par.country]
         
-        total_profit = total_profit + profit_per_asset[c] * fund.var.currency
+        total_profit = total_profit + profit_per_asset[c] * fund.var.currency[c]
         
     
     redeemable_shares = min(fund.var_previous.redeemable_shares + total_profit, fund.var.size_target)

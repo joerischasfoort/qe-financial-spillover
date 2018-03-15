@@ -76,9 +76,11 @@ def spillover_model(portfolios, currencies, environment, exogeneous_agents, fund
 
                 fund.var.weights = portfolio_optimization(fund)
                 
-    
+                # intermediate cash position resulting from interest payments, payouts, maturing and defaulting assets
+                fund.var.cash_inventory = cash_inventory(fund, portfolios, currencies)
+                
                 # compute demand for balance sheet positions
-                fund.var.asset_demand, fund.var.currency_demand = asset_demand(fund, portfolios, currencies, environment, tau, day)
+                fund.var.asset_demand, fund.var.currency_demand = asset_demand(fund, portfolios, currencies, environment)
 
 
             # for ex in exogeneous_agents:
