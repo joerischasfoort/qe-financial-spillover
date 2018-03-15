@@ -9,7 +9,7 @@ from functions.balance_sheet_adjustments import *
 from functions.stochasticprocess import *
 from functions.expectation_formation import *
 from functions.market_mechanism import *
-from functions.payouts_and_share_value import *
+from functions.profits_and_payouts import *
 from functions.realised_returns import *
 
 
@@ -53,10 +53,10 @@ def spillover_model(portfolios, currencies, environment, exogeneous_agents, fund
             
             for fund in funds:
                 
-                
-                
+              
+
                 # shareholder dividends and fund profits (returns)
-                profits, dividends = profit_calculation
+                fund.var.profits, fund.var.redeemable_shares, fund.var.payouts = profit_and_payout(fund, assets, currencies, environment)
                 
                 # 1 Expectation formation
                 ewma delta p, ewma delta x, price, exchange rate expectations = price_ex_rate_expectations(fund, assets, environment)
