@@ -17,7 +17,6 @@ def parameters():
         "fx_change_intensity": 0.1,
         # asset parameters
         "face_value": 5000,
-        "default_rate": 0.012,
         "nominal_interest_rate": 0.003,
         "currency_rate": 0,
         "maturity": 0.99,
@@ -70,4 +69,4 @@ def test_init_objects(parameters):
     assert_equal(total_money, parameters["total_money"])
 
 
-#test_init_objects(parameters())
+test_init_objects(parameters())

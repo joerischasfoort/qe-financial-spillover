@@ -1,6 +1,7 @@
 from numpy.testing import assert_equal
 from functions.stochasticprocess import *
 
+
 def test_ornstein_uhlenbeck_levels():
     """Basic checks for ornstein uhlenbeck function"""
     assert_equal(len(ornstein_uhlenbeck_levels(time=20)), 20)

@@ -23,7 +23,7 @@ def fund_variables():
                                ewma_delta_fx={'currency1': 2},
                                covariance_matrix=pd.DataFrame({obj1: [1, 2], obj2: [0, 2]}),
                                payouts={obj1: 2, obj2: 2}, weights={obj1: 2, obj2: 3},
-                               hypothetical_returns={obj1: 0, obj2:0}, profits=0)
+                               hypothetical_returns={obj1: 0, obj2:0}, profits=0, size_target=2000)
     return variables, obj1, obj2
 
 

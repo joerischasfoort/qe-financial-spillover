@@ -1,7 +1,6 @@
 from math import log
 from math import exp
 import numpy as np
-#from functions.realised_returns import *
 
 
 def expected_profits_asset(exp_default_rate, face_value, price, exp_price, quantity,
