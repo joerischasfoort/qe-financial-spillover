@@ -114,9 +114,11 @@ def init_objects(parameters):
                 # add the variance to covariance matrix
                 cov_matr.loc[currency][currency] = parameters["fx_shock_std"]
 
+        fund_redeemable_share_size = sum(asset_portfolio.values()) + divide_by_funds(parameters["total_money"])
+
         fund_vars = AgentVariables(asset_portfolio,
                                    currency_portfolio,
-                                   sum(asset_portfolio.values()) + divide_by_funds(parameters["total_money"]),
+                                   fund_redeemable_share_size,
                                    asset_demand,
                                    currency_demand,
                                    ewma_returns,
@@ -124,7 +126,7 @@ def init_objects(parameters):
                                    ewma_delta_fx,
                                    cov_matr, parameters["init_payouts"], dict.fromkeys(assets),
                                    realised_rets, init_profits,
-                                   parameters["fund_size_target"])
+                                   fund_redeemable_share_size)
         r = ewma_returns.copy()
         df_rates = {asset: default_rate for (asset, default_rate) in zip(portfolios, default_rates)}
         exp_prices = {asset: asset.var.price for asset in portfolios}
