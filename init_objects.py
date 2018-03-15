@@ -97,6 +97,10 @@ def init_objects(parameters):
         ewma_delta_prices = {asset: parameters["init_agent_ewma_delta_prices"] for (asset, rt) in zip(portfolios, returns)}
         ewma_delta_fx = {currency: parameters["init_ewma_delta_fx"] for currency in currencies}
         realised_rets = {asset: 0 for asset in assets}
+        init_c_profits = dict.fromkeys(currencies)
+        init_a_profits = dict.fromkeys(assets)
+        init_profits = init_c_profits.copy()  # start with x's keys and values
+        init_profits.update(init_a_profits)
 
         currency_portfolio = {}
         currency_demand = {}
@@ -119,7 +123,7 @@ def init_objects(parameters):
                                    ewma_delta_prices,
                                    ewma_delta_fx,
                                    cov_matr, parameters["init_payouts"], dict.fromkeys(assets),
-                                   realised_rets, parameters["init_profits"],
+                                   realised_rets, init_profits,
                                    parameters["fund_size_target"])
         r = ewma_returns.copy()
         df_rates = {asset: default_rate for (asset, default_rate) in zip(portfolios, default_rates)}
