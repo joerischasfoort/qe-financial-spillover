@@ -41,8 +41,11 @@ def spillover_model(portfolios, currencies, environment, exogeneous_agents, fund
             fund.exp.default_rates = default_rate_expectations(fund, portfolios, delta_news)
             
         for tau in range(10): #TODO this needs to be rewritten into a while loop when stopping criteria are defined
-            for fund in funds:
-                # shareholder dividends and fund profits (returns)
+
+
+            for fund in funds:            
+
+                # shareholder dividends and fund profits 
                 fund.var.profits, \
                 fund.var.redeemable_shares, \
                 fund.var.payouts = profit_and_payout(fund, portfolios, currencies, environment)
@@ -77,7 +80,7 @@ def spillover_model(portfolios, currencies, environment, exogeneous_agents, fund
                 fund.var.weights = portfolio_optimization(fund)
                 
                 # intermediate cash position resulting from interest payments, payouts, maturing and defaulting assets
-                fund.var.cash_inventory = cash_inventory(fund, portfolios, currencies)
+                fund.var.currency_inventory = cash_inventory(fund, portfolios, currencies)
                 
                 # compute demand for balance sheet positions
                 fund.var.asset_demand, fund.var.currency_demand = asset_demand(fund, portfolios, currencies, environment)
