@@ -178,8 +178,7 @@ def fund_cash_adjustments(nuC, piC, excess_demandC, currencies, fund, portfolios
         
         else :
             new_cash_position[c] = fund.var.cash_inventory[c] + fund.var.currency_demand[c] 
-            print fund.var.currency_demand[c], fund.var.weights[c], fund.var_previous.currency[c] + cash_from_matured_assets[c]
-    
+   
     
     return new_cash_position
         
