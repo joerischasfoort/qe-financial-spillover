@@ -3,8 +3,8 @@ from math import exp
 from functions.realised_returns import *
 
 
-def expected_profits_asset(default_rate, face_value, previous_price, price, quantity,
-                           interest_rate, maturity, previous_exchange_rate=1, exchange_rate=1):
+def expected_profits_asset(exp_default_rate, face_value, price, exp_price, quantity,
+                           interest_rate, maturity, exchange_rate=1, exp_exchange_rate=1):
     """
     Equation 1.1 - 1.2 Calculate realised returns for domestic or foreign asset
     :param default_rate: float default rate
@@ -18,15 +18,15 @@ def expected_profits_asset(default_rate, face_value, previous_price, price, quan
     :param exchange_rate: float new exchange rate
     :return: float realised return on asset
     """
-    out = maturity * (1 - default_rate)
-    mat = (1 - maturity) * (1 - default_rate)
+    out = maturity * (1 - exp_default_rate)
+    mat = (1 - maturity) * (1 - exp_default_rate)
     all = out + mat
-    repayment_effect = mat * (exchange_rate * np.divide(face_value, float(quantity)) - previous_exchange_rate * previous_price)
-    price_effect = out * (exchange_rate * price - previous_exchange_rate * previous_price)
-    interest_effect = all * exchange_rate * np.divide(face_value, float(quantity)) * interest_rate
-    default_effect = default_rate * previous_exchange_rate * previous_price
-    realised_profit = repayment_effect + price_effect + interest_effect - default_effect
-    return realised_profit
+    repayment_effect = mat * (exp_exchange_rate * np.divide(face_value, float(quantity)) - exchange_rate * price)
+    price_effect = out * (exp_exchange_rate * exp_price - exchange_rate * price)
+    interest_effect = all * exp_exchange_rate * np.divide(face_value, float(quantity)) * interest_rate
+    default_effect = exp_default_rate * exchange_rate * price
+    expected_profit = repayment_effect + price_effect + interest_effect - default_effect
+    return expected_profit
 
 
 def default_rate_expectations(fund, assets, delta_news):
@@ -82,9 +82,14 @@ def return_expectations(fund, portfolios, currencies, environment):
 
     asset_ret_expectations = {}
     for asset in fund.var.assets:
-        asset_ret_expectations[asset] = exp_return_asset(asset, fund, environment.var.fx_rates)
+        asset_ret_expectations[asset] = realised_profits_asset(fund.exp.default_rates[asset], asset.par.face_value,
+                                                               asset.var.price, fund.exp.prices[asset],
+                                                               asset.par.quantity,
+                                                               asset.par.nominal_interest_rate, asset.par.maturity,
+                                                               environment.var.fx_rates.loc[fund.par.country][asset.par.country],
+                                                               fund.exp.exchange_rates.loc[fund.par.country][asset.par.country])
 
-
+    #TODO expected_profits_asset
     return exp_returns, exp_cash_returns
 
 

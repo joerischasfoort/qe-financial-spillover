@@ -16,7 +16,6 @@ parameters = {
     "fx_change_intensity": 0.1,
     # asset parameters
     "face_value": 5000,
-    "default_rate": 0.0021,
     "nominal_interest_rate" : 0.003,
     "currency_rate": 0,
     "maturity" : 0.99,
@@ -41,8 +40,8 @@ parameters = {
     # shock processes parameters
     "fx_shock_mu": 0.0,
     "fx_shock_std": 0.001,
-    "default_rate_mu": 10e-7,
-    "default_rate_std": 0.125,
+    "default_rate_mu": 0.00004,
+    "default_rate_std": 0.00004,
     "default_rate_mean_reversion": 0.99,
     "default_rate_delta_t": 0.003968253968253968,
     "adaptive_param": 0.5
@@ -50,7 +49,7 @@ parameters = {
 
 # 2 initalise model objects
 portfolios, currencies, funds, environment, exogeneous_agents = init_objects(parameters)
-#print(portfolios, currencies, funds, environment, exogeneous_agents)
+print(portfolios, currencies, funds, environment, exogeneous_agents)
 
 # 3 simulate model
 #spillover_model(portfolios, currencies, environment, exogeneous_agents, funds,  seed=1)
