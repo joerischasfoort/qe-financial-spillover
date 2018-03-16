@@ -11,15 +11,10 @@ def asset_demand(fund, portfolios, currencies, environment):
         #dataframe with row column (e.g. Xdf); 
         a_demand[a] = ((fund.var.weights[a] * fund.var.redeemable_shares) / (environment.var.fx_rates.loc[fund.par.country,a.par.country] * a.var.price)) - out * fund.var_previous.assets[a]
         
-
-        
- 
     c_demand = {}   
     for c in currencies:  #   
         c_demand[c] = ((fund.var.weights[c] * fund.var.redeemable_shares) / environment.var.fx_rates.loc[fund.par.country,c.par.country] ) - fund.var.currency_inventory[c]
-        
-
-    
+            
     return a_demand, c_demand
 
 
