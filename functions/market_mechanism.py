@@ -21,8 +21,7 @@ def price_adjustment(portfolios, environment, exogeneous_agents , funds, a):
 
     # collect total demand from agents per asset
     for fund in funds:
-        
-        total_demand[a] = fund.var.asset_demand[a]
+        total_demand[a] += fund.var.asset_demand[a]
     
     #exit the fund loop and take into account underwriter and central bank demand
     total_demand[a] = total_demand[a] + total_demand_exogenous_agents[a]
