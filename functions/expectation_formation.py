@@ -60,7 +60,7 @@ def price_fx_expectations(fund, portfolios, currencies, environment):
         # add delta fx ewma
         current_fx = environment.var.fx_rates.loc[fund.par.country][currency.par.country]
         previous_fx = environment.var_previous.fx_rates.loc[fund.par.country][currency.par.country]
-        realised_dfx = current_fx - previous_fx
+        realised_dfx = current_fx / previous_fx
         ewma_delta_fx[currency] = compute_ewma(realised_dfx, fund.var.ewma_delta_fx[currency],
                                                fund.par.fx_memory)
         # calculate expected fx price
@@ -128,7 +128,7 @@ def exp_price_or_fx(current_price, previous_price, previous_ewma_delta_price, me
     :return: float of the expected price or exchange rate
     """
     delta_price = current_price / previous_price
-    exp_price = compute_ewma(delta_price, previous_ewma_delta_price, memory_parameter) * previous_price
+    exp_price = compute_ewma(delta_price, previous_ewma_delta_price, memory_parameter) * current_price
     return exp_price
 
 
