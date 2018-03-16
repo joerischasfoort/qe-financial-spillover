@@ -3,25 +3,33 @@ from math import exp
 import numpy as np
 
 
-def price_adjustment(portfolios, currencies, environment, exogeneous_agents , funds, a):
+def price_adjustment(portfolios, environment, exogeneous_agents , funds, a):
     """
     Find the next  price.
   
-    """
- 
-    #Equation 1.20 : Get aggregate demand 
+    """     
+    #Equation 1.18 : Get aggregate demand over all funds and exogenous agents
     total_demand = {i:0 for i in portfolios}
-        
+    
+    
+    total_demand_exogenous_agents = {i:0 for i in portfolios}
+    
+    #first loop over all exogenous agents and collect their demand per asset
+    
+    for ex in exogeneous_agents:
+        for a in portfolios:
+            total_demand_exogenous_agents[a] += exogeneous_agents[ex].var.asset_demand[a]
+
+    
     # collect total demand from agents per asset
     for fund in funds:
         
         total_demand[a] =  fund.var.asset_demand[a]
     
-        #exit the fund loop and take into account underwriter and central bank demand
-        total_demand[a] = total_demand[a] + exogeneous_agents["underwriter"].var.asset_demand[a] + exogeneous_agents["central_bank_domestic"].var.asset_demand[a]
-       
-
-    #Equation 1.19 : price adjustment 
+    #exit the fund loop and take into account underwriter and central bank demand
+    total_demand[a] = total_demand[a] + total_demand_exogenous_agents[a]
+   
+    #Equation 1.17 : price adjustment 
     log_new_price  = log(a.var.price) +  environment.par.global_parameters['p_change_intensity'] *  total_demand[a]/a.par.quantity    
     return exp(log_new_price)
 
@@ -79,8 +87,11 @@ def fx_adjustment(portfolios, currencies, environment, exogeneous_agents , funds
                      if fund.par.country !=  weight.par.country:  
                          weight_fd += fund.var.weights[weight]
                 aux_2 = (fund.var.redeemable_shares) * weight_fd
-
-        fx_demand = np.divide(aux - aux_2, aux + aux_2)
+        
+        if aux + aux_2!=0:
+            fx_demand = np.divide(aux - aux_2, aux + aux_2)
+        else:
+            fx_demand = 0
         
         #Generate noise
         market_noise = np.random.normal(0, 0.1)  # We get the random noise 

@@ -65,6 +65,7 @@ def copy_underwriter_variables(var_object):
                          asset_demand=new_variables['asset_demand'],
                          currency_demand=new_variables['currency_demand'])
 
+
     return obj
 
 

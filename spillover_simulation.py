@@ -52,5 +52,5 @@ portfolios, currencies, funds, environment, exogeneous_agents = init_objects(par
 #print(portfolios, currencies, funds, environment, exogeneous_agents)
 
 # 3 simulate model
-spillover_model(portfolios, currencies, environment, exogeneous_agents, funds,  seed=1)
+#spillover_model(portfolios, currencies, environment, exogeneous_agents, funds,  seed=1)
 
