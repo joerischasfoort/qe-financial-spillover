@@ -21,8 +21,8 @@ parameters = {
     "maturity" : 0.99,
     "quantity" : 5000,
     # agent parameters
-    "price_memory": 0.6,
-    "fx_memory": 0.6,
+    "price_memory": 0.0,
+    "fx_memory": 0.0,
     "risk_aversion": 1.0,
     "news_evaluation_error": 0.0001,
     # cb parameters
