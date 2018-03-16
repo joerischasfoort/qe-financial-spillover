@@ -70,13 +70,12 @@ def spillover_model(portfolios, currencies, environment, exogeneous_agents, fund
             for ex in exogeneous_agents:
                 exogeneous_agents[ex].var.asset_demand = ex_agent_asset_demand(ex, exogeneous_agents, portfolios )
             
-
+             
             for a in portfolios:
                 a.var.price = price_adjustment(portfolios, environment, exogeneous_agents , funds, a)
             
             
             environment.var.fx_rates = fx_adjustment(portfolios, currencies, environment, exogeneous_agents , funds) #exchange rate adjustment
-        
         #this is where intraday calculations end
         
         #computing new asset and cash positions
