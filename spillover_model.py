@@ -2,6 +2,7 @@
 import numpy as np
 import random
 import copy
+import pandas as pd
 
 from functions.port_opt import *
 from functions.asset_demands import *
@@ -26,6 +27,8 @@ def spillover_model(portfolios, currencies, environment, exogeneous_agents, fund
     """
     random.seed(seed)
     np.random.seed(seed)
+    # create tau data dictionary
+    data = {str(a) + 'price': [environment.par.global_parameters["init_asset_price"]] for a in portfolios}
 
     news_process = ornstein_uhlenbeck_levels(environment.par.global_parameters["days"],
                                              environment.par.global_parameters["default_rate_mu"],
@@ -79,6 +82,9 @@ def spillover_model(portfolios, currencies, environment, exogeneous_agents, fund
             environment.var.fx_rates = fx_adjustment(portfolios, currencies, environment, exogeneous_agents , funds) 
             
             print a.var.price, fund.exp.returns
+
+            for a in portfolios:
+                data[str(a) + 'price'].append(a.var.price) #TODO remove when done
         
         #this is where intraday calculations end
         
@@ -105,5 +111,7 @@ def spillover_model(portfolios, currencies, environment, exogeneous_agents, fund
 
         exogeneous_agents['central_bank_domestic'].var_previous = copy_cb_variables(exogeneous_agents['central_bank_domestic'].var)
         exogeneous_agents['underwriter'].var_previous = copy_underwriter_variables(exogeneous_agents['underwriter'].var)
+
+    pd.DataFrame(data).to_csv('intraday_data.csv')
 
     return portfolios, currencies, environment, exogeneous_agents, funds
