@@ -87,8 +87,11 @@ def fx_adjustment(portfolios, currencies, environment, exogeneous_agents , funds
                      if fund.par.country !=  weight.par.country:  
                          weight_fd += fund.var.weights[weight]
                 aux_2 = (fund.var.redeemable_shares) * weight_fd
-
-        fx_demand = np.divide(aux - aux_2, aux + aux_2)
+        
+        if aux + aux_2!=0:
+            fx_demand = np.divide(aux - aux_2, aux + aux_2)
+        else:
+            fx_demand = 0
         
         #Generate noise
         market_noise = np.random.normal(0, 0.1)  # We get the random noise 

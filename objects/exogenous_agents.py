@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 
-class Underwriter():
+class Underwriter:
     """Class holding underwriter properties"""
     def __init__(self, variables, previous_variables):
         self.var = variables
@@ -41,7 +41,7 @@ class CB_Variables:
         self.asset_target = asset_target
 
 
-class Central_Bank():
+class Central_Bank:
     """
     Class holding central bank properties
     """
