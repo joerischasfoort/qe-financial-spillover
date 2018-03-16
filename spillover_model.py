@@ -93,4 +93,3 @@ def spillover_model(portfolios, currencies, environment, exogeneous_agents, fund
             fund.var.currency = fund_cash_adjustments(nuC, piC, excess_demandC, currencies, fund, portfolios)
 
       
-
