@@ -16,7 +16,7 @@ parameters = {
     "fx_change_intensity": 0.1,
     # asset parameters
     "face_value": 5000,
-    "nominal_interest_rate" : 0.003,
+    "nominal_interest_rate": 0.003,
     "currency_rate": 0,
     "maturity" : 0.99,
     "quantity" : 5000,
@@ -24,7 +24,7 @@ parameters = {
     "price_memory": 0.6,
     "fx_memory": 0.6,
     "risk_aversion": 1,
-    "news_evaluation_error": 0.001,
+    "news_evaluation_error": 0.0001,
     # cb parameters
     "cb_country": 'domestic',
     # initial values

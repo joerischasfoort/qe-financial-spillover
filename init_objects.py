@@ -91,7 +91,7 @@ def init_objects(parameters):
         # change covariance to include exchange rate movements
         for a in portfolios:
             if a.par.country != fund_countries[idx]:
-                fx_matrix.loc[a.par.country, a.par.country] = fx_matrix.loc[a.par.country, a.par.country] * 2 #TODO change this to init exchange rate var?
+                cov_matr.loc[a, a] = cov_matr.loc[a, a] + parameters["fx_shock_std"]
 
         fund_params = AgentParameters(fund_countries[idx], parameters["price_memory"],
                                       parameters["fx_memory"], parameters["risk_aversion"],
