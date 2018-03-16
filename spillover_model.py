@@ -40,7 +40,7 @@ def spillover_model(portfolios, currencies, environment, exogeneous_agents, fund
         for fund in funds:
             fund.exp.default_rates = dr_expectations(fund, portfolios, delta_news)
             
-        for tau in range(10): #TODO this needs to be rewritten into a while loop when stopping criteria are defined
+        for tau in range(100): #TODO this needs to be rewritten into a while loop when stopping criteria are defined
 
             for fund in funds:
                 # shareholder dividends and fund profits 
@@ -73,7 +73,7 @@ def spillover_model(portfolios, currencies, environment, exogeneous_agents, fund
 
             for a in portfolios:
                 a.var.price = price_adjustment(portfolios, environment, exogeneous_agents , funds, a)
-            
+            print a.var.price,  funds[0].var.asset_demand  
             
             environment.var.fx_rates = fx_adjustment(portfolios, currencies, environment, exogeneous_agents , funds) #exchange rate adjustment
         

@@ -11,7 +11,7 @@ parameters = {
     "n_foreign_assets": 1,
     "n_domestic_funds": 1,
     "n_foreign_funds": 1,
-    "days": 10,
+    "days": 2,
     "p_change_intensity": 0.1,
     "fx_change_intensity": 0.1,
     # asset parameters
@@ -52,5 +52,5 @@ portfolios, currencies, funds, environment, exogeneous_agents = init_objects(par
 #print(portfolios, currencies, funds, environment, exogeneous_agents)
 
 # 3 simulate model
-#spillover_model(portfolios, currencies, environment, exogeneous_agents, funds,  seed=1)
+spillover_model(portfolios, currencies, environment, exogeneous_agents, funds,  seed=1)
 
