@@ -1,4 +1,5 @@
 from objects.fund import *
+from objects.exogenous_agents import *
 
 
 def copy_agent_variables(fund_var_object):
@@ -26,7 +27,44 @@ def copy_agent_variables(fund_var_object):
                          payouts=new_variables['payouts'], weights=new_variables['weights'],
                          hypothetical_returns=new_variables['hypothetical_returns'],
                          profits=new_variables['profits'], size_target=new_variables['size_target'],
-                         currency_inventory = new_variables['currency_inventory'] )
+                         currency_inventory=new_variables['currency_inventory'])
+    return obj
+
+
+def copy_cb_variables(var_object):
+    variables = vars(var_object)
+    new_variables = {}
+    for variable in variables:
+        if type(variables[variable]) == dict:
+            new_variables[variable] = copy_dict(variables[variable])
+        elif type(variables[variable]) == int or type(variables[variable]) == float:
+            new_variables[variable] = variables[variable]
+        else:
+            new_variables[variable] = variables[variable].copy()
+
+    obj = CB_Variables(assets=new_variables['assets'], currency=new_variables['currency'],
+                       asset_demand=new_variables['asset_demand'],
+                       currency_demand=new_variables['currency_demand'],
+                       asset_target=new_variables['asset_target'])
+
+    return obj
+
+
+def copy_underwriter_variables(var_object):
+    variables = vars(var_object)
+    new_variables = {}
+    for variable in variables:
+        if type(variables[variable]) == dict:
+            new_variables[variable] = copy_dict(variables[variable])
+        elif type(variables[variable]) == int or type(variables[variable]) == float:
+            new_variables[variable] = variables[variable]
+        else:
+            new_variables[variable] = variables[variable].copy()
+
+    obj = ExoAgentVariables(assets=new_variables['assets'], currency=new_variables['currency'],
+                         asset_demand=new_variables['asset_demand'],
+                         currency_demand=new_variables['currency_demand'])
+
     return obj
 
 

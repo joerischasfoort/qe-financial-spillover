@@ -1,6 +1,7 @@
 """Main model"""
 import numpy as np
 import random
+import copy
 
 from functions.port_opt import *
 from functions.asset_demands import *
@@ -11,6 +12,7 @@ from functions.expectation_formation import *
 from functions.market_mechanism import *
 from functions.profits_and_payouts import *
 #from functions.realised_returns import *
+from functions.supercopy import *
 
 
 def spillover_model(portfolios, currencies, environment, exogeneous_agents, funds,  seed):
@@ -92,4 +94,14 @@ def spillover_model(portfolios, currencies, environment, exogeneous_agents, fund
         for fund in funds:
             fund.var.currency = fund_cash_adjustments(nuC, piC, excess_demandC, currencies, fund, portfolios)
 
-      
+        # update previous variables
+        for fund in funds:
+            fund.var_previous = copy_agent_variables(fund.var)
+
+        for portfolio in portfolios:
+            portfolio.var_previous = copy.copy(portfolio.var)
+
+        exogeneous_agents['central_bank_domestic'].var_previous = copy_cb_variables(exogeneous_agents['central_bank_domestic'].var)
+        exogeneous_agents['underwriter'].var_previous = copy_underwriter_variables(exogeneous_agents['underwriter'].var)
+
+    return portfolios, currencies, environment, exogeneous_agents, funds
