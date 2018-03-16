@@ -21,8 +21,8 @@ parameters = {
     "maturity" : 0.99,
     "quantity" : 5000,
     # agent parameters
-    "price_memory": 0.6,
-    "fx_memory": 0.6,
+    "price_memory": 0.0,
+    "fx_memory": 0.0,
     "risk_aversion": 1,
     "news_evaluation_error": 0.0001,
     # cb parameters
@@ -31,8 +31,8 @@ parameters = {
     "init_asset_price": 1,
     "init_exchange_rate": 1,
     "total_money": 4000,
-    "init_agent_ewma_delta_prices": 0,
-    "init_ewma_delta_fx": 0,
+    "init_agent_ewma_delta_prices": 1,
+    "init_ewma_delta_fx": 1,
     "init_asset_demand": 0,
     "init_currency_demand": 0,
     "init_payouts": 0,
