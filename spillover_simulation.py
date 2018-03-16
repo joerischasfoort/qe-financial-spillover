@@ -23,16 +23,16 @@ parameters = {
     # agent parameters
     "price_memory": 0.6,
     "fx_memory": 0.6,
-    "risk_aversion": 1,
+    "risk_aversion": 1.0,
     "news_evaluation_error": 0.0001,
     # cb parameters
     "cb_country": 'domestic',
     # initial values
-    "init_asset_price": 1,
-    "init_exchange_rate": 1,
+    "init_asset_price": 1.0,
+    "init_exchange_rate": 1.0,
     "total_money": 4000,
-    "init_agent_ewma_delta_prices": 0,
-    "init_ewma_delta_fx": 0,
+    "init_agent_ewma_delta_prices": 1.0,
+    "init_ewma_delta_fx": 1.0,
     "init_asset_demand": 0,
     "init_currency_demand": 0,
     "init_payouts": 0,
