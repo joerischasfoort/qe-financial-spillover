@@ -83,13 +83,14 @@ def spillover_model(portfolios, currencies, environment, exogeneous_agents, fund
 
             environment.var.fx_rates = fx_adjustment(portfolios, currencies, environment, exogeneous_agents , funds, fx_shock[day]) 
             
-            #print a.var.price, fund.exp.returns
-            print  environment.var.fx_rates
+           
 
             for a in portfolios:
                 data[str(a) + 'price'].append(a.var.price) #TODO remove when done
         
-        #this is where intraday calculations end
+            #print funds[0].var.payouts, funds[1].var.payouts
+            print funds[0].exp.returns
+             #this is where intraday calculations end
         
         #computing new asset and cash positions
         excess_demand, pi, nu = asset_excess_demand_and_correction_factors(funds, portfolios, currencies, exogeneous_agents)

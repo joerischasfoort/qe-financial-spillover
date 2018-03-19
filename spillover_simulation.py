@@ -39,7 +39,7 @@ parameters = {
     "init_profits": 0,
     # shock processes parameters
     "fx_shock_mu": 0.0,
-    "fx_shock_std": 0.001,
+    "fx_shock_std": 0.00001,
     "default_rate_mu": 0.00004,
     "default_rate_std": 0.00004,
     "default_rate_mean_reversion": 0.99,

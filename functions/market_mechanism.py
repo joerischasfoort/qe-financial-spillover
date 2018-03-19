@@ -67,7 +67,12 @@ def fx_adjustment(portfolios, currencies, environment, exogeneous_agents , funds
         weight_fd = 0 # This is the sum of   weights per fund from the other perspective (the second term in the nominator term inequation 1.22 )
         aux_2 = 0 # helper variable
         
+        tot_red_shares = 0
         for fund in funds:
+            if fund.par.country == el[0]:
+                tot_red_shares += fund.var.redeemable_shares / environment.var.fx_rates[el[0]][el[1]]
+            else:
+                tot_red_shares += fund.var.redeemable_shares
             #we look for all demand of the "from" country, e.g. the first element of the tuple in the list of combinations
             if fund.par.country == el[0]: 
                 for weight in fund.var.weights:
@@ -87,11 +92,9 @@ def fx_adjustment(portfolios, currencies, environment, exogeneous_agents , funds
                          weight_fd += fund.var.weights[weight]
                 aux_2 = (fund.var.redeemable_shares) * weight_fd
         
-        if aux + aux_2!=0:
-            fx_demand = np.divide(aux - aux_2, aux + aux_2)
-        else:
-            fx_demand = 0
-        
+
+        fx_demand = np.divide(aux - aux_2, tot_red_shares)
+       
         #Generate noise
          
         log_new_fx_rate = log(environment.var.fx_rates[el[0]][el[1]]) + environment.par.global_parameters["fx_change_intensity"] * fx_demand + noise 
@@ -99,7 +102,7 @@ def fx_adjustment(portfolios, currencies, environment, exogeneous_agents , funds
             
         environment.var.fx_rates[el[0]][el[1]] =  fx_rate
         environment.var.fx_rates[el[1]][el[0]] =  1/ fx_rate
-        
+
     return environment.var.fx_rates
     
      
