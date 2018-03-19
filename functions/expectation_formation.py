@@ -74,22 +74,22 @@ def price_fx_expectations(fund, portfolios, currencies, environment):
 
 def return_expectations(fund, portfolios, currencies, environment):
     """"""
-    exp_cash_returns = {}
+    exp_returns = {}
     for currency in currencies:
-        exp_cash_returns[currency] = currency.par.nominal_interest_rate + (
+        exp_returns[currency] = currency.par.nominal_interest_rate + (
                 fund.exp.exchange_rates.loc[fund.par.country][currency.par.country
                 ] / environment.var.fx_rates.loc[fund.par.country][currency.par.country] - 1)
 
-    asset_ret_expectations = {}
+
     for asset in portfolios:
         exp_profit = expected_profits_asset(fund.exp.default_rates[asset], asset.par.face_value,
                                             asset.var.price, fund.exp.prices[asset], asset.par.quantity,
                                             asset.par.nominal_interest_rate, asset.par.maturity,
                                             environment.var.fx_rates.loc[fund.par.country][asset.par.country],
                                             fund.exp.exchange_rates.loc[fund.par.country][asset.par.country])
-        asset_ret_expectations[asset] = exp_profit / asset.var.price * environment.var.fx_rates.loc[fund.par.country][asset.par.country]
+        exp_returns[asset] = exp_profit / asset.var.price * environment.var.fx_rates.loc[fund.par.country][asset.par.country]
 
-    return asset_ret_expectations, exp_cash_returns
+    return exp_returns
 
 
 def covariance_estimate(fund, portfolios):

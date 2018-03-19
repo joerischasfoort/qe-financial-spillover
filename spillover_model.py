@@ -46,8 +46,13 @@ def spillover_model(portfolios, currencies, environment, exogeneous_agents, fund
         # determine value and payouts to shareholders
         for fund in funds:
             fund.exp.default_rates = dr_expectations(fund, portfolios, delta_news)
+        
+        convergence=False
+        intraday_over=False
+        for tau in range(2000): #TODO this needs to be rewritten into a while loop when stopping criteria are defined
             
-        for tau in range(100): #TODO this needs to be rewritten into a while loop when stopping criteria are defined
+            if convergence == True:
+                intraday_over = True
 
             for fund in funds:
                 # shareholder dividends and fund profits 
@@ -60,7 +65,7 @@ def spillover_model(portfolios, currencies, environment, exogeneous_agents, fund
                 fund.var.ewma_delta_fx, \
                 fund.exp.prices, \
                 fund.exp.exchange_rates = price_fx_expectations(fund, portfolios, currencies, environment)
-                fund.exp.asset_returns, fund.exp.cash_returns = return_expectations(fund, portfolios, currencies, environment)
+                fund.exp.returns = return_expectations(fund, portfolios, currencies, environment)
                 fund.var.ewma_returns, fund.var.covariance_matrix = covariance_estimate(fund, portfolios)
 
                               
@@ -73,24 +78,29 @@ def spillover_model(portfolios, currencies, environment, exogeneous_agents, fund
                 # compute demand for balance sheet positions
                 fund.var.asset_demand, fund.var.currency_demand = asset_demand(fund, portfolios, currencies, environment)
 
-
+            
             for ex in exogeneous_agents:
                 exogeneous_agents[ex].var.asset_demand = ex_agent_asset_demand(ex, exogeneous_agents, portfolios )
-            
-            for a in portfolios:
-                a.var.price = price_adjustment(portfolios, environment, exogeneous_agents , funds, a)
 
 
-            environment.var.fx_rates = fx_adjustment(portfolios, currencies, environment, exogeneous_agents , funds, fx_shock[day]) 
+            if intraday_over == False:            
+                for a in portfolios:
+                    a.var.price = price_adjustment(portfolios, environment, exogeneous_agents , funds, a)
+       
+
+                environment.var.fx_rates = fx_adjustment(portfolios, currencies, environment, exogeneous_agents , funds, fx_shock[day]) 
             
-           
+            if tau == 1998:
+                convergence=True
 
             for a in portfolios:
                 data[str(a) + 'price'].append(a.var.price) #TODO remove when done
         
             #print funds[0].var.payouts, funds[1].var.payouts
-            print funds[0].exp.returns
+            print funds[0].var.weights[portfolios[0]],funds[1].var.weights[portfolios[0]],funds[0].var.weights[portfolios[1]],funds[1].var.weights[portfolios[1]]
              #this is where intraday calculations end
+        
+
         
         #computing new asset and cash positions
         excess_demand, pi, nu = asset_excess_demand_and_correction_factors(funds, portfolios, currencies, exogeneous_agents)

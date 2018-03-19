@@ -12,8 +12,8 @@ parameters = {
     "n_domestic_funds": 1,
     "n_foreign_funds": 1,
     "days": 2,
-    "p_change_intensity": 0.1,
-    "fx_change_intensity": 0.1,
+    "p_change_intensity": 0.001,
+    "fx_change_intensity": 0.001,
     # asset parameters
     "face_value": 5000,
     "nominal_interest_rate": 0.003,
