@@ -35,6 +35,8 @@ def spillover_model(portfolios, currencies, environment, exogeneous_agents, fund
                                              environment.par.global_parameters["default_rate_delta_t"],
                                              environment.par.global_parameters["default_rate_std"],
                                              environment.par.global_parameters["default_rate_mean_reversion"])
+    # We get the random noise 
+    fx_shock = [ np.random.normal(0, environment.par.global_parameters["fx_shock_std"]) for i in range(environment.par.global_parameters["days"]) ] 
 
     for day in range(1, environment.par.global_parameters["days"]):
         # initialise intraday prices at current price
@@ -79,9 +81,10 @@ def spillover_model(portfolios, currencies, environment, exogeneous_agents, fund
                 a.var.price = price_adjustment(portfolios, environment, exogeneous_agents , funds, a)
 
 
-            environment.var.fx_rates = fx_adjustment(portfolios, currencies, environment, exogeneous_agents , funds) 
+            environment.var.fx_rates = fx_adjustment(portfolios, currencies, environment, exogeneous_agents , funds, fx_shock[day]) 
             
-            print a.var.price, fund.exp.returns
+            #print a.var.price, fund.exp.returns
+            print  environment.var.fx_rates
 
             for a in portfolios:
                 data[str(a) + 'price'].append(a.var.price) #TODO remove when done

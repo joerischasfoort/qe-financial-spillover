@@ -33,7 +33,7 @@ def price_adjustment(portfolios, environment, exogeneous_agents , funds, a):
     return exp(log_new_price)
 
     
-def fx_adjustment(portfolios, currencies, environment, exogeneous_agents , funds):
+def fx_adjustment(portfolios, currencies, environment, exogeneous_agents , funds, noise):
     """
     Find the new fxrate
   
@@ -93,9 +93,8 @@ def fx_adjustment(portfolios, currencies, environment, exogeneous_agents , funds
             fx_demand = 0
         
         #Generate noise
-        market_noise = np.random.normal(0, 0.1)  # We get the random noise 
-    
-        log_new_fx_rate = log(environment.var.fx_rates[el[0]][el[1]]) + environment.par.global_parameters["fx_change_intensity"] * fx_demand + market_noise
+         
+        log_new_fx_rate = log(environment.var.fx_rates[el[0]][el[1]]) + environment.par.global_parameters["fx_change_intensity"] * fx_demand + noise 
         fx_rate = exp(log_new_fx_rate)
             
         environment.var.fx_rates[el[0]][el[1]] =  fx_rate
