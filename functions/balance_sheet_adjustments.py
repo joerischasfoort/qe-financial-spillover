@@ -163,8 +163,7 @@ def cash_excess_demand_and_correction_factors(funds, portfolios, currencies, exo
     return nuC, piC, excess_demandC
 
 
-
-def fund_cash_adjustments(nuC, piC, excess_demandC, currencies, fund, portfolios):       
+def fund_cash_adjustments(nuC, piC, excess_demandC, currencies, fund):
     new_cash_position = {}
     
     for c in currencies:    
@@ -174,9 +173,7 @@ def fund_cash_adjustments(nuC, piC, excess_demandC, currencies, fund, portfolios
         elif fund.var.currency_demand[c] < 0 and excess_demandC[c] < 0:
             new_cash_position[c] = fund.var.currency_inventory[c] + fund.var.currency_demand[c] * nuC[c]
         
-        else :
+        else:
             new_cash_position[c] = fund.var.currency_inventory[c] + fund.var.currency_demand[c] 
    
     return new_cash_position
-        
-        
