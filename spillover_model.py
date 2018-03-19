@@ -3,7 +3,7 @@ import numpy as np
 import random
 import copy
 import pandas as pd
-
+from functions.payouts_and_share_value import *
 from functions.port_opt import *
 from functions.asset_demands import *
 from functions.ex_agent_asset_demands import *
@@ -53,6 +53,7 @@ def spillover_model(portfolios, currencies, environment, exogeneous_agents, fund
             
             if convergence == True:
                 intraday_over = True
+                break
 
             for fund in funds:
                 # shareholder dividends and fund profits 
@@ -65,7 +66,7 @@ def spillover_model(portfolios, currencies, environment, exogeneous_agents, fund
                 fund.var.ewma_delta_fx, \
                 fund.exp.prices, \
                 fund.exp.exchange_rates = price_fx_expectations(fund, portfolios, currencies, environment)
-                fund.exp.returns = return_expectations(fund, portfolios, currencies, environment)
+                #fund.exp.returns = return_expectations(fund, portfolios, currencies, environment)
                 fund.var.ewma_returns, fund.var.covariance_matrix = covariance_estimate(fund, portfolios)
 
                               
@@ -90,7 +91,7 @@ def spillover_model(portfolios, currencies, environment, exogeneous_agents, fund
 
                 environment.var.fx_rates = fx_adjustment(portfolios, currencies, environment, exogeneous_agents , funds, fx_shock[day]) 
             
-            if tau == 1998:
+            if tau == 198:
                 convergence=True
 
             for a in portfolios:
