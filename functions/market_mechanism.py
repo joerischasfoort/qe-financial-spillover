@@ -1,7 +1,22 @@
+from __future__ import division
+
 from math import log
 from math import exp
 import numpy as np
 
+
+
+def convert_P2R(a, price):
+    mat=(1-a.par.maturity)*(1-a.var.default_rate)
+    all=(1-a.var.default_rate)
+    ret=((a.par.face_value / a.par.quantity) * (mat + a.par.nominal_interest_rate * all) / price) - a.var.default_rate - mat    
+    return ret 
+
+def convert_R2P(a, ret):
+    mat=(1-a.par.maturity)*(1-a.var.default_rate)
+    all=(1-a.var.default_rate)
+    price = ((a.par.face_value / a.par.quantity) * (mat + a.par.nominal_interest_rate * all)) / (ret + a.var.default_rate + mat)
+    return price 
 
 def price_adjustment(portfolios, environment, exogeneous_agents , funds, a):
     """
@@ -29,8 +44,14 @@ def price_adjustment(portfolios, environment, exogeneous_agents , funds, a):
     total_demand[a] = total_demand[a] + total_demand_exogenous_agents[a]
     
     #Equation 1.17 : price adjustment 
-    log_new_price  = log(a.var.price) +  environment.par.global_parameters['p_change_intensity'] *  total_demand[a]/a.par.quantity    
-    return exp(log_new_price)
+    #log_new_price  = log(a.var.price) +  environment.par.global_parameters['p_change_intensity'] *  total_demand[a]/a.par.quantity  
+    
+    log_new_ret  = log(a.var.aux_ret) -  environment.par.global_parameters['p_change_intensity'] *  total_demand[a]/a.par.quantity  
+    
+    price=convert_R2P(a,exp(log_new_ret))
+    #print log(exp(log_new_ret)/a.var.aux_ret)
+    
+    return price, exp(log_new_ret)
 
     
 def fx_adjustment(portfolios, currencies, environment, exogeneous_agents , funds, noise):
