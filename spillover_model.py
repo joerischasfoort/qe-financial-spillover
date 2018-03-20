@@ -32,7 +32,6 @@ def spillover_model(portfolios, currencies, environment, exogeneous_agents, fund
 
     news_process = ornstein_uhlenbeck_levels(environment.par.global_parameters["days"],
                                              environment.par.global_parameters["default_rate_mu"],
-                                             environment.par.global_parameters["default_rate_delta_t"],
                                              environment.par.global_parameters["default_rate_std"],
                                              environment.par.global_parameters["default_rate_mean_reversion"])
     # We get the random noise 
@@ -40,6 +39,8 @@ def spillover_model(portfolios, currencies, environment, exogeneous_agents, fund
     
     for a in portfolios:
         a.var.aux_ret = convert_P2R(a,a.var.price)
+        if a.var.aux_ret<=0:
+            a.var.aux_ret=0.0001
        
     
     for day in range(1, environment.par.global_parameters["days"]):
@@ -54,12 +55,12 @@ def spillover_model(portfolios, currencies, environment, exogeneous_agents, fund
         convergence=False
         intraday_over=False
         for tau in range(10000): #TODO this needs to be rewritten into a while loop when stopping criteria are defined
-            if tau == 1000:
-                environment.par.global_parameters["p_change_intensity"]=0.01
-            if tau == 3000:
-                environment.par.global_parameters["p_change_intensity"]=0.001
-            if tau == 5000:
-                environment.par.global_parameters["p_change_intensity"]=0.0001
+#            if tau == 1000:
+#                environment.par.global_parameters["p_change_intensity"]=0.01
+#            if tau == 3000:
+#                environment.par.global_parameters["p_change_intensity"]=0.001
+#            if tau == 5000:
+#                environment.par.global_parameters["p_change_intensity"]=0.0001
             if convergence == True:
                 intraday_over = True
                 break
@@ -95,7 +96,7 @@ def spillover_model(portfolios, currencies, environment, exogeneous_agents, fund
 
             if intraday_over == False:            
                 for a in portfolios:
-                    a.var.price, a.var.aux_ret = price_adjustment(portfolios, environment, exogeneous_agents , funds, a)
+                    a.var.price, a.var.aux_ret = price_adjustment(portfolios, environment, exogeneous_agents, funds, a)
 
 
                 environment.var.fx_rates = fx_adjustment(portfolios, currencies, environment, exogeneous_agents , funds, fx_shock[day]) 
@@ -109,7 +110,7 @@ def spillover_model(portfolios, currencies, environment, exogeneous_agents, fund
         
 
 
-            #print portfolios[0].var.price, funds[0].var.weights[portfolios[0]], portfolios[1].var.price, funds[1].var.weights[portfolios[1]]
+            #print funds[0].var.weights
              #this is where intraday calculations end
         
 

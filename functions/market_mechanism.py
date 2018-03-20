@@ -18,7 +18,7 @@ def convert_R2P(a, ret):
     price = ((a.par.face_value / a.par.quantity) * (mat + a.par.nominal_interest_rate * all)) / (ret + a.var.default_rate + mat)
     return price 
 
-def price_adjustment(portfolios, environment, exogeneous_agents , funds, a):
+def price_adjustment(portfolios, environment, exogeneous_agents, funds, a):
     """
     Find the next  price of asset a.
     
@@ -39,11 +39,11 @@ def price_adjustment(portfolios, environment, exogeneous_agents , funds, a):
     # collect total demand from agents per asset
     for fund in funds:
         total_demand[a] += fund.var.asset_demand[a]
-        print fund, a, fund.var.asset_demand[a]
+
     
     #exit the fund loop and take into account underwriter and central bank demand
     total_demand[a] = total_demand[a] + total_demand_exogenous_agents[a]
-    
+    #print a.var.price, total_demand[a]    
     #Equation 1.17 : price adjustment 
     #log_new_price  = log(a.var.price) +  environment.par.global_parameters['p_change_intensity'] *  total_demand[a]/a.par.quantity  
     
@@ -51,7 +51,7 @@ def price_adjustment(portfolios, environment, exogeneous_agents , funds, a):
     
     price=convert_R2P(a,exp(log_new_ret))
     
-    #print a, price, total_demand[a]
+    print a, price, total_demand[a]
     return price, exp(log_new_ret)
 
     

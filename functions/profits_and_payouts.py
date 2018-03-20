@@ -1,13 +1,13 @@
 from __future__ import division
 
 
-def profit_and_payout(fund, assets, currencies, environment):
+def profit_and_payout(fund, portfolios, currencies, environment):
     
     profit_per_asset = {}
     payouts = {}
     total_payouts = {c:0 for c in currencies}
     total_profit = 0
-    for a in assets:
+    for a in portfolios:
     
         out = a.par.maturity * (1 - a.var.default_rate)
         mat = (1 - a.par.maturity) * (1 - a.var.default_rate)

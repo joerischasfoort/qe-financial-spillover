@@ -29,7 +29,7 @@ def cash_inventory(fund, portfolios, currencies):
                 all = (1 - a.var.default_rate)
                 cash_inv[c] = cash_inv[c] + (mat + all * a.par.nominal_interest_rate) * fund.var.assets[a] * a.par.face_value / a.par.quantity
                 
-        if c.par.country == fund.par.country:
-            cash_inv[c] = cash_inv[c] - fund.var.payouts
+
+        cash_inv[c] = cash_inv[c] - fund.var.payouts[c]
     
     return cash_inv

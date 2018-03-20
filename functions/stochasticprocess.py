@@ -1,9 +1,7 @@
 import math
-import numpy.random as nrand
+import numpy as np
 
-
-def ornstein_uhlenbeck_levels(time=500, init_level=10e-7, rate_of_time = 0.003968253968253968, sigma=0.125,
-                              mean_reversion=0.99):
+def ornstein_uhlenbeck_levels(time=500, init_level=10e-7, sigma=0.125, mean_reversion=0.99):
     """
     This function returns news about the as a mean-reverting ornstein uhlenbeck process.
     :param init_level: starting point of the default probability
@@ -14,15 +12,12 @@ def ornstein_uhlenbeck_levels(time=500, init_level=10e-7, rate_of_time = 0.00396
     :param long_run_average_level:
     :return: list : simulatated default probability simulated over time
     """
-    long_run_average_level = init_level
     default_probability = [init_level]
-    sqrt_delta_sigma = math.sqrt(rate_of_time) * sigma
+    
+    for t in range(1, 10000):
+        error = np.random.normal(0, sigma)
+        new_dr = default_probability[-1] + mean_reversion * (init_level - default_probability[-1]) + error
+        new_dr = max(0,new_dr)
+        default_probability.append(new_dr)
 
-    brownian_motion_returns = nrand.normal(loc=0, scale=sqrt_delta_sigma, size=time)
-
-    for t in range(1, time):
-        drift = mean_reversion * (long_run_average_level - default_probability[t - 1]) * rate_of_time
-        randomness = brownian_motion_returns[t - 1]
-        default_probability.append(default_probability[t - 1] + drift + randomness)
-
-    return [max(0, dp) for dp in default_probability]
+    return default_probability
