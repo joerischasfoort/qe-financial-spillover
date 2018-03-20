@@ -29,22 +29,36 @@ def expected_profits_asset(exp_default_rate, face_value, price, exp_price, quant
     return expected_profit
 
 
-def dr_expectations(fund, assets, delta_news):
-    """"""
+def dr_expectations(fund, portfolios, delta_news):
+    """
+    Calculate default rate expectations
+    :param fund: Fund object for which to calculate default rate expectations
+    :param portfolios: Dictionary with portfolio object keys which the fund holds
+    :param delta_news: float the difference in the news process about the default rate
+    :return: dictionary of assets and corresponding floats of expected default rates
+    """
     expected_dr = {}
-    for asset in assets:
-        previously_exp_dr = fund.exp.default_rates[asset]
-        default_rate = asset.var.default_rate
+    for portfolio in portfolios:
+        previously_exp_dr = fund.exp.default_rates[portfolio]
+        default_rate = portfolio.var.default_rate
         noise = np.random.normal(0, fund.par.news_evaluation_error)
         log_exp_dr= log(previously_exp_dr) + delta_news + noise + fund.par.adaptive_param * (
                 log(default_rate) - log(previously_exp_dr))
-        expected_dr[asset] = exp(log_exp_dr)
+        expected_dr[portfolio] = exp(log_exp_dr)
 
     return expected_dr
 
 
 def price_fx_expectations(fund, portfolios, currencies, environment):
-    """"""
+    """
+    Calculate the price and exchange rate expectations of currencies and asset portfolios
+    :param fund: Fund object for which to calculate expectations
+    :param portfolios: Dictionary with portfolio object keys which the fund holds
+    :param currencies: Dictionary with currency object keys which the fund holds
+    :param environment: Enviornment object which holds a DataFrame of current exchange rates
+    :return: Dictionaries of expected weighted moving average delta prices and exchange rates, expected
+    prices and exchange rates.
+    """
     ewma_delta_prices = {}
     expected_prices ={}
     for asset in portfolios:
@@ -73,7 +87,14 @@ def price_fx_expectations(fund, portfolios, currencies, environment):
 
 
 def return_expectations(fund, portfolios, currencies, environment):
-    """"""
+    """
+    Calcuate expectated returns on a fund's asset portfolios and currencies
+    :param fund: Fund object for which the returns are calculated
+    :param portfolios: Dictionary of Asset objects keys with corresponding values
+    :param currencies: Dictionary of Currency objects keys with corresponding values
+    :param environment: Environment object which holds a Pandas Dataframe of exchange rates
+    :return: Dictionary of portfolio and currency object keys with float return expectations
+    """
     exp_returns = {}
     for currency in currencies:
         exp_returns[currency] = currency.par.nominal_interest_rate + (
@@ -93,7 +114,13 @@ def return_expectations(fund, portfolios, currencies, environment):
 
 
 def covariance_estimate(fund, portfolios):
-    """"""
+    """
+    Calculate expected weighted moving average of returns and covariance matrix between them
+    :param fund: the Fund object for which to make the calculation
+    :param portfolios: Dictionary of Asset object keys and quantity values
+    :return: dictionary of asset objects and their expected weighted moving average of returns , and
+    a pandas DataFrame of covariances of returns between asset portfolios.
+    """
     ewma_returns = {}
     for asset in fund.var.assets:
         ewma_returns[asset] = compute_ewma(fund.var.hypothetical_returns[asset], fund.var.ewma_returns[asset],
