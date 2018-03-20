@@ -39,7 +39,8 @@ def price_adjustment(portfolios, environment, exogeneous_agents , funds, a):
     # collect total demand from agents per asset
     for fund in funds:
         total_demand[a] += fund.var.asset_demand[a]
-
+        print fund, a, fund.var.asset_demand[a]
+    
     #exit the fund loop and take into account underwriter and central bank demand
     total_demand[a] = total_demand[a] + total_demand_exogenous_agents[a]
     
@@ -49,8 +50,8 @@ def price_adjustment(portfolios, environment, exogeneous_agents , funds, a):
     log_new_ret  = log(a.var.aux_ret) -  environment.par.global_parameters['p_change_intensity'] *  total_demand[a]/a.par.quantity  
     
     price=convert_R2P(a,exp(log_new_ret))
-    #print log(exp(log_new_ret)/a.var.aux_ret)
     
+    #print a, price, total_demand[a]
     return price, exp(log_new_ret)
 
     

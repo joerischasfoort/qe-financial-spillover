@@ -53,8 +53,13 @@ def spillover_model(portfolios, currencies, environment, exogeneous_agents, fund
         
         convergence=False
         intraday_over=False
-        for tau in range(1000): #TODO this needs to be rewritten into a while loop when stopping criteria are defined
-            
+        for tau in range(10000): #TODO this needs to be rewritten into a while loop when stopping criteria are defined
+            if tau == 1000:
+                environment.par.global_parameters["p_change_intensity"]=0.01
+            if tau == 3000:
+                environment.par.global_parameters["p_change_intensity"]=0.001
+            if tau == 5000:
+                environment.par.global_parameters["p_change_intensity"]=0.0001
             if convergence == True:
                 intraday_over = True
                 break
@@ -70,7 +75,7 @@ def spillover_model(portfolios, currencies, environment, exogeneous_agents, fund
                 fund.var.ewma_delta_fx, \
                 fund.exp.prices, \
                 fund.exp.exchange_rates = price_fx_expectations(fund, portfolios, currencies, environment)
-                #fund.exp.returns = return_expectations(fund, portfolios, currencies, environment)
+                fund.exp.returns = return_expectations(fund, portfolios, currencies, environment)
                 fund.var.ewma_returns, fund.var.covariance_matrix = covariance_estimate(fund, portfolios)
 
                               
@@ -96,7 +101,7 @@ def spillover_model(portfolios, currencies, environment, exogeneous_agents, fund
                 environment.var.fx_rates = fx_adjustment(portfolios, currencies, environment, exogeneous_agents , funds, fx_shock[day]) 
             
 
-            if tau == 998:
+            if tau == 9998:
                 convergence=True
 
             for a in portfolios:
@@ -104,7 +109,7 @@ def spillover_model(portfolios, currencies, environment, exogeneous_agents, fund
         
 
 
-            print funds[0].var.weights[portfolios[0]], funds[1].var.weights[portfolios[1]]
+            #print portfolios[0].var.price, funds[0].var.weights[portfolios[0]], portfolios[1].var.price, funds[1].var.weights[portfolios[1]]
              #this is where intraday calculations end
         
 
