@@ -12,6 +12,7 @@ from functions.stochasticprocess import *
 from functions.expectation_formation import *
 from functions.market_mechanism import *
 from functions.profits_and_payouts import *
+from functions.show import *
 #from functions.realised_returns import *
 from functions.supercopy import *
 
@@ -41,8 +42,7 @@ def spillover_model(portfolios, currencies, environment, exogeneous_agents, fund
         a.var.aux_ret = convert_P2R(a,a.var.price)
         if a.var.aux_ret<=0:
             a.var.aux_ret=0.0001
-       
-    
+
     for day in range(1, environment.par.global_parameters["days"]):
         # initialise intraday prices at current price
         prices_tau = {portfolio: portfolio.var.price for portfolio in portfolios}
@@ -54,7 +54,9 @@ def spillover_model(portfolios, currencies, environment, exogeneous_agents, fund
         
         convergence=False
         intraday_over=False
+
         for tau in range(10): #TODO this needs to be rewritten into a while loop when stopping criteria are defined
+
 #            if tau == 1000:
 #                environment.par.global_parameters["p_change_intensity"]=0.01
 #            if tau == 3000:
@@ -111,34 +113,42 @@ def spillover_model(portfolios, currencies, environment, exogeneous_agents, fund
 
 
                 environment.var.fx_rates = fx_adjustment(portfolios, currencies, environment, exogeneous_agents , funds, fx_shock[day]) 
-            
+                print a.var.price, a, tau
+
 
             if tau == 9:
+
                 convergence=True
 
             for a in portfolios:
                 data[str(a) + 'price'].append(a.var.price) #TODO remove when done
         
-
-
-            #print funds[0].var.weights
-             #this is where intraday calculations end
+            
+            
+            #this is where intraday calculations end
         
 
         
         #computing new asset and cash positions
+
         excess_demand, pi, nu = asset_excess_demand_and_correction_factors(funds, portfolios, currencies, exogeneous_agents)
-    
+        
+        # trading
         for fund in funds:
             fund.var.assets = fund_asset_adjustments(fund, portfolios, excess_demand, pi, nu)
         
         for ex in exogeneous_agents:
             exogeneous_agents[ex].var.assets = ex_asset_adjustments(ex, portfolios, excess_demand, pi, nu, exogeneous_agents)
-        
+    
+        # balance sheet adjustment
+   
         nuC, piC, excess_demandC = cash_excess_demand_and_correction_factors(funds, portfolios, currencies, exogeneous_agents)
         
         for fund in funds:
             fund.var.currency = fund_cash_adjustments(nuC, piC, excess_demandC, currencies, fund)
+            
+        show_fund(funds[0], portfolios, currencies, environment)
+   
 
         # update previous variables
         for fund in funds:
