@@ -124,7 +124,7 @@ def init_objects(parameters):
                 cov_matr.loc[currency][currency] = parameters["fx_shock_std"]
 
         fund_redeemable_share_size = sum(asset_portfolio.values()) + divide_by_funds(parameters["total_money"])
-
+         
         fund_vars = AgentVariables(asset_portfolio,
                                    currency_portfolio,
                                    fund_redeemable_share_size,
