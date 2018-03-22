@@ -44,7 +44,7 @@ def asset_excess_demand_and_correction_factors(funds, portfolios, currencies, ex
             pi[a] = 1- (excess_demand[a] / set_of_positive[a])
         else:
              pi[a] = 1
-        if set_of_negative != 0:
+        if set_of_negative[a] != 0:
             nu[a] = 1- (excess_demand[a] / set_of_negative[a])
         else:
             nu[a] = 1

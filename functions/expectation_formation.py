@@ -42,9 +42,12 @@ def dr_expectations(fund, portfolios, delta_news):
         previously_exp_dr = fund.exp.default_rates[portfolio]
         default_rate = portfolio.var.default_rate
         noise = np.random.normal(0, fund.par.news_evaluation_error)
-        log_exp_dr= log(previously_exp_dr) + delta_news + noise + fund.par.adaptive_param * (
+        if previously_exp_dr<=0:
+            expected_dr[portfolio]=0
+        else:
+            log_exp_dr= log(previously_exp_dr) + delta_news + noise + fund.par.adaptive_param * (
                 log(default_rate) - log(previously_exp_dr))
-        expected_dr[portfolio] = exp(log_exp_dr)
+            expected_dr[portfolio] = exp(log_exp_dr)
 
     return expected_dr
 

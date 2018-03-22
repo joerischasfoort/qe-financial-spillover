@@ -51,7 +51,7 @@ def price_adjustment(portfolios, environment, exogeneous_agents, funds, a):
     
     price=convert_R2P(a,exp(log_new_ret))
     
-    print a, price, total_demand[a]
+    #print a, price, total_demand[a]
     return price, exp(log_new_ret)
 
     

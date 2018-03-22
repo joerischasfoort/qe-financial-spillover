@@ -54,7 +54,7 @@ def spillover_model(portfolios, currencies, environment, exogeneous_agents, fund
         
         convergence=False
         intraday_over=False
-        for tau in range(10000): #TODO this needs to be rewritten into a while loop when stopping criteria are defined
+        for tau in range(10): #TODO this needs to be rewritten into a while loop when stopping criteria are defined
 #            if tau == 1000:
 #                environment.par.global_parameters["p_change_intensity"]=0.01
 #            if tau == 3000:
@@ -71,6 +71,11 @@ def spillover_model(portfolios, currencies, environment, exogeneous_agents, fund
                 fund.var.redeemable_shares, \
                 fund.var.payouts = profit_and_payout(fund, portfolios, currencies, environment)
                 
+
+                
+                
+                
+                
                 # 1 Expectation formation
                 fund.var.ewma_delta_prices, \
                 fund.var.ewma_delta_fx, \
@@ -85,10 +90,16 @@ def spillover_model(portfolios, currencies, environment, exogeneous_agents, fund
                 
                 # intermediate cash position resulting from interest payments, payouts, maturing and defaulting assets
                 fund.var.currency_inventory = cash_inventory(fund, portfolios, currencies)
+                #print fund, fund.var.currency_inventory[currencies[0]],  fund.var_previous.currency[currencies[0]] + fund.var.assets[portfolios[0]]*((1-portfolios[0].var.default_rate)*(1-portfolios[0].par.maturity)+portfolios[0].var.default_rate)*portfolios[0].var.price
                 
                 # compute demand for balance sheet positions
                 fund.var.asset_demand, fund.var.currency_demand = asset_demand(fund, portfolios, currencies, environment)
-
+                
+                
+                
+                newA=portfolios[0].par.maturity*(1-portfolios[0].var.default_rate)*fund.var.assets[portfolios[0]]*portfolios[0].var.price*environment.var.fx_rates[fund.par.country][portfolios[0].par.country]+portfolios[1].par.maturity*(1-portfolios[1].var.default_rate)*fund.var.assets[portfolios[1]]*portfolios[1].var.price*environment.var.fx_rates[fund.par.country][portfolios[1].par.country]
+                newC=fund.var.currency_inventory[currencies[0]]*environment.var.fx_rates[fund.par.country][currencies[0].par.country] + fund.var.currency_inventory[currencies[1]]*environment.var.fx_rates[fund.par.country][currencies[1].par.country]
+                print newA, newC, fund.var.redeemable_shares, newA+newC- fund.var.redeemable_shares, portfolios[0].var.price
             
             for ex in exogeneous_agents:
                 exogeneous_agents[ex].var.asset_demand = ex_agent_asset_demand(ex, exogeneous_agents, portfolios )
@@ -102,7 +113,7 @@ def spillover_model(portfolios, currencies, environment, exogeneous_agents, fund
                 environment.var.fx_rates = fx_adjustment(portfolios, currencies, environment, exogeneous_agents , funds, fx_shock[day]) 
             
 
-            if tau == 9998:
+            if tau == 9:
                 convergence=True
 
             for a in portfolios:
