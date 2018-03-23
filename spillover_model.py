@@ -55,7 +55,7 @@ def spillover_model(portfolios, currencies, environment, exogeneous_agents, fund
         convergence=False
         intraday_over=False
 
-        for tau in range(10000): #TODO this needs to be rewritten into a while loop when stopping criteria are defined
+        for tau in range(20): #TODO this needs to be rewritten into a while loop when stopping criteria are defined
 
 #            if tau == 1000:
 #                environment.par.global_parameters["p_change_intensity"]=0.01
@@ -65,7 +65,7 @@ def spillover_model(portfolios, currencies, environment, exogeneous_agents, fund
 #                environment.par.global_parameters["p_change_intensity"]=0.0001
             if convergence == True:
                 intraday_over = True
-                break
+                
 
             for fund in funds:
                 # shareholder dividends and fund profits 
@@ -131,10 +131,8 @@ def spillover_model(portfolios, currencies, environment, exogeneous_agents, fund
                 newA = Q0_t*p0_t1*fx0_t1+Q1_t*p1_t1*fx1_t1
                 newC = fund.var.currency_inventory[currencies[0]]*fxC0_t1 + fund.var.currency_inventory[currencies[1]]*fxC1_t1
 
-                #print "asset side effect:", fund, newA+newC-fund.var.redeemable_shares
+                print "asset side effect:", fund, newA+newC-fund.var.redeemable_shares
                 
-                #print newA, newC, fund.var.redeemable_shares, newA+newC- fund.var.redeemable_shares, portfolios[0].var.price
-            
             for ex in exogeneous_agents:
                 exogeneous_agents[ex].var.asset_demand = ex_agent_asset_demand(ex, exogeneous_agents, portfolios )
 
@@ -144,10 +142,10 @@ def spillover_model(portfolios, currencies, environment, exogeneous_agents, fund
                     a.var.price, a.var.aux_ret = price_adjustment(portfolios, environment, exogeneous_agents, funds, a)
 
                 environment.var.fx_rates = fx_adjustment(portfolios, currencies, environment, exogeneous_agents , funds, fx_shock[day]) 
-               
+                print tau
 
 
-            if tau == 9998:
+            if tau == 18:
 
                 convergence=True
 
@@ -163,7 +161,7 @@ def spillover_model(portfolios, currencies, environment, exogeneous_agents, fund
         #computing new asset and cash positions
 
         excess_demand, pi, nu = asset_excess_demand_and_correction_factors(funds, portfolios, currencies, exogeneous_agents)
-        
+        print pi, nu, excess_demand
         # trading
         for fund in funds:
             fund.var.assets = fund_asset_adjustments(fund, portfolios, excess_demand, pi, nu)
@@ -174,7 +172,7 @@ def spillover_model(portfolios, currencies, environment, exogeneous_agents, fund
         # balance sheet adjustment
    
         nuC, piC, excess_demandC = cash_excess_demand_and_correction_factors(funds, portfolios, currencies, exogeneous_agents)
-        
+        print piC, nuC, excess_demandC
         for fund in funds:
             fund.var.currency = fund_cash_adjustments(nuC, piC, excess_demandC, currencies, fund)
             
