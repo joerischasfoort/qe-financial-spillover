@@ -85,7 +85,7 @@ def spillover_model(portfolios, currencies, environment, exogeneous_agents, fund
                 fund.exp.exchange_rates = price_fx_expectations(fund, portfolios, currencies, environment)
                 fund.exp.returns = return_expectations(fund, portfolios, currencies, environment)
                 fund.var.ewma_returns, fund.var.covariance_matrix = covariance_estimate(fund, portfolios)
-                print fund, fund.exp.returns
+                
                               
                 # compute the weights of optimal balance sheet positions
                 fund.var.weights = portfolio_optimization(fund)
