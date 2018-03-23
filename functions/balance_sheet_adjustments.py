@@ -1,20 +1,5 @@
 from __future__ import division
 
-def balance_sheet_adjustment(funds, portfolios, currencies, exogeneous_agents):
-    
-    excess_demand, pi, nu = asset_excess_demand_and_correction_factors(funds, portfolios, currencies, exogeneous_agents)
-    
-    for fund in funds:
-        fund_assets = fund_asset_adjustments(fund, portfolios, excess_demand, pi, nu)
-    
-    for ex in exogeneous_agents:
-        ex_assets = ex_asset_adjustments(ex, portfolios, excess_demand, pi, nu, exogeneous_agents)
-    
-    excess_demandC, piC, nuC = cash_excess_demand_and_correction_factors(funds, portfolios, currencies, exogeneous_agents)
-    
-    for fund in funds:
-        fund_cash = fund_cash_adjustments(nuC, piC, excess_demandC, currencies, fund, portfolios)
-
     
     
 def asset_excess_demand_and_correction_factors(funds, portfolios, currencies, exogeneous_agents):
@@ -163,7 +148,7 @@ def cash_excess_demand_and_correction_factors(funds, portfolios, currencies, exo
     return nuC, piC, excess_demandC
 
 
-def fund_cash_adjustments(nuC, piC, excess_demandC, currencies, fund):
+def fund_cash_adjustments(nuC, piC, excess_demandC, currencies, fund, environment):
     new_cash_position = {}
     
     for c in currencies:    
@@ -175,5 +160,21 @@ def fund_cash_adjustments(nuC, piC, excess_demandC, currencies, fund):
         
         else:
             new_cash_position[c] = fund.var.currency_inventory[c] + fund.var.currency_demand[c] 
-   
+    
+    aux1_trans={}    
+    aux2_trans={}
+    nc={}
+    for c in currencies:
+        for cu in currencies:
+            if c!=cu:
+                aux1_trans[c]=new_cash_position[c]-fund.var.currency_inventory[c]
+                aux2_trans[c]=environment.var.fx_rates.loc[fund.par.country,c.par.country]*(aux1_trans[c]) / (environment.var.fx_rates.loc[fund.par.country,cu.par.country]*(new_cash_position[cu]-fund.var.currency_inventory[cu]))
+        if aux2_trans[c]<0 and aux2_trans[c]<-1 :
+            new_cash_position[c]=fund.var.currency_inventory[c]+(aux1_trans[c] / (-aux2_trans[c]))
+            
+    
+    print "2nd cash correction",aux1_trans, aux2_trans, nc       
+    
+
+
     return new_cash_position

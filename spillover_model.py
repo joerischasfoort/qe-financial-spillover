@@ -174,7 +174,7 @@ def spillover_model(portfolios, currencies, environment, exogeneous_agents, fund
         nuC, piC, excess_demandC = cash_excess_demand_and_correction_factors(funds, portfolios, currencies, exogeneous_agents)
         print piC, nuC, excess_demandC
         for fund in funds:
-            fund.var.currency = fund_cash_adjustments(nuC, piC, excess_demandC, currencies, fund)
+            fund.var.currency = fund_cash_adjustments(nuC, piC, excess_demandC, currencies, fund, environment)
             
         show_fund(funds[0], portfolios, currencies, environment)
    
