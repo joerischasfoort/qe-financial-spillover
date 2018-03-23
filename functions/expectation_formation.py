@@ -112,7 +112,18 @@ def return_expectations(fund, portfolios, currencies, environment):
                                             environment.var.fx_rates.loc[fund.par.country][asset.par.country],
                                             fund.exp.exchange_rates.loc[fund.par.country][asset.par.country])
         exp_returns[asset] = exp_profit / asset.var.price * environment.var.fx_rates.loc[fund.par.country][asset.par.country]
-
+        
+        out = asset.par.maturity * (1 - fund.exp.default_rates[asset])
+        mat = (1 - asset.par.maturity) * (1 - fund.exp.default_rates[asset])
+        alla = (1 - fund.exp.default_rates[asset])
+        
+        repayment_effect = mat * (fund.exp.exchange_rates.loc[fund.par.country, asset.par.country] * np.divide(asset.par.face_value, float(asset.par.quantity)) - environment.var.fx_rates.loc[fund.par.country, asset.par.country] * asset.var.price)
+        price_effect = out * (fund.exp.exchange_rates.loc[fund.par.country, asset.par.country] * fund.exp.prices[asset] - environment.var.fx_rates.loc[fund.par.country, asset.par.country] * asset.var.price)
+        interest_effect = alla * fund.exp.exchange_rates.loc[fund.par.country, asset.par.country] * np.divide(asset.par.face_value, float(asset.par.quantity)) * asset.par.nominal_interest_rate
+        default_effect = fund.exp.default_rates[asset] * fund.exp.exchange_rates.loc[fund.par.country, asset.par.country]  *  fund.exp.prices[asset]
+        #expected_return[asset] = repayment_effect + price_effect + interest_effect - default_effect
+        
+        
     return exp_returns
 
 

@@ -55,7 +55,7 @@ def spillover_model(portfolios, currencies, environment, exogeneous_agents, fund
         convergence=False
         intraday_over=False
 
-        for tau in range(10): #TODO this needs to be rewritten into a while loop when stopping criteria are defined
+        for tau in range(10000): #TODO this needs to be rewritten into a while loop when stopping criteria are defined
 
 #            if tau == 1000:
 #                environment.par.global_parameters["p_change_intensity"]=0.01
@@ -85,7 +85,7 @@ def spillover_model(portfolios, currencies, environment, exogeneous_agents, fund
                 fund.exp.exchange_rates = price_fx_expectations(fund, portfolios, currencies, environment)
                 fund.exp.returns = return_expectations(fund, portfolios, currencies, environment)
                 fund.var.ewma_returns, fund.var.covariance_matrix = covariance_estimate(fund, portfolios)
-
+                print fund, fund.exp.returns
                               
                 # compute the weights of optimal balance sheet positions
                 fund.var.weights = portfolio_optimization(fund)
@@ -99,9 +99,41 @@ def spillover_model(portfolios, currencies, environment, exogeneous_agents, fund
                 
                 
                 
-                newA=portfolios[0].par.maturity*(1-portfolios[0].var.default_rate)*fund.var.assets[portfolios[0]]*portfolios[0].var.price*environment.var.fx_rates[fund.par.country][portfolios[0].par.country]+portfolios[1].par.maturity*(1-portfolios[1].var.default_rate)*fund.var.assets[portfolios[1]]*portfolios[1].var.price*environment.var.fx_rates[fund.par.country][portfolios[1].par.country]
-                newC=fund.var.currency_inventory[currencies[0]]*environment.var.fx_rates[fund.par.country][currencies[0].par.country] + fund.var.currency_inventory[currencies[1]]*environment.var.fx_rates[fund.par.country][currencies[1].par.country]
-                print newA, newC, fund.var.redeemable_shares, newA+newC- fund.var.redeemable_shares, portfolios[0].var.price
+                c0_t = fund.var_previous.currency[currencies[0]]
+                c1_t = fund.var_previous.currency[currencies[1]]
+                rhoC0 = currencies[0].par.nominal_interest_rate
+                rhoC1 = currencies[1].par.nominal_interest_rate
+                rho0 = portfolios[0].par.nominal_interest_rate
+                rho1 = portfolios[1].par.nominal_interest_rate
+                Q0_t = fund.var_previous.assets[portfolios[0]]
+                Q1_t = fund.var_previous.assets[portfolios[1]]
+                fxC0_t1 = environment.var.fx_rates.loc[fund.par.country][currencies[0].par.country]
+                fxC1_t1 = environment.var.fx_rates.loc[fund.par.country][currencies[1].par.country]
+                fxC0_t = environment.var_previous.fx_rates.loc[fund.par.country][currencies[0].par.country]
+                fxC1_t = environment.var_previous.fx_rates.loc[fund.par.country][currencies[1].par.country]
+                fx0_t1 = environment.var.fx_rates.loc[fund.par.country][portfolios[0].par.country]
+                fx1_t1 = environment.var.fx_rates.loc[fund.par.country][portfolios[1].par.country]
+                fx0_t = environment.var_previous.fx_rates.loc[fund.par.country][portfolios[0].par.country]
+                fx1_t = environment.var_previous.fx_rates.loc[fund.par.country][portfolios[1].par.country]
+                p0_t1 = portfolios[0].var.price
+                p1_t1 = portfolios[1].var.price
+                p0_t = portfolios[0].var_previous.price
+                p1_t = portfolios[1].var_previous.price
+                
+                dC0 = fxC0_t1*(c0_t*(1+rhoC0)+rho0*Q0_t)-c0_t*fxC0_t
+                dC1 = fxC1_t1*(c1_t*(1+rhoC1)+rho1*Q1_t)-c1_t*fxC1_t
+
+                d0 = Q0_t*(fx0_t1*p0_t1-fx0_t*p0_t)
+                d1 = Q1_t*(fx1_t1*p1_t1-fx1_t*p1_t)
+                
+                
+                
+                newA = Q0_t*p0_t1*fx0_t1+Q1_t*p1_t1*fx1_t1
+                newC = fund.var.currency_inventory[currencies[0]]*fxC0_t1 + fund.var.currency_inventory[currencies[1]]*fxC1_t1
+
+                #print "asset side effect:", fund, newA+newC-fund.var.redeemable_shares
+                
+                #print newA, newC, fund.var.redeemable_shares, newA+newC- fund.var.redeemable_shares, portfolios[0].var.price
             
             for ex in exogeneous_agents:
                 exogeneous_agents[ex].var.asset_demand = ex_agent_asset_demand(ex, exogeneous_agents, portfolios )
@@ -111,12 +143,11 @@ def spillover_model(portfolios, currencies, environment, exogeneous_agents, fund
                 for a in portfolios:
                     a.var.price, a.var.aux_ret = price_adjustment(portfolios, environment, exogeneous_agents, funds, a)
 
-
                 environment.var.fx_rates = fx_adjustment(portfolios, currencies, environment, exogeneous_agents , funds, fx_shock[day]) 
-                print a.var.price, a, tau
+               
 
 
-            if tau == 9:
+            if tau == 9998:
 
                 convergence=True
 

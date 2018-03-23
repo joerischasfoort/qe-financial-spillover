@@ -8,14 +8,14 @@ import numpy as np
 
 def convert_P2R(a, price):
     mat=(1-a.par.maturity)*(1-a.var.default_rate)
-    all=(1-a.var.default_rate)
-    ret=((a.par.face_value / a.par.quantity) * (mat + a.par.nominal_interest_rate * all) / price) - a.var.default_rate - mat
+    alla=(1-a.var.default_rate)
+    ret=((a.par.face_value / a.par.quantity) * (mat + a.par.nominal_interest_rate * alla) / price) - a.var.default_rate - mat
     return ret
 
 def convert_R2P(a, ret):
     mat=(1-a.par.maturity)*(1-a.var.default_rate)
-    all=(1-a.var.default_rate)
-    price = ((a.par.face_value / a.par.quantity) * (mat + a.par.nominal_interest_rate * all)) / (ret + a.var.default_rate + mat)
+    alla=(1-a.var.default_rate)
+    price = ((a.par.face_value / a.par.quantity) * (mat + a.par.nominal_interest_rate * alla)) / (ret + a.var.default_rate + mat)
     return price
 
 def price_adjustment(portfolios, environment, exogeneous_agents, funds, a):
@@ -46,12 +46,13 @@ def price_adjustment(portfolios, environment, exogeneous_agents, funds, a):
     #print a.var.price, total_demand[a]
 
     #Equation 1.17 : price adjustment
-    #log_new_price  = log(a.var.price) +  environment.par.global_parameters['p_change_intensity'] *  total_demand[a]/a.par.quantity
+    log_new_price  = log(a.var.price) +  environment.par.global_parameters['p_change_intensity'] *  total_demand[a]/a.par.quantity
 
     log_new_ret  = log(a.var.aux_ret) -  environment.par.global_parameters['p_change_intensity'] *  total_demand[a]/a.par.quantity
 
     price=convert_R2P(a,exp(log_new_ret))
 
+    #print a, exp(log_new_price), total_demand[a]
     #print a, price, total_demand[a]
     return price, exp(log_new_ret)
 
@@ -93,7 +94,7 @@ def fx_adjustment(portfolios, currencies, environment, exogeneous_agents , funds
         tot_red_shares = 0
         for fund in funds:
             if fund.par.country == el[0]:
-                tot_red_shares += fund.var.redeemable_shares / environment.var.fx_rates[el[0]][el[1]]
+                tot_red_shares += fund.var.redeemable_shares / environment.var.fx_rates.loc[el[0]][el[1]]
             else:
                 tot_red_shares += fund.var.redeemable_shares
             #we look for all demand of the "from" country, e.g. the first element of the tuple in the list of combinations
@@ -104,7 +105,7 @@ def fx_adjustment(portfolios, currencies, environment, exogeneous_agents , funds
 
                         weight_df += fund.var.weights[weight]
 
-                aux = (fund.var.redeemable_shares/environment.var.fx_rates[el[0]][el[1]]) * weight_df
+                aux = (fund.var.redeemable_shares/environment.var.fx_rates.loc[el[0]][el[1]]) * weight_df
 
             #then look for all supply of the "to" country, e.g. the second element of the tuple in the list of combinations
 
@@ -117,13 +118,14 @@ def fx_adjustment(portfolios, currencies, environment, exogeneous_agents , funds
 
 
         fx_demand = np.divide(aux - aux_2, tot_red_shares)
-
+        
         #Generate noise
 
-        log_new_fx_rate = log(environment.var.fx_rates[el[0]][el[1]]) + environment.par.global_parameters["fx_change_intensity"] * fx_demand + noise
+        log_new_fx_rate = log(environment.var.fx_rates.loc[el[0]][el[1]]) + environment.par.global_parameters["fx_change_intensity"] * fx_demand + noise
         fx_rate = exp(log_new_fx_rate)
 
-        environment.var.fx_rates[el[0]][el[1]] =  fx_rate
-        environment.var.fx_rates[el[1]][el[0]] =  1/ fx_rate
-
+        environment.var.fx_rates.loc[el[0]][el[1]] =  fx_rate
+        environment.var.fx_rates.loc[el[1]][el[0]] =  1/ fx_rate
+        
+        #print el[0], el[1], fx_demand, log(fx_rate)-log(environment.var_previous.fx_rates.loc[el[0]][el[1]]),environment.par.global_parameters["fx_change_intensity"] * fx_demand
     return environment.var.fx_rates

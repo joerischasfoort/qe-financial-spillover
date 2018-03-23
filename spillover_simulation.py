@@ -16,8 +16,8 @@ parameters = {
     "fx_change_intensity": 0.01,
     # asset parameters
     "face_value": 5000,
-    "nominal_interest_rate": 0.000,
-    "currency_rate": 0.000,
+    "nominal_interest_rate": 0.003,
+    "currency_rate": 0.004,
     "maturity" : 1,
     "quantity" : 5000,
     # agent parameters
