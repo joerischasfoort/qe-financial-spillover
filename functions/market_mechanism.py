@@ -51,7 +51,7 @@ def price_adjustment(portfolios, environment, exogeneous_agents, funds, a):
     price=convert_R2P(a,exp(log_new_ret))
 
     #print a, exp(log_new_price), total_demand[a]
-    #print a, price, total_demand[a]
+    print a, price, total_demand[a]
     return price, exp(log_new_ret)
 
 
@@ -125,7 +125,8 @@ def fx_adjustment(portfolios, currencies, environment, exogeneous_agents , funds
         environment.var.fx_rates.loc[el[0]][el[1]] =  fx_rate
         environment.var.fx_rates.loc[el[1]][el[0]] =  1/ fx_rate
 
-        #print el[0], el[1], fx_demand, log(fx_rate)-log(environment.var_previous.fx_rates.loc[el[0]][el[1]]),environment.par.global_parameters["fx_change_intensity"] * fx_demand
+        print "FX:", fx_rate, K_delta
+        
     return environment.var.fx_rates
 
  

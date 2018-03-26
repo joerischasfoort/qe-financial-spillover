@@ -60,7 +60,7 @@ def spillover_model(portfolios, currencies, environment, exogeneous_agents, fund
         convergence=False
         intraday_over=False
 
-        for tau in range(10): #TODO this needs to be rewritten into a while loop when stopping criteria are defined
+        for tau in range(10000): #TODO this needs to be rewritten into a while loop when stopping criteria are defined
 
 
 #            if tau == 1000:
@@ -137,9 +137,8 @@ def spillover_model(portfolios, currencies, environment, exogeneous_agents, fund
                 newA = Q0_t*p0_t1*fx0_t1+Q1_t*p1_t1*fx1_t1
                 newC = fund.var.currency_inventory[currencies[0]]*fxC0_t1 + fund.var.currency_inventory[currencies[1]]*fxC1_t1
 
-                print "asset side effect:", fund, newA+newC-fund.var.redeemable_shares
+                #print "asset side effect:", fund, newA+newC-fund.var.redeemable_shares
 
-                print newA, newC, fund.var.redeemable_shares, newA+newC- fund.var.redeemable_shares, portfolios[0].var.price
             
             for ex in exogeneous_agents:
                 exogeneous_agents[ex].var.asset_demand = ex_agent_asset_demand(ex, exogeneous_agents, portfolios )
@@ -150,10 +149,9 @@ def spillover_model(portfolios, currencies, environment, exogeneous_agents, fund
                     a.var.price, a.var.aux_ret = price_adjustment(portfolios, environment, exogeneous_agents, funds, a)
 
                 environment.var.fx_rates = fx_adjustment(portfolios, currencies, environment, exogeneous_agents , funds, fx_shock[day]) 
-                print tau
 
 
-            if tau == 8:
+            if tau == 9998:
                 convergence=True
 
             for a in portfolios:
@@ -169,7 +167,6 @@ def spillover_model(portfolios, currencies, environment, exogeneous_agents, fund
 
         excess_demand, pi, nu = asset_excess_demand_and_correction_factors(funds, portfolios, currencies, exogeneous_agents)
 
-        print pi, nu, excess_demand
 
          # trading
         for fund in funds:
@@ -180,12 +177,12 @@ def spillover_model(portfolios, currencies, environment, exogeneous_agents, fund
             exogeneous_agents[ex].var.assets = ex_asset_adjustments(ex, portfolios, excess_demand, pi, nu, exogeneous_agents)
     
         # balance sheet adjustment
-   
+        for fund in funds:
+            fund.var.currency_demand = cash_demand_correction(fund, currencies,environment)
+        
         nuC, piC, excess_demandC = cash_excess_demand_and_correction_factors(funds, portfolios, currencies, exogeneous_agents)
 
-        print piC, nuC, "excess demand", excess_demandC
 
-        print  piC, nuC
         for fund in funds:
             fund.var.currency = fund_cash_adjustments(nuC, piC, excess_demandC, currencies, fund, environment)
             

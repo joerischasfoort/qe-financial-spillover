@@ -1,5 +1,7 @@
 from __future__ import division
 
+import numpy as np
+
     
     
 def asset_excess_demand_and_correction_factors(funds, portfolios, currencies, exogeneous_agents):
@@ -84,7 +86,13 @@ def ex_asset_adjustments(ex, portfolios, excess_demand, pi, nu, exogeneous_agent
     
     return new_position
         
-        
+def cash_demand_correction(fund, currencies,environment):
+    new_cash_demand={c:0 for c in currencies}
+    for c, cu in zip(currencies, reversed(currencies)):
+        if np.sign(fund.var.currency_demand[c])!=np.sign(fund.var.currency_demand[cu]):
+            new_cash_demand[c]=np.sign(fund.var.currency_demand[c])*min(abs(fund.var.currency_demand[c]),abs(environment.var.fx_rates.loc[c.par.country,cu.par.country]*fund.var.currency_demand[cu]))
+                    
+    return new_cash_demand 
         
 def cash_excess_demand_and_correction_factors(funds, portfolios, currencies, exogeneous_agents):
                 
@@ -162,35 +170,22 @@ def fund_cash_adjustments(nuC, piC, excess_demandC, currencies, fund, environmen
         else:
             new_cash_position[c] = fund.var.currency_inventory[c] + fund.var.currency_demand[c] 
     
-    aux1_trans={}    
-    aux2_trans={}
-    nc={}
-    for c in currencies:
-        for cu in currencies:
-            if c!=cu:
-                aux1_trans[c]=new_cash_position[c]-fund.var.currency_inventory[c]
-                aux2_trans[c]=environment.var.fx_rates.loc[fund.par.country,c.par.country]*(aux1_trans[c]) / (environment.var.fx_rates.loc[fund.par.country,cu.par.country]*(new_cash_position[cu]-fund.var.currency_inventory[cu]))
-        if aux2_trans[c]<0 and aux2_trans[c]<-1 :
-            new_cash_position[c]=fund.var.currency_inventory[c]+(aux1_trans[c] / (-aux2_trans[c]))
-            
-    
-    print "2nd cash correction",aux1_trans, aux2_trans, nc       
 
     return new_cash_position
 
 
 def fund_cash_inventory_adjustment(fund, portfolios, currencies):
 
-    net_cash_flows = 0
+    net_cash_flows = {c:0 for c in currencies}
     new_cash_inventory = {}
 
     for c in currencies:
         for a in portfolios:
             if a.par.country == c.par.country:
                 out = a.par.maturity * (1 - a.var.default_rate)
-                net_cash_flows += (out * (fund.var_previous.assets[a]) - fund.var.assets[a]) * a.var.price
+                net_cash_flows[c] = net_cash_flows[c] + (out * (fund.var_previous.assets[a]) - fund.var.assets[a]) * a.var.price
 
-        new_cash_inventory[c] = fund.var.currency_inventory[c] + net_cash_flows
+        new_cash_inventory[c] = fund.var.currency_inventory[c] + net_cash_flows[c]
 
     return new_cash_inventory
 
