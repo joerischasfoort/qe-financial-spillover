@@ -51,11 +51,17 @@ def spillover_model(portfolios, currencies, environment, exogeneous_agents, fund
         # determine value and payouts to shareholders
         for fund in funds:
             fund.exp.default_rates = dr_expectations(fund, portfolios, delta_news)
-        
+
+        show_fund(funds[0], portfolios, currencies, environment)
+        show_fund(funds[1], portfolios, currencies, environment)
+
+
+
         convergence=False
         intraday_over=False
 
-        for tau in range(20): #TODO this needs to be rewritten into a while loop when stopping criteria are defined
+        for tau in range(10): #TODO this needs to be rewritten into a while loop when stopping criteria are defined
+
 
 #            if tau == 1000:
 #                environment.par.global_parameters["p_change_intensity"]=0.01
@@ -65,7 +71,6 @@ def spillover_model(portfolios, currencies, environment, exogeneous_agents, fund
 #                environment.par.global_parameters["p_change_intensity"]=0.0001
             if convergence == True:
                 intraday_over = True
-                
 
             for fund in funds:
                 # shareholder dividends and fund profits 
@@ -85,8 +90,9 @@ def spillover_model(portfolios, currencies, environment, exogeneous_agents, fund
                 fund.exp.exchange_rates = price_fx_expectations(fund, portfolios, currencies, environment)
                 fund.exp.returns = return_expectations(fund, portfolios, currencies, environment)
                 fund.var.ewma_returns, fund.var.covariance_matrix = covariance_estimate(fund, portfolios)
-                
-                              
+
+                #print fund, fund.exp.returns
+
                 # compute the weights of optimal balance sheet positions
                 fund.var.weights = portfolio_optimization(fund)
                 
@@ -132,7 +138,9 @@ def spillover_model(portfolios, currencies, environment, exogeneous_agents, fund
                 newC = fund.var.currency_inventory[currencies[0]]*fxC0_t1 + fund.var.currency_inventory[currencies[1]]*fxC1_t1
 
                 print "asset side effect:", fund, newA+newC-fund.var.redeemable_shares
-                
+
+                print newA, newC, fund.var.redeemable_shares, newA+newC- fund.var.redeemable_shares, portfolios[0].var.price
+            
             for ex in exogeneous_agents:
                 exogeneous_agents[ex].var.asset_demand = ex_agent_asset_demand(ex, exogeneous_agents, portfolios )
 
@@ -145,8 +153,7 @@ def spillover_model(portfolios, currencies, environment, exogeneous_agents, fund
                 print tau
 
 
-            if tau == 18:
-
+            if tau == 8:
                 convergence=True
 
             for a in portfolios:
@@ -161,24 +168,30 @@ def spillover_model(portfolios, currencies, environment, exogeneous_agents, fund
         #computing new asset and cash positions
 
         excess_demand, pi, nu = asset_excess_demand_and_correction_factors(funds, portfolios, currencies, exogeneous_agents)
+
         print pi, nu, excess_demand
-        # trading
+
+         # trading
         for fund in funds:
             fund.var.assets = fund_asset_adjustments(fund, portfolios, excess_demand, pi, nu)
-            fund.var.currency_inventory = fund_cash_inventory_adjustment()
-                
+            fund.var.currency_inventory = fund_cash_inventory_adjustment(fund, portfolios, currencies)
+
         for ex in exogeneous_agents:
             exogeneous_agents[ex].var.assets = ex_asset_adjustments(ex, portfolios, excess_demand, pi, nu, exogeneous_agents)
     
         # balance sheet adjustment
    
         nuC, piC, excess_demandC = cash_excess_demand_and_correction_factors(funds, portfolios, currencies, exogeneous_agents)
-        print piC, nuC, excess_demandC
+
+        print piC, nuC, "excess demand", excess_demandC
+
+        print  piC, nuC
         for fund in funds:
             fund.var.currency = fund_cash_adjustments(nuC, piC, excess_demandC, currencies, fund, environment)
             
         show_fund(funds[0], portfolios, currencies, environment)
-   
+        show_fund(funds[1], portfolios, currencies, environment)
+
 
         # update previous variables
         for fund in funds:

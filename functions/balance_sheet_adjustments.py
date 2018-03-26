@@ -46,6 +46,7 @@ def fund_asset_adjustments(fund, portfolios, excess_demand, pi, nu):
     new_position = {}
     for a in portfolios:
         out=a.par.maturity * (1-a.var.default_rate)
+         
         #compute new balance sheet position of funds
         if fund.var.asset_demand[a] > 0 and excess_demand[a] > 0:
             new_position[a] = out * fund.var_previous.assets[a] + fund.var.asset_demand[a] * pi[a]
@@ -174,7 +175,22 @@ def fund_cash_adjustments(nuC, piC, excess_demandC, currencies, fund, environmen
             
     
     print "2nd cash correction",aux1_trans, aux2_trans, nc       
-    
-
 
     return new_cash_position
+
+
+def fund_cash_inventory_adjustment(fund, portfolios, currencies):
+
+    net_cash_flows = 0
+    new_cash_inventory = {}
+
+    for c in currencies:
+        for a in portfolios:
+            if a.par.country == c.par.country:
+                out = a.par.maturity * (1 - a.var.default_rate)
+                net_cash_flows += (out * (fund.var_previous.assets[a]) - fund.var.assets[a]) * a.var.price
+
+        new_cash_inventory[c] = fund.var.currency_inventory[c] + net_cash_flows
+
+    return new_cash_inventory
+

@@ -3,8 +3,8 @@
 
 def show_fund(fund, portfolios, currencies, environment):
     
-    print("Balance sheet Fund",fund.name)
-    
+    print("Balance sheet Fund" , fund.name)
+    print("-------------------------")
     sum_asset =0
     for a in portfolios:
         sum_asset += fund.var.assets[a] * a.var.price * environment.var.fx_rates.loc[fund.par.country][a.par.country]

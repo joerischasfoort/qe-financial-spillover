@@ -21,10 +21,8 @@ def convert_R2P(a, ret):
 def price_adjustment(portfolios, environment, exogeneous_agents, funds, a):
     """
     Find the next  price of asset a.
-
     Sums over all demands of funds and exogenous agents
     and calculates the new price in tau via a log impact function
-
     """
     #Equation 1.18 : Get aggregate demand over all funds and exogenous agents
     total_demand = {i:0 for i in portfolios}
@@ -60,7 +58,6 @@ def price_adjustment(portfolios, environment, exogeneous_agents, funds, a):
 def fx_adjustment(portfolios, currencies, environment, exogeneous_agents , funds, noise):
     """
     Find the new fxrate
-
     """
 
     # We iterate over the  exchange rate matrix to get all
@@ -79,33 +76,35 @@ def fx_adjustment(portfolios, currencies, environment, exogeneous_agents , funds
         combinations.append(combination_tuple)
 
 
-    fx_demand = 0 # respective exchange demand
-    fx_rate =  0 # respective exchange demand
+    K_delta = 0 # net capital flows
+    fx_rate =  0
 
 
     for el in combinations:
 
-        weight_df = 0 # This is the sum of   weights per fund DEMANDING a currency (the first sum in equation 1.22)
+        weight_f = 0 # This is the sum of   weights per fund DEMANDING a currency (the first sum in equation 1.23)
         aux = 0 #helper variable
 
-        weight_fd = 0 # This is the sum of   weights per fund from the other perspective (the second term in the nominator term inequation 1.22 )
+        weight_fd = 0 # This is the sum of   weights per fund from the other perspective (the second term in the nominator term inequation 1.23 )
         aux_2 = 0 # helper variable
 
-        tot_red_shares = 0
+        tot_red_shares_home = 0 # denominator in 1.23
+        tot_red_shares_foreign = 0  # denominator in 1.23
         for fund in funds:
             if fund.par.country == el[0]:
-                tot_red_shares += fund.var.redeemable_shares / environment.var.fx_rates.loc[el[0]][el[1]]
-            else:
-                tot_red_shares += fund.var.redeemable_shares
+                tot_red_shares_home += fund.var.redeemable_shares / environment.var.fx_rates.loc[el[0]][el[1]]
+            if fund.par.country == el[1]: # add all foreign redeemable shares
+                tot_red_shares_foreign += fund.var.redeemable_shares
+
             #we look for all demand of the "from" country, e.g. the first element of the tuple in the list of combinations
             if fund.par.country == el[0]:
                 for weight in fund.var.weights:
                 # Then we look for all weights that are outside of the fund's own country
                     if fund.par.country != weight.par.country:
 
-                        weight_df += fund.var.weights[weight]
+                        weight_f += fund.var.weights[weight]
 
-                aux = (fund.var.redeemable_shares/environment.var.fx_rates.loc[el[0]][el[1]]) * weight_df
+                aux = (tot_red_shares_foreign/environment.var.fx_rates.loc[el[0]][el[1]]) * weight_f
 
             #then look for all supply of the "to" country, e.g. the second element of the tuple in the list of combinations
 
@@ -114,18 +113,19 @@ def fx_adjustment(portfolios, currencies, environment, exogeneous_agents , funds
                 for weight in fund.var.weights:
                      if fund.par.country !=  weight.par.country:
                          weight_fd += fund.var.weights[weight]
-                aux_2 = (fund.var.redeemable_shares) * weight_fd
+                aux_2 = (tot_red_shares_foreign) * weight_fd
 
 
-        fx_demand = np.divide(aux - aux_2, tot_red_shares)
-        
-        #Generate noise
+        K_delta  = np.divide(aux - aux_2, (  tot_red_shares_home +   tot_red_shares_foreign  ))
 
-        log_new_fx_rate = log(environment.var.fx_rates.loc[el[0]][el[1]]) + environment.par.global_parameters["fx_change_intensity"] * fx_demand + noise
+
+        log_new_fx_rate = log(environment.var.fx_rates.loc[el[0]][el[1]]) + environment.par.global_parameters["fx_change_intensity"] * K_delta + noise
         fx_rate = exp(log_new_fx_rate)
 
         environment.var.fx_rates.loc[el[0]][el[1]] =  fx_rate
         environment.var.fx_rates.loc[el[1]][el[0]] =  1/ fx_rate
-        
+
         #print el[0], el[1], fx_demand, log(fx_rate)-log(environment.var_previous.fx_rates.loc[el[0]][el[1]]),environment.par.global_parameters["fx_change_intensity"] * fx_demand
     return environment.var.fx_rates
+
+ 
