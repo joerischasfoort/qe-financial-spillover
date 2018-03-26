@@ -165,7 +165,8 @@ def spillover_model(portfolios, currencies, environment, exogeneous_agents, fund
         # trading
         for fund in funds:
             fund.var.assets = fund_asset_adjustments(fund, portfolios, excess_demand, pi, nu)
-        
+            fund.var.currency_inventory = fund_cash_inventory_adjustment()
+                
         for ex in exogeneous_agents:
             exogeneous_agents[ex].var.assets = ex_asset_adjustments(ex, portfolios, excess_demand, pi, nu, exogeneous_agents)
     
