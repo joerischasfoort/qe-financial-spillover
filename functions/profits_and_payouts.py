@@ -6,6 +6,7 @@ def profit_and_payout(fund, portfolios, currencies, environment):
     profit_per_asset = {}
     payouts = {}
     total_payouts = {c:0 for c in currencies}
+    total_payouts_fx_corr={}
     testing = 0
     total_profit = 0
     for a in portfolios:
@@ -41,8 +42,12 @@ def profit_and_payout(fund, portfolios, currencies, environment):
         
         profit_per_asset[c] = c.par.nominal_interest_rate * environment.var.fx_rates.loc[fund.par.country, c.par.country] + environment.var.fx_rates.loc[fund.par.country, c.par.country] - environment.var_previous.fx_rates.loc[fund.par.country,c.par.country]
         
-        total_payouts[c] =  (total_payouts[c] + fund.var.currency[c] * c.par.nominal_interest_rate) * environment.var.fx_rates.loc[fund.par.country, c.par.country]
-        total_payouts[c]=0
+        total_payouts[c] =  (total_payouts[c] + fund.var.currency[c] * c.par.nominal_interest_rate) 
+        
+        # the balance sheet effect takes into account the exchange rate effect
+        total_payouts_fx_corr[c] =  total_payouts[c]  * environment.var.fx_rates.loc[fund.par.country, c.par.country]
+        
+        #total_payouts[c]=0
         
         total_profit = total_profit + profit_per_asset[c] * fund.var.currency[c]
        
@@ -50,7 +55,7 @@ def profit_and_payout(fund, portfolios, currencies, environment):
         
     #print "profit effect:", fund, total_profit
     
-    redeemable_shares =fund.var_previous.redeemable_shares + total_profit - sum(total_payouts.values())
+    redeemable_shares =fund.var_previous.redeemable_shares + total_profit - sum(total_payouts_fx_corr.values())
     
     
 
