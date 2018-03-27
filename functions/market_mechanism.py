@@ -50,7 +50,7 @@ def price_adjustment(portfolios, environment, exogeneous_agents, funds, a):
 
     price=convert_R2P(a,exp(log_new_ret))
 
-    print a, price, total_demand[a]
+    #print a, price, total_demand[a]
     return price, exp(log_new_ret)
 
 
@@ -81,7 +81,7 @@ def fx_adjustment(portfolios, currencies, environment, exogeneous_agents , funds
 
     for el in combinations:
 
-        weight_df = 0 # This is the sum of   weights per fund DEMANDING a currency (the first sum in equation 1.23)
+        weight_f = 0 # This is the sum of   weights per fund DEMANDING a currency (the first sum in equation 1.23)
         aux = 0 #helper variable
 
         weight_fd = 0 # This is the sum of   weights per fund from the other perspective (the second term in the nominator term inequation 1.23 )
@@ -103,16 +103,17 @@ def fx_adjustment(portfolios, currencies, environment, exogeneous_agents , funds
         
         Delta_Capital = (capital_DF - capital_FD) / sum(red_share_fx_corr.values())
 
-
-        log_new_fx_rate = log(environment.var.fx_rates.loc[el[0]][el[1]]) + environment.par.global_parameters["fx_change_intensity"] * Delta_Capital + noise
+        log_new_fx_rate = log(environment.var.fx_rates.loc[el[0]][el[1]]) + environment.par.global_parameters["fx_change_intensity"] * Delta_Capital #+ noise
         fx_rate = exp(log_new_fx_rate)
 
         environment.var.fx_rates.loc[el[0]][el[1]] =  fx_rate
         environment.var.fx_rates.loc[el[1]][el[0]] =  1/ fx_rate
-        
-        print "testing", fx_rate, Delta_Capital
-        #print "FX:", fx_rate, K_delta
-        
-    return environment.var.fx_rates
 
- 
+        #for debugging
+       #print "testing Fund",  fund.name, fx_rate, "demand", fund.var.weights, Delta_Capital
+        #print "FX:", fx_rate, K_delta
+
+
+
+    return environment.var.fx_rates, Delta_Capital
+
