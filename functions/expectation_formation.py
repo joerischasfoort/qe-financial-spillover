@@ -94,7 +94,7 @@ def return_expectations(fund, portfolios, currencies, environment):
     return exp_returns
 
 
-def covariance_estimate(fund, portfolios):
+def covariance_estimate(fund, portfolios, environment):
     """
     Calculate expected weighted moving average of returns and covariance matrix between them
     :param fund: the Fund object for which to make the calculation
@@ -105,7 +105,10 @@ def covariance_estimate(fund, portfolios):
     ewma_returns = {}
     for asset in fund.var.assets:
         ewma_returns[asset] = compute_ewma(fund.var.hypothetical_returns[asset], fund.var.ewma_returns[asset],
-                                           fund.par.price_memory)
+                                           environment.par.global_parameters["cov_memory"])
+
+
+    print ewma_returns, fund
 
     new_covariance_matrix = fund.var.covariance_matrix.copy()
     for idx_x, asset_x in enumerate(portfolios):
@@ -119,7 +122,7 @@ def covariance_estimate(fund, portfolios):
                     fund.var.hypothetical_returns[asset_y],
                     fund.var.ewma_returns[asset_y],
                     fund.par.price_memory))
-                ewma_covar = compute_ewma(covar, fund.var.covariance_matrix.loc[asset_x][asset_y], fund.par.price_memory)
+                ewma_covar = compute_ewma(covar, fund.var.covariance_matrix.loc[asset_x][asset_y], environment.par.global_parameters["cov_memory"])
 
                 new_covariance_matrix.loc[asset_x][asset_y] = ewma_covar
 

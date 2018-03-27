@@ -72,7 +72,7 @@ def spillover_model(portfolios, currencies, environment, exogeneous_agents, fund
         convergence=False
         intraday_over=False
 
-        for tau in range(1000): #TODO this needs to be rewritten into a while loop when stopping criteria are defined
+        for tau in range(10000): #TODO this needs to be rewritten into a while loop when stopping criteria are defined
 
 #            if tau == 1000:
 #                environment.par.global_parameters["p_change_intensity"]=0.01
@@ -80,6 +80,8 @@ def spillover_model(portfolios, currencies, environment, exogeneous_agents, fund
 #                environment.par.global_parameters["p_change_intensity"]=0.001
 #            if tau == 5000:
 #                environment.par.global_parameters["p_change_intensity"]=0.0001
+
+
             if convergence == True:
                 intraday_over = True
 
@@ -88,20 +90,15 @@ def spillover_model(portfolios, currencies, environment, exogeneous_agents, fund
                 fund.var.profits, \
                 fund.var.redeemable_shares, \
                 fund.var.payouts = profit_and_payout(fund, portfolios, currencies, environment)
-                
 
-                
-                
-                
-                
                 # 1 Expectation formation
                 fund.var.ewma_delta_prices, \
                 fund.var.ewma_delta_fx, \
                 fund.exp.prices, \
                 fund.exp.exchange_rates = price_fx_expectations(fund, portfolios, currencies, environment)
                 fund.exp.returns = return_expectations(fund, portfolios, currencies, environment)
-                fund.var.ewma_returns, fund.var.covariance_matrix = covariance_estimate(fund, portfolios)
-
+                fund.var.ewma_returns, fund.var.covariance_matrix = covariance_estimate(fund, portfolios, environment)
+                #print fund.var.covariance_matrix
                 #print fund, fund.exp.returns
 
                 # compute the weights of optimal balance sheet positions
@@ -113,9 +110,7 @@ def spillover_model(portfolios, currencies, environment, exogeneous_agents, fund
                 
                 # compute demand for balance sheet positions
                 fund.var.asset_demand, fund.var.currency_demand = asset_demand(fund, portfolios, currencies, environment)
-                
-                
-                
+
                 c0_t = fund.var_previous.currency[currencies[0]]
                 c1_t = fund.var_previous.currency[currencies[1]]
                 rhoC0 = currencies[0].par.nominal_interest_rate
@@ -162,7 +157,7 @@ def spillover_model(portfolios, currencies, environment, exogeneous_agents, fund
                 environment.var.fx_rates, Delta_Capital = fx_adjustment(portfolios, currencies, environment, exogeneous_agents , funds, fx_shock[day])
                 print "Delta K", Delta_Capital
 
-            if tau == 998:
+            if tau == 9998:
 
                 convergence=True
 

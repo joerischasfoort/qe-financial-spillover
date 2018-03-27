@@ -14,6 +14,7 @@ parameters = {
     "days": 2,
     "p_change_intensity": 0.001,
     "fx_change_intensity": 0.01,
+    "cov_memory": 0.01,
     # asset parameters
     "face_value": 5000,
     "nominal_interest_rate": 0.003,
