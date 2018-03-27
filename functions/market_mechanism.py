@@ -124,10 +124,6 @@ def fx_adjustment(portfolios, currencies, environment, exogeneous_agents , funds
         #print "testing", fx_rate, Delta_Capital
         print "FX:", fx_rate, Delta_Capital
         
-    return environment.var.fx_rates
-
-
-
 
     return environment.var.fx_rates, Delta_Capital
 

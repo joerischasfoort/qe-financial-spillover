@@ -104,7 +104,7 @@ def covariance_estimate(fund, portfolios, environment):
     """
     ewma_returns = {}
     for asset in fund.var.assets:
-        ewma_returns[asset] = compute_ewma(fund.var.hypothetical_returns[asset], fund.var.ewma_returns[asset],
+        ewma_returns[asset] = compute_ewma(fund.var.hypothetical_returns[asset], fund.var_previous.ewma_returns[asset],
                                            environment.par.global_parameters["cov_memory"])
 
 
