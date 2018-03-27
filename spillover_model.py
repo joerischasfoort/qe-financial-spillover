@@ -29,7 +29,19 @@ def spillover_model(portfolios, currencies, environment, exogeneous_agents, fund
     random.seed(seed)
     np.random.seed(seed)
     # create tau data dictionary
+
+    #Measurements
     data = {str(a) + 'price': [environment.par.global_parameters["init_asset_price"]] for a in portfolios}
+    data["FX_rate_domestic_foreign"] = [environment.var.fx_rates.loc["domestic"][ "foreign"]]
+
+    all_assets = portfolios + currencies
+    for fund in funds:
+        for a in all_assets:
+            weights = { "weight_" +str(a) + "_fund_" + str(fund.name):  [fund.var.weights[a]]  for weight in fund.var.weights }
+            data.update(weights)
+            redeem_s = { "redeemable_shares" + "_fund_" + str(fund.name):  [fund.var.redeemable_shares]  }
+            data.update(redeem_s)
+    data["Delta_Capital"] = [0]
 
     news_process = ornstein_uhlenbeck_levels(environment.par.global_parameters["days"],
                                              environment.par.global_parameters["default_rate_mu"],
@@ -52,8 +64,8 @@ def spillover_model(portfolios, currencies, environment, exogeneous_agents, fund
         for fund in funds:
             fund.exp.default_rates = dr_expectations(fund, portfolios, delta_news)
 
-        show_fund(funds[0], portfolios, currencies, environment)
-        show_fund(funds[1], portfolios, currencies, environment)
+        #show_fund(funds[0], portfolios, currencies, environment)
+        #show_fund(funds[1], portfolios, currencies, environment)
 
 
 
@@ -63,12 +75,8 @@ def spillover_model(portfolios, currencies, environment, exogeneous_agents, fund
         for tau in range(20000): #TODO this needs to be rewritten into a while loop when stopping criteria are defined
 
 
-#            if tau == 1000:
-#                environment.par.global_parameters["p_change_intensity"]=0.01
-#            if tau == 3000:
-#                environment.par.global_parameters["p_change_intensity"]=0.001
-#            if tau == 5000:
-#                environment.par.global_parameters["p_change_intensity"]=0.0001
+
+#          
             if convergence == True:
                 intraday_over = True
 
@@ -95,7 +103,7 @@ def spillover_model(portfolios, currencies, environment, exogeneous_agents, fund
 
                 # compute the weights of optimal balance sheet positions
                 fund.var.weights = portfolio_optimization(fund)
-                
+                #print fund.var.weights, "weights"
                 # intermediate cash position resulting from interest payments, payouts, maturing and defaulting assets
                 fund.var.currency_inventory = cash_inventory(fund, portfolios, currencies)
                 #print fund, fund.var.currency_inventory[currencies[0]],  fund.var_previous.currency[currencies[0]] + fund.var.assets[portfolios[0]]*((1-portfolios[0].var.default_rate)*(1-portfolios[0].par.maturity)+portfolios[0].var.default_rate)*portfolios[0].var.price
@@ -152,13 +160,19 @@ def spillover_model(portfolios, currencies, environment, exogeneous_agents, fund
                 
                 
             if tau == 19998:
+
                 convergence=True
 
+            #Update intraday data points
             for a in portfolios:
                 data[str(a) + 'price'].append(a.var.price) #TODO remove when done
-        
-            
-            
+            for fund in funds:
+                data["redeemable_shares" + "_fund_" + str(fund.name)].append(fund.var.redeemable_shares)
+                for a in all_assets:
+                    data["weight_" + str(a) + "_fund_" + str(fund.name)].append(fund.var.weights[a])
+
+            data["Delta_Capital"].append(Delta_Capital )
+            data["FX_rate_domestic_foreign"].append(environment.var.fx_rates.loc["domestic"][ "foreign"])
             #this is where intraday calculations end
         
 
@@ -185,7 +199,8 @@ def spillover_model(portfolios, currencies, environment, exogeneous_agents, fund
 
         for fund in funds:
             fund.var.currency = fund_cash_adjustments(nuC, piC, excess_demandC, currencies, fund, environment)
-            
+
+        #debugging
         show_fund(funds[0], portfolios, currencies, environment)
         show_fund(funds[1], portfolios, currencies, environment)
 

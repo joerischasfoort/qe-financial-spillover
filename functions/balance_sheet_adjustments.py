@@ -175,7 +175,6 @@ def fund_cash_adjustments(nuC, piC, excess_demandC, currencies, fund, environmen
 
 
 def fund_cash_inventory_adjustment(fund, portfolios, currencies):
-
     net_cash_flows = {c:0 for c in currencies}
     new_cash_inventory = {}
 
@@ -188,4 +187,6 @@ def fund_cash_inventory_adjustment(fund, portfolios, currencies):
         new_cash_inventory[c] = fund.var.currency_inventory[c] + net_cash_flows[c]
 
     return new_cash_inventory
+
+
 
