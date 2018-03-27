@@ -50,7 +50,6 @@ def price_adjustment(portfolios, environment, exogeneous_agents, funds, a):
 
     price=convert_R2P(a,exp(log_new_ret))
 
-    #print a, exp(log_new_price), total_demand[a]
     print a, price, total_demand[a]
     return price, exp(log_new_ret)
 
@@ -90,40 +89,29 @@ def fx_adjustment(portfolios, currencies, environment, exogeneous_agents , funds
 
         tot_red_shares = 0
 
+        
+        red_share_fx_corr={}
+        capital_DF = 0
+        capital_FD = 0
         for fund in funds:
-            if fund.par.country == el[0]:
-                tot_red_shares += fund.var.redeemable_shares / environment.var.fx_rates.loc[el[0]][el[1]]
-            else:
-                tot_red_shares += fund.var.redeemable_shares
-            #we look for all demand of the "from" country, e.g. the first element of the tuple in the list of combinations
-            if fund.par.country == el[0]:
-                for weight in fund.var.weights:
-                # Then we look for all weights that are outside of the fund's own country
-                    if fund.par.country != weight.par.country:
-
-                        weight_df += fund.var.weights[weight]
-
-                aux = (fund.var.redeemable_shares/environment.var.fx_rates.loc[el[0]][el[1]]) * weight_df
-
-            #then look for all supply of the "to" country, e.g. the second element of the tuple in the list of combinations
-
-            if fund.par.country == el[1]:
-
-                for weight in fund.var.weights:
-                     if fund.par.country !=  weight.par.country:
-                         weight_fd += fund.var.weights[weight]
-                aux_2 = (fund.var.redeemable_shares) * weight_fd
-
-        K_delta  = np.divide(aux - aux_2, ( tot_red_shares  ))
+            red_share_fx_corr[fund]=fund.var.redeemable_shares / environment.var.fx_rates.loc[fund.par.country, el[1]]
+            for pos in fund.var.weights:
+                if pos.par.country != fund.par.country and fund.par.country == el[0]:
+                    capital_DF = capital_DF + fund.var.weights[pos]*red_share_fx_corr[fund]
+                if pos.par.country != fund.par.country and fund.par.country == el[1]:
+                    capital_FD = capital_FD + fund.var.weights[pos]*red_share_fx_corr[fund]
+        
+        Delta_Capital = (capital_DF - capital_FD) / sum(red_share_fx_corr.values())
 
 
-        log_new_fx_rate = log(environment.var.fx_rates.loc[el[0]][el[1]]) + environment.par.global_parameters["fx_change_intensity"] * K_delta + noise
+        log_new_fx_rate = log(environment.var.fx_rates.loc[el[0]][el[1]]) + environment.par.global_parameters["fx_change_intensity"] * Delta_Capital + noise
         fx_rate = exp(log_new_fx_rate)
 
         environment.var.fx_rates.loc[el[0]][el[1]] =  fx_rate
         environment.var.fx_rates.loc[el[1]][el[0]] =  1/ fx_rate
-
-        print "FX:", fx_rate, K_delta
+        
+        print "testing", fx_rate, Delta_Capital
+        #print "FX:", fx_rate, K_delta
         
     return environment.var.fx_rates
 
