@@ -172,6 +172,8 @@ def spillover_model(portfolios, currencies, environment, exogeneous_agents, fund
 
         for portfolio in portfolios:
             portfolio.var_previous = copy.copy(portfolio.var)
+        
+        environment.var_previous = copy.copy(environment.var)
 
         exogeneous_agents['central_bank_domestic'].var_previous = copy_cb_variables(exogeneous_agents['central_bank_domestic'].var)
         exogeneous_agents['underwriter'].var_previous = copy_underwriter_variables(exogeneous_agents['underwriter'].var)
