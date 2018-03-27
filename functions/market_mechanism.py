@@ -82,29 +82,28 @@ def fx_adjustment(portfolios, currencies, environment, exogeneous_agents , funds
 
     for el in combinations:
 
-        weight_f = 0 # This is the sum of   weights per fund DEMANDING a currency (the first sum in equation 1.23)
+        weight_df = 0 # This is the sum of   weights per fund DEMANDING a currency (the first sum in equation 1.23)
         aux = 0 #helper variable
 
         weight_fd = 0 # This is the sum of   weights per fund from the other perspective (the second term in the nominator term inequation 1.23 )
         aux_2 = 0 # helper variable
 
-        tot_red_shares_home = 0 # denominator in 1.23
-        tot_red_shares_foreign = 0  # denominator in 1.23
+        tot_red_shares = 0
+
         for fund in funds:
             if fund.par.country == el[0]:
-                tot_red_shares_home += fund.var.redeemable_shares / environment.var.fx_rates.loc[el[0]][el[1]]
-            if fund.par.country == el[1]: # add all foreign redeemable shares
-                tot_red_shares_foreign += fund.var.redeemable_shares
-
+                tot_red_shares += fund.var.redeemable_shares / environment.var.fx_rates.loc[el[0]][el[1]]
+            else:
+                tot_red_shares += fund.var.redeemable_shares
             #we look for all demand of the "from" country, e.g. the first element of the tuple in the list of combinations
             if fund.par.country == el[0]:
                 for weight in fund.var.weights:
                 # Then we look for all weights that are outside of the fund's own country
                     if fund.par.country != weight.par.country:
 
-                        weight_f += fund.var.weights[weight]
+                        weight_df += fund.var.weights[weight]
 
-                aux = (tot_red_shares_foreign/environment.var.fx_rates.loc[el[0]][el[1]]) * weight_f
+                aux = (fund.var.redeemable_shares/environment.var.fx_rates.loc[el[0]][el[1]]) * weight_df
 
             #then look for all supply of the "to" country, e.g. the second element of the tuple in the list of combinations
 
@@ -113,10 +112,9 @@ def fx_adjustment(portfolios, currencies, environment, exogeneous_agents , funds
                 for weight in fund.var.weights:
                      if fund.par.country !=  weight.par.country:
                          weight_fd += fund.var.weights[weight]
-                aux_2 = (tot_red_shares_foreign) * weight_fd
+                aux_2 = (fund.var.redeemable_shares) * weight_fd
 
-
-        K_delta  = np.divide(aux - aux_2, (  tot_red_shares_home +   tot_red_shares_foreign  ))
+        K_delta  = np.divide(aux - aux_2, ( tot_red_shares  ))
 
 
         log_new_fx_rate = log(environment.var.fx_rates.loc[el[0]][el[1]]) + environment.par.global_parameters["fx_change_intensity"] * K_delta + noise

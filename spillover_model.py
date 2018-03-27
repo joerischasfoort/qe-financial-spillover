@@ -60,7 +60,7 @@ def spillover_model(portfolios, currencies, environment, exogeneous_agents, fund
         convergence=False
         intraday_over=False
 
-        for tau in range(10000): #TODO this needs to be rewritten into a while loop when stopping criteria are defined
+        for tau in range(1000): #TODO this needs to be rewritten into a while loop when stopping criteria are defined
 
 
 #            if tau == 1000:
@@ -151,7 +151,7 @@ def spillover_model(portfolios, currencies, environment, exogeneous_agents, fund
                 environment.var.fx_rates = fx_adjustment(portfolios, currencies, environment, exogeneous_agents , funds, fx_shock[day]) 
 
 
-            if tau == 9998:
+            if tau == 999:
                 convergence=True
 
             for a in portfolios:
@@ -162,7 +162,7 @@ def spillover_model(portfolios, currencies, environment, exogeneous_agents, fund
             #this is where intraday calculations end
         
 
-        
+        print environment.var.fx_rates
         #computing new asset and cash positions
 
         excess_demand, pi, nu = asset_excess_demand_and_correction_factors(funds, portfolios, currencies, exogeneous_agents)
