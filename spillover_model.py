@@ -60,7 +60,7 @@ def spillover_model(portfolios, currencies, environment, exogeneous_agents, fund
         convergence=False
         intraday_over=False
 
-        for tau in range(10000): #TODO this needs to be rewritten into a while loop when stopping criteria are defined
+        for tau in range(20000): #TODO this needs to be rewritten into a while loop when stopping criteria are defined
 
 
 #            if tau == 1000:
@@ -149,9 +149,9 @@ def spillover_model(portfolios, currencies, environment, exogeneous_agents, fund
                     a.var.price, a.var.aux_ret = price_adjustment(portfolios, environment, exogeneous_agents, funds, a)
 
                 environment.var.fx_rates = fx_adjustment(portfolios, currencies, environment, exogeneous_agents , funds, fx_shock[day]) 
-
-
-            if tau == 9998:
+                
+                
+            if tau == 19998:
                 convergence=True
 
             for a in portfolios:

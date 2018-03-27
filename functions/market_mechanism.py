@@ -50,7 +50,7 @@ def price_adjustment(portfolios, environment, exogeneous_agents, funds, a):
 
     price=convert_R2P(a,exp(log_new_ret))
 
-    print a, price, total_demand[a]
+    print "Price:", a, price, total_demand[a]/a.par.quantity
     return price, exp(log_new_ret)
 
 
@@ -93,25 +93,32 @@ def fx_adjustment(portfolios, currencies, environment, exogeneous_agents , funds
         red_share_fx_corr={}
         capital_DF = 0
         capital_FD = 0
+        
         for fund in funds:
-            red_share_fx_corr[fund]=fund.var.redeemable_shares / environment.var.fx_rates.loc[fund.par.country, el[1]]
-            for pos in fund.var.weights:
-                if pos.par.country != fund.par.country and fund.par.country == el[0]:
-                    capital_DF = capital_DF + fund.var.weights[pos]*red_share_fx_corr[fund]
-                if pos.par.country != fund.par.country and fund.par.country == el[1]:
-                    capital_FD = capital_FD + fund.var.weights[pos]*red_share_fx_corr[fund]
+            red_share_fx_corr[fund]= fund.var.redeemable_shares / environment.var.fx_rates.loc[fund.par.country,el[1]]
+            for a in portfolios:
+                if a.par.country != fund.par.country and fund.par.country == el[0]:
+                    capital_DF = capital_DF + fund.var.asset_demand[a]*a.var.price*environment.var.fx_rates.loc[el[0], el[1]]
+                if a.par.country != fund.par.country and fund.par.country == el[1]:
+                    capital_FD = capital_FD + fund.var.asset_demand[a]*a.var.price
+            for c in currencies:
+                if c.par.country != fund.par.country and fund.par.country == el[0]:
+                    capital_DF = capital_DF + fund.var.currency_demand[c]*environment.var.fx_rates.loc[el[0], el[1]]
+                if a.par.country != fund.par.country and fund.par.country == el[1]:
+                    capital_FD = capital_FD + fund.var.currency_demand[c]
+        
+
         
         Delta_Capital = (capital_DF - capital_FD) / sum(red_share_fx_corr.values())
 
-
-        log_new_fx_rate = log(environment.var.fx_rates.loc[el[0]][el[1]]) + environment.par.global_parameters["fx_change_intensity"] * Delta_Capital + noise
+        log_new_fx_rate = log(environment.var.fx_rates.loc[el[0]][el[1]]) + environment.par.global_parameters["fx_change_intensity"] * Delta_Capital #+ noise
         fx_rate = exp(log_new_fx_rate)
 
         environment.var.fx_rates.loc[el[0]][el[1]] =  fx_rate
         environment.var.fx_rates.loc[el[1]][el[0]] =  1/ fx_rate
         
-        print "testing", fx_rate, Delta_Capital
-        #print "FX:", fx_rate, K_delta
+        #print "testing", fx_rate, Delta_Capital
+        print "FX:", fx_rate, Delta_Capital
         
     return environment.var.fx_rates
 
