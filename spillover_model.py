@@ -73,7 +73,7 @@ def spillover_model(portfolios, currencies, environment, exogeneous_agents, fund
         intraday_over=False
 
 
-        for tau in range(10000): #TODO this needs to be rewritten into a while loop when stopping criteria are defined
+        for tau in range(20000): #TODO this needs to be rewritten into a while loop when stopping criteria are defined
 
 
             if convergence == True:
@@ -112,13 +112,15 @@ def spillover_model(portfolios, currencies, environment, exogeneous_agents, fund
 
 
             if intraday_over == False:            
+                Delta_Demand = {}
                 for a in portfolios:
-                    a.var.price, a.var.aux_ret = price_adjustment(portfolios, environment, exogeneous_agents, funds, a)
+                    a.var.price, a.var.aux_ret, Delta_Demand[a] = price_adjustment(portfolios, environment, exogeneous_agents, funds, a)
 
-                environment.var.fx_rates, Delta_Capital = fx_adjustment(portfolios, currencies, environment, exogeneous_agents , funds, fx_shock[day]) 
+                environment.var.fx_rates, Delta_Capital = fx_adjustment(portfolios, currencies, environment, exogeneous_agents , funds, 0.0)#fx_shock[day])
                 
-                
-            if tau == 9998:
+            print tau,environment.var.fx_rates.loc[funds[0].par.country, funds[1].par.country]
+
+            if tau == 19998:
                 convergence=True
 
             #Update intraday data points
