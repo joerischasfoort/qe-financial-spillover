@@ -94,7 +94,7 @@ def return_expectations(fund, portfolios, currencies, environment):
     return exp_returns
 
 
-def covariance_estimate(fund, portfolios, environment,currencies):
+def covariance_estimate(fund, portfolios, environment, currencies):
     """
     Calculate expected weighted moving average of returns and covariance matrix between them
     :param fund: the Fund object for which to make the calculation
@@ -107,12 +107,12 @@ def covariance_estimate(fund, portfolios, environment,currencies):
     for asset in fund.var.assets:
         hypothetical_returns[asset]=fund.var.profits[asset] / (asset.var_previous.price * environment.var_previous.fx_rates.loc[fund.par.country, asset.par.country])
         ewma_returns[asset] = compute_ewma(hypothetical_returns[asset], fund.var_previous.ewma_returns[asset], environment.par.global_parameters["cov_memory"])
-    
-    for c in currencies:
-        hypothetical_returns[c]= fund.var.profits[c] / ( environment.var_previous.fx_rates.loc[fund.par.country, c.par.country])
+
+    for cash in fund.var.currency:
+        hypothetical_returns[cash] = fund.var.profits[cash] / (    environment.var_previous.fx_rates.loc[fund.par.country, cash.par.country])
+        ewma_returns[cash] = compute_ewma(hypothetical_returns[cash], fund.var_previous.ewma_returns[cash],environment.par.global_parameters["cov_memory"])
 
 
-    print ewma_returns, fund
 
     new_covariance_matrix = fund.var.covariance_matrix.copy()
     for idx_x, asset_x in enumerate(new_covariance_matrix.columns):
@@ -123,8 +123,6 @@ def covariance_estimate(fund, portfolios, environment,currencies):
 
                 new_covariance_matrix.loc[asset_x][asset_y] = ewma_covar
                 new_covariance_matrix.loc[asset_y][asset_x] = ewma_covar
-
-
 
 
     return ewma_returns, new_covariance_matrix

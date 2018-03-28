@@ -73,13 +73,12 @@ def spillover_model(portfolios, currencies, environment, exogeneous_agents, fund
         intraday_over=False
 
 
-        for tau in range(20000): #TODO this needs to be rewritten into a while loop when stopping criteria are defined
+        for tau in range(10000): #TODO this needs to be rewritten into a while loop when stopping criteria are defined
 
 
-
-#          
             if convergence == True:
                 intraday_over = True
+
 
             for fund in funds:
                 # shareholder dividends and fund profits 
@@ -93,7 +92,7 @@ def spillover_model(portfolios, currencies, environment, exogeneous_agents, fund
                 fund.exp.prices, \
                 fund.exp.exchange_rates = price_fx_expectations(fund, portfolios, currencies, environment)
                 fund.exp.returns = return_expectations(fund, portfolios, currencies, environment)
-                fund.var.ewma_returns, fund.var.covariance_matrix = covariance_estimate(fund, portfolios, environment)
+                fund.var.ewma_returns, fund.var.covariance_matrix = covariance_estimate(fund, portfolios, environment, currencies)
                 #print fund.var.covariance_matrix
                 #print fund, fund.exp.returns
 
@@ -106,8 +105,8 @@ def spillover_model(portfolios, currencies, environment, exogeneous_agents, fund
                 
                 # compute demand for balance sheet positions
                 fund.var.asset_demand, fund.var.currency_demand = asset_demand(fund, portfolios, currencies, environment)
+                fund.var.asset_demand, fund.var.currency_demand = asset_demand(fund, portfolios, currencies, environment)
 
-            
             for ex in exogeneous_agents:
                 exogeneous_agents[ex].var.asset_demand = ex_agent_asset_demand(ex, exogeneous_agents, portfolios )
 
@@ -119,9 +118,7 @@ def spillover_model(portfolios, currencies, environment, exogeneous_agents, fund
                 environment.var.fx_rates, Delta_Capital = fx_adjustment(portfolios, currencies, environment, exogeneous_agents , funds, fx_shock[day]) 
                 
                 
-            if tau == 19998:
-
-
+            if tau == 9998:
                 convergence=True
 
             #Update intraday data points
@@ -135,13 +132,10 @@ def spillover_model(portfolios, currencies, environment, exogeneous_agents, fund
             data["Delta_Capital"].append(Delta_Capital )
             data["FX_rate_domestic_foreign"].append(environment.var.fx_rates.loc["domestic"][ "foreign"])
             #this is where intraday calculations end
-        
 
         
         #computing new asset and cash positions
-
         excess_demand, pi, nu = asset_excess_demand_and_correction_factors(funds, portfolios, currencies, exogeneous_agents)
-
 
          # trading
         for fund in funds:

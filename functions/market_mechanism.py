@@ -76,10 +76,8 @@ def fx_adjustment(portfolios, currencies, environment, exogeneous_agents , funds
         row =row + 1
         combinations.append(combination_tuple)
 
-
     K_delta = 0 # net capital flows
     fx_rate =  0
-
 
     for el in combinations:
 
@@ -90,8 +88,6 @@ def fx_adjustment(portfolios, currencies, environment, exogeneous_agents , funds
         aux_2 = 0 # helper variable
 
         tot_red_shares = 0
-
-        
         red_share_fx_corr={}
         capital_DF = 0
         capital_FD = 0
@@ -110,8 +106,6 @@ def fx_adjustment(portfolios, currencies, environment, exogeneous_agents , funds
                     capital_FD = capital_FD + fund.var.currency_demand[c]
         
 
-
-        
         Delta_Capital = (capital_DF - capital_FD) / sum(red_share_fx_corr.values())
 
 
