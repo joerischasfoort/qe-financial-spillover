@@ -119,7 +119,49 @@ def spillover_model(portfolios, currencies, environment, exogeneous_agents, fund
             Deltas.update({"FX": Delta_Capital})
             convergence = sum(abs(Deltas[i])<0.01 for i in Deltas)==len(Deltas) and tau >30
 
-            print tau, convergence, Deltas,  environment.var.fx_rates.loc[currencies[0].par.country, currencies[1].par.country]
+            c0_t = fund.var_previous.currency[currencies[0]]
+            c1_t = fund.var_previous.currency[currencies[1]]
+            rhoC0 = currencies[0].par.nominal_interest_rate
+            rhoC1 = currencies[1].par.nominal_interest_rate
+            rho0 = portfolios[0].par.nominal_interest_rate
+            rho1 = portfolios[1].par.nominal_interest_rate
+            Q0_t = fund.var_previous.assets[portfolios[0]]
+            Q1_t = fund.var_previous.assets[portfolios[1]]
+            fxC0_t1 = environment.var.fx_rates.loc[fund.par.country][currencies[0].par.country]
+            fxC1_t1 = environment.var.fx_rates.loc[fund.par.country][currencies[1].par.country]
+            fxC0_t = environment.var_previous.fx_rates.loc[fund.par.country][currencies[0].par.country]
+            fxC1_t = environment.var_previous.fx_rates.loc[fund.par.country][currencies[1].par.country]
+            fx0_t1 = environment.var.fx_rates.loc[fund.par.country][portfolios[0].par.country]
+            fx1_t1 = environment.var.fx_rates.loc[fund.par.country][portfolios[1].par.country]
+            fx0_t = environment.var_previous.fx_rates.loc[fund.par.country][portfolios[0].par.country]
+            fx1_t = environment.var_previous.fx_rates.loc[fund.par.country][portfolios[1].par.country]
+            p0_t1 = portfolios[0].var.price
+            p1_t1 = portfolios[1].var.price
+            p0_t = portfolios[0].var_previous.price
+            p1_t = portfolios[1].var_previous.price
+
+            dC0 = fxC0_t1 * (c0_t * (1 + rhoC0) + rho0 * Q0_t) - c0_t * fxC0_t
+            dC1 = fxC1_t1 * (c1_t * (1 + rhoC1) + rho1 * Q1_t) - c1_t * fxC1_t
+
+            d0 = Q0_t * (fx0_t1 * p0_t1 - fx0_t * p0_t)
+            d1 = Q1_t * (fx1_t1 * p1_t1 - fx1_t * p1_t)
+
+            newA = Q0_t * p0_t1 * fx0_t1 + Q1_t * p1_t1 * fx1_t1
+            newC = fund.var.currency_inventory[currencies[0]] * fxC0_t1 + fund.var.currency_inventory[
+                currencies[1]] * fxC1_t1
+
+            print "asset side effect:", tau, fund, newA+newC-fund.var.redeemable_shares
+
+
+
+
+
+
+
+
+
+
+            #print tau, convergence, Deltas,  environment.var.fx_rates.loc[currencies[0].par.country, currencies[1].par.country]
 
 
 
