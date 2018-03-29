@@ -90,6 +90,9 @@ def fx_adjustment(portfolios, currencies, environment, exogeneous_agents , funds
 
         tot_red_shares = 0
         red_share_fx_corr={}
+        aux1 = {}
+        aux2 = {}
+        aux3 = {}
         capital_DF = 0
         capital_FD = 0
         
@@ -107,10 +110,12 @@ def fx_adjustment(portfolios, currencies, environment, exogeneous_agents , funds
                     capital_FD = capital_FD + fund.var.currency_demand[c]
         
 
-        Delta_Capital = (capital_DF - capital_FD) / sum(red_share_fx_corr.values())
 
 
-        log_new_fx_rate = log(environment.var.fx_rates.loc[el[0]][el[1]]) + environment.par.global_parameters["fx_change_intensity"] * Delta_Capital + noise
+        Delta_Capital = noise + (capital_DF - capital_FD ) / sum(red_share_fx_corr.values())
+
+
+        log_new_fx_rate = log(environment.var.fx_rates.loc[el[0]][el[1]]) + environment.par.global_parameters["fx_change_intensity"] * Delta_Capital
         fx_rate = exp(log_new_fx_rate)
 
         environment.var.fx_rates.loc[el[0]][el[1]] =  fx_rate

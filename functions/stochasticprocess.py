@@ -1,5 +1,6 @@
 import math
 import numpy as np
+import random
 
 def ornstein_uhlenbeck_levels(time=500, init_level=10e-7, sigma=0.125, mean_reversion=0.99):
     """
@@ -12,9 +13,11 @@ def ornstein_uhlenbeck_levels(time=500, init_level=10e-7, sigma=0.125, mean_reve
     :param long_run_average_level:
     :return: list : simulatated default probability simulated over time
     """
+
+
     default_probability = [init_level]
     
-    for t in range(1, 10000):
+    for t in range(1, 100000):
         error = np.random.normal(0, sigma)
         new_dr = default_probability[-1] + mean_reversion * (init_level - default_probability[-1]) + error
         new_dr = max(0,new_dr)

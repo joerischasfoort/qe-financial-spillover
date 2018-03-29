@@ -117,7 +117,7 @@ def covariance_estimate(fund, portfolios, environment, currencies):
     new_covariance_matrix = fund.var.covariance_matrix.copy()
     for idx_x, asset_x in enumerate(new_covariance_matrix.columns):
         for idx_y, asset_y in enumerate(new_covariance_matrix.columns):
-            if idx_x <= idx_y:
+           if idx_x <= idx_y:
                 covar = (hypothetical_returns[asset_x] - ewma_returns[asset_x]) * (hypothetical_returns[asset_y] - ewma_returns[asset_y])
                 ewma_covar = compute_ewma(covar, fund.var_previous.covariance_matrix.loc[asset_x][asset_y], environment.par.global_parameters["cov_memory"])
 
@@ -125,7 +125,7 @@ def covariance_estimate(fund, portfolios, environment, currencies):
                 new_covariance_matrix.loc[asset_y][asset_x] = ewma_covar
 
 
-    return ewma_returns, new_covariance_matrix
+    return ewma_returns, new_covariance_matrix, hypothetical_returns
 
 
 def exp_price_or_fx(current_price, previous_price, previous_ewma_delta_price, memory_parameter):

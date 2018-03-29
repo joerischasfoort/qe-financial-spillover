@@ -57,24 +57,21 @@ def spillover_model(portfolios, currencies, environment, exogeneous_agents, fund
 
     for day in range(1, environment.par.global_parameters["days"]):
         # initialise intraday prices at current price
-        prices_tau = {portfolio: portfolio.var.price for portfolio in portfolios}
         delta_news = news_process[day] - news_process[day-1]
 
         # determine value and payouts to shareholders
         for fund in funds:
             fund.exp.default_rates = dr_expectations(fund, portfolios, delta_news)
 
-        #show_fund(funds[0], portfolios, currencies, environment)
-        #show_fund(funds[1], portfolios, currencies, environment)
-
+        print funds[0].var.covariance_matrix.loc[portfolios[0], portfolios[0]], funds[1].var.covariance_matrix.loc[portfolios[0], portfolios[0]]
 
 
         convergence=False
         intraday_over=False
 
-
-        for tau in range(20000): #TODO this needs to be rewritten into a while loop when stopping criteria are defined
-
+        tau=0
+        while intraday_over == False: #TODO this needs to be rewritten into a while loop when stopping criteria are defined
+            tau += 1
 
             if convergence == True:
                 intraday_over = True
@@ -92,7 +89,7 @@ def spillover_model(portfolios, currencies, environment, exogeneous_agents, fund
                 fund.exp.prices, \
                 fund.exp.exchange_rates = price_fx_expectations(fund, portfolios, currencies, environment)
                 fund.exp.returns = return_expectations(fund, portfolios, currencies, environment)
-                fund.var.ewma_returns, fund.var.covariance_matrix = covariance_estimate(fund, portfolios, environment, currencies)
+                fund.var.ewma_returns, fund.var.covariance_matrix, fund.var.hypothetical_returns = covariance_estimate(fund, portfolios, environment, currencies)
                 #print fund.var.covariance_matrix
                 #print fund, fund.exp.returns
 
@@ -117,11 +114,16 @@ def spillover_model(portfolios, currencies, environment, exogeneous_agents, fund
                     a.var.price, a.var.aux_ret, Delta_Demand[a] = price_adjustment(portfolios, environment, exogeneous_agents, funds, a)
 
                 environment.var.fx_rates, Delta_Capital = fx_adjustment(portfolios, currencies, environment, exogeneous_agents , funds, 0.0)#fx_shock[day])
-                
-            print tau,environment.var.fx_rates.loc[funds[0].par.country, funds[1].par.country]
 
-            if tau == 19998:
-                convergence=True
+
+            Deltas = {}
+            Deltas.update(Delta_Demand)
+            Deltas.update({"FX": Delta_Capital})
+            convergence = sum(abs(Deltas[i])<0.01 for i in Deltas)==len(Deltas) and tau >100
+
+            print tau, convergence, Deltas,  environment.var.fx_rates.loc[currencies[0].par.country, currencies[1].par.country]
+
+
 
             #Update intraday data points
             for a in portfolios:
