@@ -89,7 +89,9 @@ def spillover_model(portfolios, currencies, environment, exogeneous_agents, fund
                 fund.exp.prices, \
                 fund.exp.exchange_rates = price_fx_expectations(fund, portfolios, currencies, environment)
                 fund.exp.returns = return_expectations(fund, portfolios, currencies, environment)
+
                 fund.var.ewma_returns, fund.var.covariance_matrix, fund.var.hypothetical_returns = covariance_estimate(fund, portfolios, environment, currencies)
+
                 #print fund.var.covariance_matrix
                 #print fund, fund.exp.returns
 
@@ -99,7 +101,7 @@ def spillover_model(portfolios, currencies, environment, exogeneous_agents, fund
                 # intermediate cash position resulting from interest payments, payouts, maturing and defaulting assets
                 fund.var.currency_inventory = cash_inventory(fund, portfolios, currencies)
                 #print fund, fund.var.currency_inventory[currencies[0]],  fund.var_previous.currency[currencies[0]] + fund.var.assets[portfolios[0]]*((1-portfolios[0].var.default_rate)*(1-portfolios[0].par.maturity)+portfolios[0].var.default_rate)*portfolios[0].var.price
-                
+
                 # compute demand for balance sheet positions
                 fund.var.asset_demand, fund.var.currency_demand = asset_demand(fund, portfolios, currencies, environment)
                 fund.var.asset_demand, fund.var.currency_demand = asset_demand(fund, portfolios, currencies, environment)
@@ -108,7 +110,7 @@ def spillover_model(portfolios, currencies, environment, exogeneous_agents, fund
                 exogeneous_agents[ex].var.asset_demand = ex_agent_asset_demand(ex, exogeneous_agents, portfolios )
 
 
-            if intraday_over == False:            
+            if intraday_over == False:
                 Delta_Demand = {}
                 for a in portfolios:
                     a.var.price, a.var.aux_ret, Delta_Demand[a] = price_adjustment(portfolios, environment, exogeneous_agents, funds, a)
@@ -137,7 +139,7 @@ def spillover_model(portfolios, currencies, environment, exogeneous_agents, fund
             data["FX_rate_domestic_foreign"].append(environment.var.fx_rates.loc["domestic"][ "foreign"])
             #this is where intraday calculations end
 
-        
+
         #computing new asset and cash positions
         excess_demand, pi, nu = asset_excess_demand_and_correction_factors(funds, portfolios, currencies, exogeneous_agents)
 
@@ -148,11 +150,11 @@ def spillover_model(portfolios, currencies, environment, exogeneous_agents, fund
 
         for ex in exogeneous_agents:
             exogeneous_agents[ex].var.assets = ex_asset_adjustments(ex, portfolios, excess_demand, pi, nu, exogeneous_agents)
-    
+
         # balance sheet adjustment
         for fund in funds:
             fund.var.currency_demand = cash_demand_correction(fund, currencies,environment)
-        
+
         nuC, piC, excess_demandC = cash_excess_demand_and_correction_factors(funds, portfolios, currencies, exogeneous_agents)
 
 
@@ -170,7 +172,7 @@ def spillover_model(portfolios, currencies, environment, exogeneous_agents, fund
 
         for portfolio in portfolios:
             portfolio.var_previous = copy.copy(portfolio.var)
-        
+
         environment.var_previous = copy.copy(environment.var)
 
         exogeneous_agents['central_bank_domestic'].var_previous = copy_cb_variables(exogeneous_agents['central_bank_domestic'].var)
@@ -178,4 +180,4 @@ def spillover_model(portfolios, currencies, environment, exogeneous_agents, fund
 
     pd.DataFrame(data).to_csv('intraday_data.csv')
 
-    return portfolios, currencies, environment, exogeneous_agents, funds
+    return portfolios, currencies, environment, exogeneous_agents, fundsrn portfolios, currencies, environment, exogeneous_agents, funds

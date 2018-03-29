@@ -3,9 +3,6 @@ from math import exp
 import numpy as np
 
 
-
-
-
 def dr_expectations(fund, portfolios, delta_news):
     """
     Calculate default rate expectations
@@ -19,11 +16,11 @@ def dr_expectations(fund, portfolios, delta_news):
         previously_exp_dr = fund.exp.default_rates[portfolio]
         default_rate = portfolio.var.default_rate
         noise = np.random.normal(0, fund.par.news_evaluation_error)
-        if previously_exp_dr<=0:
-            expected_dr[portfolio]=0
+        if previously_exp_dr <= 0:
+            expected_dr[portfolio] = 0
         else:
-            log_exp_dr= log(previously_exp_dr) + delta_news + noise + fund.par.adaptive_param * (
-                log(default_rate) - log(previously_exp_dr))
+            log_exp_dr = log(previously_exp_dr) + delta_news + noise + fund.par.adaptive_param * (
+                    log(default_rate) - log(previously_exp_dr))
             expected_dr[portfolio] = exp(log_exp_dr)
 
     return expected_dr
@@ -40,7 +37,7 @@ def price_fx_expectations(fund, portfolios, currencies, environment):
     prices and exchange rates.
     """
     ewma_delta_prices = {}
-    expected_prices ={}
+    expected_prices = {}
     for asset in portfolios:
         realised_dp = asset.var.price / asset.var_previous.price
         ewma_delta_prices[asset] = compute_ewma(realised_dp, fund.var.ewma_delta_prices[asset],
@@ -76,21 +73,33 @@ def return_expectations(fund, portfolios, currencies, environment):
     :return: Dictionary of portfolio and currency object keys with float return expectations
     """
     exp_returns = {}
-    for currency in currencies:        
-         exp_returns[currency]=(fund.exp.exchange_rates.loc[fund.par.country][currency.par.country]*(1+currency.par.nominal_interest_rate)-environment.var.fx_rates.loc[fund.par.country][currency.par.country]) / environment.var.fx_rates.loc[fund.par.country][currency.par.country]
-        
-    for asset in portfolios:      
+    for currency in currencies:
+        exp_returns[currency] = (fund.exp.exchange_rates.loc[fund.par.country][currency.par.country] * (
+                    1 + currency.par.nominal_interest_rate) - environment.var.fx_rates.loc[fund.par.country][
+                                     currency.par.country]) / environment.var.fx_rates.loc[fund.par.country][
+                                    currency.par.country]
+
+    for asset in portfolios:
         out = asset.par.maturity * (1 - fund.exp.default_rates[asset])
         mat = (1 - asset.par.maturity) * (1 - fund.exp.default_rates[asset])
         alla = (1 - fund.exp.default_rates[asset])
-        
-        repayment_effect = mat * (fund.exp.exchange_rates.loc[fund.par.country, asset.par.country] * np.divide(asset.par.face_value, float(asset.par.quantity)) - environment.var.fx_rates.loc[fund.par.country, asset.par.country] * asset.var.price)
-        price_effect = out * (fund.exp.exchange_rates.loc[fund.par.country, asset.par.country] * fund.exp.prices[asset] - environment.var.fx_rates.loc[fund.par.country, asset.par.country] * asset.var.price)
-        interest_effect = alla * fund.exp.exchange_rates.loc[fund.par.country, asset.par.country] * np.divide(asset.par.face_value, float(asset.par.quantity)) * asset.par.nominal_interest_rate
-        default_effect = fund.exp.default_rates[asset] * fund.exp.exchange_rates.loc[fund.par.country, asset.par.country]  *  fund.exp.prices[asset]
-          
-        exp_returns[asset] = (repayment_effect + price_effect + interest_effect - default_effect)/(environment.var.fx_rates.loc[fund.par.country, asset.par.country] * asset.var.price)
-        
+
+        repayment_effect = mat * (
+                    fund.exp.exchange_rates.loc[fund.par.country, asset.par.country] * np.divide(asset.par.face_value,
+                                                                                                 float(
+                                                                                                     asset.par.quantity)) -
+                    environment.var.fx_rates.loc[fund.par.country, asset.par.country] * asset.var.price)
+        price_effect = out * (
+                    fund.exp.exchange_rates.loc[fund.par.country, asset.par.country] * fund.exp.prices[asset] -
+                    environment.var.fx_rates.loc[fund.par.country, asset.par.country] * asset.var.price)
+        interest_effect = alla * fund.exp.exchange_rates.loc[fund.par.country, asset.par.country] * np.divide(
+            asset.par.face_value, float(asset.par.quantity)) * asset.par.nominal_interest_rate
+        default_effect = fund.exp.default_rates[asset] * fund.exp.exchange_rates.loc[
+            fund.par.country, asset.par.country] * fund.exp.prices[asset]
+
+        exp_returns[asset] = (repayment_effect + price_effect + interest_effect - default_effect) / (
+                    environment.var.fx_rates.loc[fund.par.country, asset.par.country] * asset.var.price)
+
     return exp_returns
 
 
@@ -105,14 +114,17 @@ def covariance_estimate(fund, portfolios, environment, currencies):
     ewma_returns = {}
     hypothetical_returns = {}
     for asset in fund.var.assets:
-        hypothetical_returns[asset]=fund.var.profits[asset] / (asset.var_previous.price * environment.var_previous.fx_rates.loc[fund.par.country, asset.par.country])
-        ewma_returns[asset] = compute_ewma(hypothetical_returns[asset], fund.var_previous.ewma_returns[asset], environment.par.global_parameters["cov_memory"])
+        hypothetical_returns[asset] = fund.var.profits[asset] / (
+                    asset.var_previous.price * environment.var_previous.fx_rates.loc[
+                fund.par.country, asset.par.country])
+        ewma_returns[asset] = compute_ewma(hypothetical_returns[asset], fund.var_previous.ewma_returns[asset],
+                                           environment.par.global_parameters["cov_memory"])
 
     for cash in fund.var.currency:
-        hypothetical_returns[cash] = fund.var.profits[cash] / (    environment.var_previous.fx_rates.loc[fund.par.country, cash.par.country])
-        ewma_returns[cash] = compute_ewma(hypothetical_returns[cash], fund.var_previous.ewma_returns[cash],environment.par.global_parameters["cov_memory"])
-
-
+        hypothetical_returns[cash] = fund.var.profits[cash] / (
+        environment.var_previous.fx_rates.loc[fund.par.country, cash.par.country])
+        ewma_returns[cash] = compute_ewma(hypothetical_returns[cash], fund.var_previous.ewma_returns[cash],
+                                          environment.par.global_parameters["cov_memory"])
 
     new_covariance_matrix = fund.var.covariance_matrix.copy()
     for idx_x, asset_x in enumerate(new_covariance_matrix.columns):
@@ -121,11 +133,14 @@ def covariance_estimate(fund, portfolios, environment, currencies):
                 covar = (hypothetical_returns[asset_x] - ewma_returns[asset_x]) * (hypothetical_returns[asset_y] - ewma_returns[asset_y])
                 ewma_covar = compute_ewma(covar, fund.var_previous.covariance_matrix.loc[asset_x][asset_y], environment.par.global_parameters["cov_memory"])
 
+
                 new_covariance_matrix.loc[asset_x][asset_y] = ewma_covar
                 new_covariance_matrix.loc[asset_y][asset_x] = ewma_covar
 
 
+
     return ewma_returns, new_covariance_matrix, hypothetical_returns
+
 
 
 def exp_price_or_fx(current_price, previous_price, previous_ewma_delta_price, memory_parameter):
@@ -152,4 +167,3 @@ def compute_ewma(variable, previous_ewma, memory_parameter):
     """
     ewma = (1 - memory_parameter) * previous_ewma + memory_parameter * variable
     return ewma
-
