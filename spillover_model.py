@@ -63,14 +63,11 @@ def spillover_model(portfolios, currencies, environment, exogeneous_agents, fund
         for fund in funds:
             fund.exp.default_rates = dr_expectations(fund, portfolios, delta_news)
 
-        print funds[0].var.covariance_matrix.loc[portfolios[0], portfolios[0]], funds[1].var.covariance_matrix.loc[portfolios[0], portfolios[0]]
-
-
         convergence=False
         intraday_over=False
 
         tau=0
-        while intraday_over == False: #TODO this needs to be rewritten into a while loop when stopping criteria are defined
+        while intraday_over == False:
             tau += 1
 
             if convergence == True:
@@ -97,10 +94,9 @@ def spillover_model(portfolios, currencies, environment, exogeneous_agents, fund
 
                 # compute the weights of optimal balance sheet positions
                 fund.var.weights = portfolio_optimization(fund)
-                #print fund.var.weights, "weights"
+
                 # intermediate cash position resulting from interest payments, payouts, maturing and defaulting assets
                 fund.var.currency_inventory = cash_inventory(fund, portfolios, currencies)
-                #print fund, fund.var.currency_inventory[currencies[0]],  fund.var_previous.currency[currencies[0]] + fund.var.assets[portfolios[0]]*((1-portfolios[0].var.default_rate)*(1-portfolios[0].par.maturity)+portfolios[0].var.default_rate)*portfolios[0].var.price
 
                 # compute demand for balance sheet positions
                 fund.var.asset_demand, fund.var.currency_demand = asset_demand(fund, portfolios, currencies, environment)
@@ -121,7 +117,7 @@ def spillover_model(portfolios, currencies, environment, exogeneous_agents, fund
             Deltas = {}
             Deltas.update(Delta_Demand)
             Deltas.update({"FX": Delta_Capital})
-            convergence = sum(abs(Deltas[i])<0.01 for i in Deltas)==len(Deltas) and tau >100
+            convergence = sum(abs(Deltas[i])<0.01 for i in Deltas)==len(Deltas) and tau >30
 
             print tau, convergence, Deltas,  environment.var.fx_rates.loc[currencies[0].par.country, currencies[1].par.country]
 
@@ -180,4 +176,4 @@ def spillover_model(portfolios, currencies, environment, exogeneous_agents, fund
 
     pd.DataFrame(data).to_csv('intraday_data.csv')
 
-    return portfolios, currencies, environment, exogeneous_agents, fundsrn portfolios, currencies, environment, exogeneous_agents, funds
+    return portfolios, currencies, environment, exogeneous_agents, funds

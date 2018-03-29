@@ -102,14 +102,13 @@ def fx_adjustment(portfolios, currencies, environment, exogeneous_agents, funds,
             red_share_fx_corr[fund] = fund.var.redeemable_shares * environment.var.fx_rates.loc[el[0], fund.par.country]
             for a in portfolios:
                 if a.par.country != fund.par.country and fund.par.country == el[0]:
-                    capital_DF = capital_DF + fund.var.asset_demand[a] * a.var.price * environment.var.fx_rates.loc[
-                        el[0], el[1]]
+                    capital_DF = capital_DF + fund.var.asset_demand[a] * a.var.price * environment.var.fx_rates.loc[ el[0], el[1]]
                 if a.par.country != fund.par.country and fund.par.country == el[1]:
                     capital_FD = capital_FD + fund.var.asset_demand[a] * a.var.price
             for c in currencies:
                 if c.par.country != fund.par.country and fund.par.country == el[0]:
                     capital_DF = capital_DF + fund.var.currency_demand[c] * environment.var.fx_rates.loc[el[0], el[1]]
-                if a.par.country != fund.par.country and fund.par.country == el[1]:
+                if c.par.country != fund.par.country and fund.par.country == el[1]:
                     capital_FD = capital_FD + fund.var.currency_demand[c]
 
 
