@@ -13,6 +13,7 @@ def dr_expectations(fund, portfolios, delta_news):
     """
     expected_dr = {}
     for portfolio in portfolios:
+
         previously_exp_dr = fund.exp.default_rates[portfolio]
         default_rate = portfolio.var.default_rate
         noise = np.random.normal(0, fund.par.news_evaluation_error)

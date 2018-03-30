@@ -117,9 +117,12 @@ def init_objects(parameters):
             currency_demand[currency] = parameters["init_currency_demand"]
             if currency.par.country == fund_countries[idx]:
                 # give this fund an initial amount of currency
-                currency_portfolio[currency] = divide_by_funds(parameters["total_money"])
+                amount = divide_by_funds(parameters["total_money"])
+                currency_portfolio[currency] = 0.5 * amount
             else:
-                currency_portfolio[currency] = 0
+                amount = divide_by_funds(parameters["total_money"])
+                currency_portfolio[currency] = 0.5 * amount
+
                 # add the variance to covariance matrix
                 cov_matr.loc[currency][currency] = parameters["fx_shock_std"]
 

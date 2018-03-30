@@ -16,8 +16,7 @@ def convert_P2R(a, price):
 def convert_R2P(a, ret):
     mat = (1 - a.par.maturity) * (1 - a.var.default_rate)
     alla = (1 - a.var.default_rate)
-    price = ((a.par.face_value / a.par.quantity) * (mat + a.par.nominal_interest_rate * alla)) / (
-                ret + a.var.default_rate + mat)
+    price = ((a.par.face_value / a.par.quantity) * (mat + a.par.nominal_interest_rate * alla)) / (ret + a.var.default_rate + mat)
     return price
 
 
@@ -45,11 +44,9 @@ def price_adjustment(portfolios, environment, exogeneous_agents, funds, a):
     # print a.var.price, total_demand[a]
 
     # Equation 1.17 : price adjustment
-    log_new_price = log(a.var.price) + environment.par.global_parameters['p_change_intensity'] * total_demand[
-        a] / a.par.quantity
+    log_new_price = log(a.var.price) + environment.par.global_parameters['p_change_intensity'] * total_demand[a] / a.par.quantity
 
-    log_new_ret = log(a.var.aux_ret) - environment.par.global_parameters['p_change_intensity'] * total_demand[
-        a] / a.par.quantity
+    log_new_ret = log(a.var.aux_ret) - environment.par.global_parameters['p_change_intensity'] * total_demand[a] / a.par.quantity
 
     price = convert_R2P(a, exp(log_new_ret))
 
