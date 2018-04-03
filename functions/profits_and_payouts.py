@@ -6,7 +6,7 @@ def profit_and_payout(fund, portfolios, currencies, environment):
     payouts = {}
     total_payouts = {c: 0 for c in currencies}
     total_payouts_fx_corr = {}
-    testing = 0
+    testing = {}
     total_profit = 0
     for a in portfolios:
 
@@ -34,6 +34,8 @@ def profit_and_payout(fund, portfolios, currencies, environment):
 
         profit_per_asset[a] = repayment_effect + price_effect + interest_effect - default_effect
 
+        testing[a] = (price_effect+ interest_effect) * fund.var.assets[a]
+
         total_profit = total_profit + profit_per_asset[a] * fund.var.assets[a]
 
         payouts[a] = fund.var.assets[a] * (rep_effect_barEx + int_effect_barEx - def_effect_barEx)
@@ -43,12 +45,10 @@ def profit_and_payout(fund, portfolios, currencies, environment):
                 total_payouts[c] = total_payouts[c] + payouts[a]
 
     for c in currencies:
-        profit_per_asset[c] = c.par.nominal_interest_rate * environment.var.fx_rates.loc[
-            fund.par.country, c.par.country] + environment.var.fx_rates.loc[fund.par.country, c.par.country] - \
-                              environment.var_previous.fx_rates.loc[fund.par.country, c.par.country]
-
+        profit_per_asset[c] = c.par.nominal_interest_rate * environment.var.fx_rates.loc[fund.par.country, c.par.country] + environment.var.fx_rates.loc[fund.par.country, c.par.country] - environment.var_previous.fx_rates.loc[fund.par.country, c.par.country]
+        testing[c] = fund.var.currency[c] * profit_per_asset[c]
         total_payouts[c] = (total_payouts[c] + fund.var.currency[c] * c.par.nominal_interest_rate)
-        #total_payouts[c] =0
+        total_payouts[c] =0
         # the balance sheet effect takes into account the exchange rate effect
         total_payouts_fx_corr[c] = total_payouts[c] * environment.var.fx_rates.loc[fund.par.country, c.par.country]
 
@@ -60,4 +60,4 @@ def profit_and_payout(fund, portfolios, currencies, environment):
 
     redeemable_shares = fund.var_previous.redeemable_shares + total_profit - sum(total_payouts_fx_corr.values())
 
-    return profit_per_asset, redeemable_shares, total_payouts
+    return profit_per_asset, redeemable_shares, total_payouts, testing
