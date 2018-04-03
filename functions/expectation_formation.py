@@ -115,15 +115,12 @@ def covariance_estimate(fund, portfolios, environment, currencies):
     ewma_returns = {}
     hypothetical_returns = {}
     for asset in fund.var.assets:
-        hypothetical_returns[asset] = fund.var.profits[asset] / (
-                    asset.var_previous.price * environment.var_previous.fx_rates.loc[
-                fund.par.country, asset.par.country])
+        hypothetical_returns[asset] = fund.var.profits[asset] / (asset.var_previous.price * environment.var_previous.fx_rates.loc[fund.par.country, asset.par.country])
         ewma_returns[asset] = compute_ewma(hypothetical_returns[asset], fund.var_previous.ewma_returns[asset],
                                            environment.par.global_parameters["cov_memory"])
 
     for cash in fund.var.currency:
-        hypothetical_returns[cash] = fund.var.profits[cash] / (
-        environment.var_previous.fx_rates.loc[fund.par.country, cash.par.country])
+        hypothetical_returns[cash] = fund.var.profits[cash] / (environment.var_previous.fx_rates.loc[fund.par.country, cash.par.country])
         ewma_returns[cash] = compute_ewma(hypothetical_returns[cash], fund.var_previous.ewma_returns[cash],
                                           environment.par.global_parameters["cov_memory"])
 
@@ -133,12 +130,8 @@ def covariance_estimate(fund, portfolios, environment, currencies):
            if idx_x <= idx_y:
                 covar = (hypothetical_returns[asset_x] - ewma_returns[asset_x]) * (hypothetical_returns[asset_y] - ewma_returns[asset_y])
                 ewma_covar = compute_ewma(covar, fund.var_previous.covariance_matrix.loc[asset_x][asset_y], environment.par.global_parameters["cov_memory"])
-
-
                 new_covariance_matrix.loc[asset_x][asset_y] = ewma_covar
                 new_covariance_matrix.loc[asset_y][asset_x] = ewma_covar
-
-
 
     return ewma_returns, new_covariance_matrix, hypothetical_returns
 

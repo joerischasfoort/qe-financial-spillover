@@ -8,10 +8,10 @@ from spillover_model import *
 parameters = {
     # global parameters
     "n_domestic_assets": 1,
-    "n_foreign_assets": 3,
-    "n_domestic_funds": 5,
+    "n_foreign_assets": 1,
+    "n_domestic_funds": 1,
     "n_foreign_funds": 1,
-    "days": 20,
+    "days": 15,
     "p_change_intensity": 0.01,
     "fx_change_intensity": 0.1,
     "cov_memory": 0.01,
@@ -53,4 +53,7 @@ portfolios, currencies, funds, environment, exogeneous_agents = init_objects(par
 #print(portfolios, currencies, funds, environment, exogeneous_agents)
 
 # 3 simulate model
-spillover_model(portfolios, currencies, environment, exogeneous_agents, funds,  seed=1)
+portfolios, currencies, environment, exogeneous_agents, funds, data_t = spillover_model(portfolios, currencies, environment, exogeneous_agents, funds,  seed=1)
+
+# 4 Measurement
+pd.DataFrame(data_t).to_csv('data' + '/' + "data_t.csv")

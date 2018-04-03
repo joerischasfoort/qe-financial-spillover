@@ -16,6 +16,8 @@ from functions.show import *
 #from functions.realised_returns import *
 from functions.supercopy import *
 
+from functions.measurement import *
+
 
 def spillover_model(portfolios, currencies, environment, exogeneous_agents, funds,  seed):
     """
@@ -28,28 +30,11 @@ def spillover_model(portfolios, currencies, environment, exogeneous_agents, fund
     """
     random.seed(seed)
     np.random.seed(seed)
-    # create tau data dictionary
 
     #Measurements
-    data = {str(a) + 'price': [environment.par.global_parameters["init_asset_price"]] for a in portfolios}
-    data["FX_rate_domestic_foreign"] = [environment.var.fx_rates.loc["domestic"][ "foreign"]]
+    data = initdatadict(funds, portfolios, currencies, environment) # create tau data dictionary
+    data_t = copy.deepcopy(data) # create t data dictionary
 
-    all_assets = portfolios + currencies
-    for fund in funds:
-        for a in portfolios:
-            a_demands = {"a_demand_" + str(a) + "_fund_" + str(fund.name): [fund.var.asset_demand[a]] for demand in fund.var.asset_demand}
-            data.update(a_demands)
-        for c in currencies:
-            c_demands = {"c_demand_" + str(c) + "_fund_" + str(fund.name): [fund.var.currency_demand[c]] for demand in fund.var.currency_demand}
-            data.update(c_demands)
-        for a in all_assets:
-            exp_returns = {"exp_return_" + str(a) + "_fund_" + str(fund.name): [fund.exp.returns[a]] for return_ in fund.exp.returns}
-            data.update(exp_returns)
-            weights = { "weight_" +str(a) + "_fund_" + str(fund.name):  [fund.var.weights[a]]  for weight in fund.var.weights }
-            data.update(weights)
-            redeem_s = { "redeemable_shares" + "_fund_" + str(fund.name):  [fund.var.redeemable_shares]  }
-            data.update(redeem_s)
-    data["Delta_Capital"] = [0]
 
     news_process = ornstein_uhlenbeck_levels(environment.par.global_parameters["days"],
                                              environment.par.global_parameters["default_rate_mu"],
@@ -70,7 +55,6 @@ def spillover_model(portfolios, currencies, environment, exogeneous_agents, fund
         # determine value and payouts to shareholders
         for fund in funds:
             fund.exp.default_rates = dr_expectations(fund, portfolios, delta_news)
-            #print fund.exp.default_rates, day
 
         convergence=False
         intraday_over=False
@@ -121,29 +105,12 @@ def spillover_model(portfolios, currencies, environment, exogeneous_agents, fund
             Deltas.update({"FX": Delta_Capital})
             convergence = sum(abs(Deltas[i])<0.0001 for i in Deltas)==len(Deltas) and tau >30
 
-
             print tau, convergence, Deltas
-
             #Update intraday data points
-            for a in portfolios:
-                data[str(a) + 'price'].append(a.var.price) #TODO remove when done
+            data = update_data(data, funds, portfolios, currencies, environment, Delta_Capital)
+            #this is where intraday simulation ends
 
-
-            for fund in funds:
-                data["redeemable_shares" + "_fund_" + str(fund.name)].append(fund.var.redeemable_shares)
-                for a in portfolios:
-                    data["a_demand_" + str(a) + "_fund_" + str(fund.name)].append(fund.var.asset_demand[a])
-                for c in currencies:
-                    data["c_demand_" + str(c) + "_fund_" + str(fund.name)].append(fund.var.currency_demand[c])
-
-                for a in all_assets:
-                    data["weight_" + str(a) + "_fund_" + str(fund.name)].append(fund.var.weights[a])
-                    data["exp_return_" + str(a) + "_fund_" + str(fund.name)].append(fund.exp.returns[a])
-
-            data["Delta_Capital"].append(Delta_Capital )
-            data["FX_rate_domestic_foreign"].append(environment.var.fx_rates.loc["domestic"][ "foreign"])
-            #this is where intraday calculations end
-
+        pd.DataFrame(data).to_csv('data' + '/' + "intraday" + "/" + "intraday_data_day_" + str(day) + ".csv")
 
         #computing new asset and cash positions
         excess_demand, pi, nu = asset_excess_demand_and_correction_factors(funds, portfolios, currencies, exogeneous_agents)
@@ -170,7 +137,6 @@ def spillover_model(portfolios, currencies, environment, exogeneous_agents, fund
         show_fund(funds[0], portfolios, currencies, environment)
         show_fund(funds[1], portfolios, currencies, environment)
 
-
         # update previous variables
         for fund in funds:
             fund.var_previous = copy_agent_variables(fund.var)
@@ -184,6 +150,12 @@ def spillover_model(portfolios, currencies, environment, exogeneous_agents, fund
         exogeneous_agents['underwriter'].var_previous = copy_underwriter_variables(exogeneous_agents['underwriter'].var)
 
 
-    pd.DataFrame(data).to_csv('intraday_data.csv')
+        #End of day measurements
+        #Update data points for day
+        if convergence == True:
+            #reset intraday datapoints inside value lists of data
+            data = reset_intraday(data)
+            #Update data_t
+            data_t = update_data(data_t, funds, portfolios, currencies, environment, Delta_Capital)
 
-    return portfolios, currencies, environment, exogeneous_agents, funds
+    return portfolios, currencies, environment, exogeneous_agents, funds,  data_t
