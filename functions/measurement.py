@@ -28,6 +28,18 @@ def initdatadict(funds, portfolios, currencies, environment):
 
     data["Delta_Capital"] = [0]
     data["FX_rate_domestic_foreign"] = [environment.var.fx_rates.loc["domestic"][ "foreign"]]  #Todo: general case!
+
+
+    for fund in funds:
+        for idx_x, asset_x in enumerate(fund.var.covariance_matrix.columns):
+            for idx_y, asset_y in enumerate(fund.var.covariance_matrix.columns):
+                if idx_x <= idx_y:
+                    varcovar =  { "var_covar_" +   "fund_" + str(fund.name) + "_" + str(asset_x) + "_"  + str(asset_y): [ fund.var.covariance_matrix.loc[asset_x][asset_y]]}
+
+                    data.update(varcovar)
+                    #print idx_x, asset_x, idx_y ,asset_y
+
+
     return data
 
 
@@ -48,6 +60,12 @@ def update_data(data, funds, portfolios, currencies, environment, Delta_Capital)
         for a in all_assets:
             data["weight_" + str(a) + "_fund_" + str(fund.name)].append(fund.var.weights[a])
             data["exp_return_" + str(a) + "_fund_" + str(fund.name)].append(fund.exp.returns[a])
+
+        #varcovar
+        for idx_x, asset_x in enumerate(fund.var.covariance_matrix.columns):
+            for idx_y, asset_y in enumerate(fund.var.covariance_matrix.columns):
+                if idx_x <= idx_y:
+                    data["var_covar_" +   "fund_" + str(fund.name)+ "_"  + str(asset_x) + "_"  + str(asset_y)].append(fund.var.covariance_matrix.loc[asset_x][asset_y])
 
 
     data["Delta_Capital"].append(Delta_Capital)

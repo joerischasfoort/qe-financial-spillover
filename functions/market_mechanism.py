@@ -72,10 +72,10 @@ def fx_adjustment(portfolios, currencies, environment, exogeneous_agents, funds,
     for column in range(len(environment.var.fx_rates.index)):
         row = 0
 
-    while row < column:
-        combination_tuple = (environment.var.fx_rates.index[row], environment.var.fx_rates.columns[column])
-        row = row + 1
-        combinations.append(combination_tuple)
+        while row < column:
+            combination_tuple = (environment.var.fx_rates.index[row], environment.var.fx_rates.columns[column])
+            row = row + 1
+            combinations.append(combination_tuple)
 
     K_delta = 0  # net capital flows
     fx_rate = 0
