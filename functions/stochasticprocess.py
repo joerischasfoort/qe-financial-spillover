@@ -14,10 +14,11 @@ def ornstein_uhlenbeck_levels(time=500, init_level=10e-7, sigma=0.125, mean_reve
     :return: list : simulatated default probability simulated over time
     """
 
-
+    #np.random.seed(2) #remeber to take out
     default_probability = [init_level]
-    
+     
     for t in range(1, 100000):
+
         error = np.random.normal(0, sigma)
         new_dr = default_probability[-1] + mean_reversion * (init_level - default_probability[-1]) + error
         new_dr = max(0,new_dr)

@@ -36,7 +36,15 @@ def spillover_model(portfolios, currencies, environment, exogeneous_agents, fund
 
     all_assets = portfolios + currencies
     for fund in funds:
+        for a in portfolios:
+            a_demands = {"a_demand_" + str(a) + "_fund_" + str(fund.name): [fund.var.asset_demand[a]] for demand in fund.var.asset_demand}
+            data.update(a_demands)
+        for c in currencies:
+            c_demands = {"c_demand_" + str(c) + "_fund_" + str(fund.name): [fund.var.currency_demand[c]] for demand in fund.var.currency_demand}
+            data.update(c_demands)
         for a in all_assets:
+            exp_returns = {"exp_return_" + str(a) + "_fund_" + str(fund.name): [fund.exp.returns[a]] for return_ in fund.exp.returns}
+            data.update(exp_returns)
             weights = { "weight_" +str(a) + "_fund_" + str(fund.name):  [fund.var.weights[a]]  for weight in fund.var.weights }
             data.update(weights)
             redeem_s = { "redeemable_shares" + "_fund_" + str(fund.name):  [fund.var.redeemable_shares]  }
@@ -48,8 +56,8 @@ def spillover_model(portfolios, currencies, environment, exogeneous_agents, fund
                                              environment.par.global_parameters["default_rate_std"],
                                              environment.par.global_parameters["default_rate_mean_reversion"])
     # We get the random noise 
-    fx_shock = [ np.random.normal(0, environment.par.global_parameters["fx_shock_std"]) for i in range(environment.par.global_parameters["days"]) ] 
-    
+    fx_shock = [ np.random.normal(0, environment.par.global_parameters["fx_shock_std"]) for i in range(environment.par.global_parameters["days"]) ]
+
     for a in portfolios:
         a.var.aux_ret = convert_P2R(a,a.var.price)
         if a.var.aux_ret<=0:
@@ -62,6 +70,7 @@ def spillover_model(portfolios, currencies, environment, exogeneous_agents, fund
         # determine value and payouts to shareholders
         for fund in funds:
             fund.exp.default_rates = dr_expectations(fund, portfolios, delta_news)
+            #print fund.exp.default_rates, day
 
         convergence=False
         intraday_over=False
@@ -72,7 +81,6 @@ def spillover_model(portfolios, currencies, environment, exogeneous_agents, fund
 
             if convergence == True:
                 intraday_over = True
-
 
             for fund in funds:
                 # shareholder dividends and fund profits 
@@ -88,9 +96,6 @@ def spillover_model(portfolios, currencies, environment, exogeneous_agents, fund
                 fund.exp.returns = return_expectations(fund, portfolios, currencies, environment)
 
                 fund.var.ewma_returns, fund.var.covariance_matrix, fund.var.hypothetical_returns = covariance_estimate(fund, portfolios, environment, currencies)
-
-                #print fund.var.covariance_matrix
-                #print fund, fund.exp.returns
 
                 # compute the weights of optimal balance sheet positions
                 fund.var.weights = portfolio_optimization(fund)
@@ -122,6 +127,7 @@ def spillover_model(portfolios, currencies, environment, exogeneous_agents, fund
                 p0_t = portfolios[0].var_previous.price
                 p1_t = portfolios[1].var_previous.price
 
+
                 dC0 = fxC0_t1 * (c0_t * (1 + rhoC0) + rho0 * Q0_t) - c0_t * fxC0_t
                 dC1 = fxC1_t1 * (c1_t * (1 + rhoC1) + rho1 * Q1_t) - c1_t * fxC1_t
 
@@ -130,6 +136,7 @@ def spillover_model(portfolios, currencies, environment, exogeneous_agents, fund
 
                 cinv0 = fund.var.currency_inventory[currencies[0]] * fxC0_t1 - c0_t * fxC0_t
                 cinv1 = fund.var.currency_inventory[currencies[1]] * fxC1_t1 - c1_t * fxC1_t
+
 
                 test0 = testing[portfolios[0]] +  testing[currencies[0]]
                 test1 = testing[portfolios[1]] + testing[currencies[1]]
@@ -164,17 +171,23 @@ def spillover_model(portfolios, currencies, environment, exogeneous_agents, fund
 
 
 
+            #print tau
             #print tau, convergence, Deltas,  environment.var.fx_rates.loc[currencies[0].par.country, currencies[1].par.country]
-
-
-
             #Update intraday data points
             for a in portfolios:
                 data[str(a) + 'price'].append(a.var.price) #TODO remove when done
+
+
             for fund in funds:
                 data["redeemable_shares" + "_fund_" + str(fund.name)].append(fund.var.redeemable_shares)
+                for a in portfolios:
+                    data["a_demand_" + str(a) + "_fund_" + str(fund.name)].append(fund.var.asset_demand[a])
+                for c in currencies:
+                    data["c_demand_" + str(c) + "_fund_" + str(fund.name)].append(fund.var.currency_demand[c])
+
                 for a in all_assets:
                     data["weight_" + str(a) + "_fund_" + str(fund.name)].append(fund.var.weights[a])
+                    data["exp_return_" + str(a) + "_fund_" + str(fund.name)].append(fund.exp.returns[a])
 
             data["Delta_Capital"].append(Delta_Capital )
             data["FX_rate_domestic_foreign"].append(environment.var.fx_rates.loc["domestic"][ "foreign"])
@@ -214,10 +227,11 @@ def spillover_model(portfolios, currencies, environment, exogeneous_agents, fund
         for portfolio in portfolios:
             portfolio.var_previous = copy.copy(portfolio.var)
 
-        environment.var_previous = copy.copy(environment.var)
+        environment.var_previous = copy_env_variables(environment.var)
 
         exogeneous_agents['central_bank_domestic'].var_previous = copy_cb_variables(exogeneous_agents['central_bank_domestic'].var)
         exogeneous_agents['underwriter'].var_previous = copy_underwriter_variables(exogeneous_agents['underwriter'].var)
+
 
     pd.DataFrame(data).to_csv('intraday_data.csv')
 

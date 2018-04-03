@@ -1,5 +1,6 @@
 from objects.fund import *
 from objects.exogenous_agents import *
+from objects.environment import *
 
 
 def copy_agent_variables(fund_var_object):
@@ -78,3 +79,22 @@ def copy_dict(dictionary):
     return {key: value for key, value in dictionary.items()}
 
 
+
+def copy_env_variables(env_var_object):
+    """
+    Takes an env object and returns a copy with dictionary keys intact
+    :param env_object: object that will be copied
+    :return: copied object
+    """
+    variables = vars(env_var_object)
+    new_variables = {}
+    for variable in variables:
+        if type(variables[variable]) == dict:
+            new_variables[variable] = copy_dict(variables[variable])
+        elif type(variables[variable]) == int or type(variables[variable]) == float:
+            new_variables[variable] = variables[variable]
+        else:
+            new_variables[variable] = variables[variable].copy()
+
+    obj = EnvironmentVariables(fx_rates=new_variables['fx_rates'])
+    return obj

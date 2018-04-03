@@ -11,7 +11,7 @@ parameters = {
     "n_foreign_assets": 1,
     "n_domestic_funds": 1,
     "n_foreign_funds": 1,
-    "days": 30,
+    "days": 20,
     "p_change_intensity": 0.001,
     "fx_change_intensity": 0.01,
     "cov_memory": 0.01,
@@ -41,7 +41,7 @@ parameters = {
     # shock processes parameters
     "fx_shock_mu": 0.0,
     "fx_shock_std": 0.00001,
-    "default_rate_mu": 0.000,
+    "default_rate_mu": 0.0000,
     "default_rate_std": 0.04,
     "default_rate_mean_reversion": 0.01,
     "default_rate_delta_t": 0.003968253968253968,
