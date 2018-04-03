@@ -32,7 +32,10 @@ def spillover_model(portfolios, currencies, environment, exogeneous_agents, fund
     np.random.seed(seed)
 
     #Measurements
-    data = initdatadict(funds, portfolios, currencies, environment) # create tau data dictionary
+    deltas = {"Delta_" + str(i): 0 for i in portfolios}
+    deltas["Delta_FX"] = 0 # Todo: general case
+
+    data = initdatadict(funds, portfolios, currencies, environment, deltas ) # create tau data dictionary
     data_t = copy.deepcopy(data) # create t data dictionary
 
 
@@ -71,14 +74,12 @@ def spillover_model(portfolios, currencies, environment, exogeneous_agents, fund
                 fund.var.profits, \
                 fund.var.redeemable_shares, \
                 fund.var.payouts, testing = profit_and_payout(fund, portfolios, currencies, environment)
-
                 # 1 Expectation formation
                 fund.var.ewma_delta_prices, \
                 fund.var.ewma_delta_fx, \
                 fund.exp.prices, \
                 fund.exp.exchange_rates = price_fx_expectations(fund, portfolios, currencies, environment)
                 fund.exp.returns = return_expectations(fund, portfolios, currencies, environment)
-
                 fund.var.ewma_returns, fund.var.covariance_matrix, fund.var.hypothetical_returns = covariance_estimate(fund, portfolios, environment, currencies)
 
                 # compute the weights of optimal balance sheet positions
@@ -93,21 +94,32 @@ def spillover_model(portfolios, currencies, environment, exogeneous_agents, fund
             for ex in exogeneous_agents:
                 exogeneous_agents[ex].var.asset_demand = ex_agent_asset_demand(ex, exogeneous_agents, portfolios )
 
-            if intraday_over == False:
-                Delta_Demand = {}
-                for a in portfolios:
-                    a.var.price, a.var.aux_ret, Delta_Demand[a] = price_adjustment(portfolios, environment, exogeneous_agents, funds, a)
 
+            if intraday_over == False:
+
+                Delta_Demand = { }
+
+                for a in portfolios:
+                    a.var.price, a.var.aux_ret, Delta_str, delta_demand  = price_adjustment(portfolios, environment, exogeneous_agents, funds, a)
+                    Delta_Demand[Delta_str] = delta_demand
                 environment.var.fx_rates, Delta_Capital = fx_adjustment(portfolios, currencies, environment, exogeneous_agents , funds, 0.0)#fx_shock[day])
-                #Delta_Capital = 0
+
             Deltas = {}
             Deltas.update(Delta_Demand)
+<<<<<<< Updated upstream
             Deltas.update({"FX": Delta_Capital})
             convergence = sum(abs(Deltas[i])<0.0001 for i in Deltas)==len(Deltas) and tau >30
+=======
+
+            Deltas.update({"Delta_FX": Delta_Capital})
+
+            convergence = sum(abs(Deltas[i])<0.01 for i in Deltas)==len(Deltas) and tau >30
+>>>>>>> Stashed changes
+
 
             print tau, convergence, Deltas
             #Update intraday data points
-            data = update_data(data, funds, portfolios, currencies, environment, Delta_Capital)
+            data = update_data(data, funds, portfolios, currencies, environment, Deltas)
             #this is where intraday simulation ends
 
         pd.DataFrame(data).to_csv('data' + '/' + "intraday" + "/" + "intraday_data_day_" + str(day) + ".csv")
@@ -156,6 +168,6 @@ def spillover_model(portfolios, currencies, environment, exogeneous_agents, fund
             #reset intraday datapoints inside value lists of data
             data = reset_intraday(data)
             #Update data_t
-            data_t = update_data(data_t, funds, portfolios, currencies, environment, Delta_Capital)
+            data_t = update_data(data_t, funds, portfolios, currencies, environment, Deltas)
 
     return portfolios, currencies, environment, exogeneous_agents, funds,  data_t

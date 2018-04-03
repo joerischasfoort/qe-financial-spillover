@@ -102,15 +102,11 @@ def init_objects(parameters):
         ewma_delta_prices = {asset: parameters["init_agent_ewma_delta_prices"] for (asset, rt) in zip(portfolios, returns)}
         ewma_delta_fx = {currency: parameters["init_ewma_delta_fx"] for currency in currencies}
         realised_rets = {asset: 0 for asset in assets}
-
         init_c_profits = dict.fromkeys(currencies)
         init_a_profits = dict.fromkeys(assets)
         init_profits = init_c_profits.copy()  # start with x's keys and values
         init_profits.update(init_a_profits)
-
         currency_inventory = {currency: 0 for currency in currencies}
-
-
         currency_portfolio = {}
         currency_demand = {}
         for currency in currencies:
