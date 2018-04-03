@@ -8,12 +8,12 @@ from spillover_model import *
 parameters = {
     # global parameters
     "n_domestic_assets": 1,
-    "n_foreign_assets": 1,
-    "n_domestic_funds": 1,
+    "n_foreign_assets": 3,
+    "n_domestic_funds": 5,
     "n_foreign_funds": 1,
     "days": 20,
-    "p_change_intensity": 0.001,
-    "fx_change_intensity": 0.01,
+    "p_change_intensity": 0.01,
+    "fx_change_intensity": 0.1,
     "cov_memory": 0.01,
     # asset parameters
     "face_value": 5000,
