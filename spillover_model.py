@@ -119,7 +119,7 @@ def spillover_model(portfolios, currencies, environment, exogeneous_agents, fund
             Deltas = {}
             Deltas.update(Delta_Demand)
             Deltas.update({"FX": Delta_Capital})
-            convergence = sum(abs(Deltas[i])<0.01 for i in Deltas)==len(Deltas) and tau >30
+            convergence = sum(abs(Deltas[i])<0.0001 for i in Deltas)==len(Deltas) and tau >30
 
 
             print tau, convergence, Deltas
