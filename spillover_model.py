@@ -106,7 +106,6 @@ def spillover_model(portfolios, currencies, environment, exogeneous_agents, fund
             convergence = sum(abs(Deltas[i])<0.01 for i in Deltas)==len(Deltas) and tau >30
 
             print tau, convergence, Deltas
-
             #Update intraday data points
             data = update_data(data, funds, portfolios, currencies, environment, Delta_Capital)
             #this is where intraday simulation ends
