@@ -126,7 +126,12 @@ def spillover_model(portfolios, currencies, environment, exogeneous_agents, fund
                 p1_t1 = portfolios[1].var.price
                 p0_t = portfolios[0].var_previous.price
                 p1_t = portfolios[1].var_previous.price
-
+                mat0 = (1-portfolios[0].par.maturity) * (1-portfolios[0].var.default_rate)
+                out0 = (portfolios[0].par.maturity) * (1-portfolios[0].var.default_rate)
+                all0 = mat0 + out0
+                mat1 = (1 - portfolios[1].par.maturity) * (1 - portfolios[1].var.default_rate)
+                out1 = (portfolios[1].par.maturity) * (1 - portfolios[1].var.default_rate)
+                all1 = mat1 + out1
 
                 dC0 = fxC0_t1 * (c0_t * (1 + rhoC0) + rho0 * Q0_t) - c0_t * fxC0_t
                 dC1 = fxC1_t1 * (c1_t * (1 + rhoC1) + rho1 * Q1_t) - c1_t * fxC1_t
@@ -146,11 +151,11 @@ def spillover_model(portfolios, currencies, environment, exogeneous_agents, fund
 
 
 
-                newA = Q0_t * p0_t1 * fx0_t1 + Q1_t * p1_t1 * fx1_t1
+                newA = out0*Q0_t * p0_t1 * fx0_t1 + out1*Q1_t * p1_t1 * fx1_t1
                 newC = fund.var.currency_inventory[currencies[0]] * fxC0_t1 + fund.var.currency_inventory[
                     currencies[1]] * fxC1_t1
 
-                print  tau, fund, newA + newC - fund.var.redeemable_shares, cinv0+q0-test0, cinv1+q1-test1
+                print  tau, fund, newA + newC - fund.var.redeemable_shares
 
             for ex in exogeneous_agents:
                 exogeneous_agents[ex].var.asset_demand = ex_agent_asset_demand(ex, exogeneous_agents, portfolios )
@@ -209,11 +214,11 @@ def spillover_model(portfolios, currencies, environment, exogeneous_agents, fund
         for fund in funds:
             fund.var.currency_demand = cash_demand_correction(fund, currencies,environment)
 
-        nuC, piC, excess_demandC = cash_excess_demand_and_correction_factors(funds, portfolios, currencies, exogeneous_agents)
+        nuC, piC, excess_demandC = cash_excess_demand_and_correction_factors(funds, currencies)
 
 
         for fund in funds:
-            fund.var.currency = fund_cash_adjustments(nuC, piC, excess_demandC, currencies, fund, environment)
+            fund.var.currency = fund_cash_adjustments(nuC, piC, excess_demandC, currencies, fund)
 
         #debugging
         show_fund(funds[0], portfolios, currencies, environment)

@@ -19,7 +19,7 @@ parameters = {
     "face_value": 5000,
     "nominal_interest_rate": 0.003,
     "currency_rate": 0.004,
-    "maturity" : 1,
+    "maturity" : 0.99,
     "quantity" : 5000,
     # agent parameters
     "price_memory": 0.0,
@@ -41,7 +41,7 @@ parameters = {
     # shock processes parameters
     "fx_shock_mu": 0.0,
     "fx_shock_std": 0.00001,
-    "default_rate_mu": 0.0000,
+    "default_rate_mu": 0.0001,
     "default_rate_std": 0.04,
     "default_rate_mean_reversion": 0.01,
     "default_rate_delta_t": 0.003968253968253968,

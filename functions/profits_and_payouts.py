@@ -48,7 +48,7 @@ def profit_and_payout(fund, portfolios, currencies, environment):
         profit_per_asset[c] = c.par.nominal_interest_rate * environment.var.fx_rates.loc[fund.par.country, c.par.country] + environment.var.fx_rates.loc[fund.par.country, c.par.country] - environment.var_previous.fx_rates.loc[fund.par.country, c.par.country]
         testing[c] = fund.var.currency[c] * profit_per_asset[c]
         total_payouts[c] = (total_payouts[c] + fund.var.currency[c] * c.par.nominal_interest_rate)
-        total_payouts[c] =0
+        #total_payouts[c] =0
         # the balance sheet effect takes into account the exchange rate effect
         total_payouts_fx_corr[c] = total_payouts[c] * environment.var.fx_rates.loc[fund.par.country, c.par.country]
 

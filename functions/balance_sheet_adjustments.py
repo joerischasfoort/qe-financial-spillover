@@ -94,29 +94,8 @@ def cash_demand_correction(fund, currencies,environment):
                     
     return new_cash_demand 
         
-def cash_excess_demand_and_correction_factors(funds, portfolios, currencies, exogeneous_agents):
-                
-    #computing cash supply (after asset transactions have been made) of exogenous agents
-    cb_cash_demand={c:0 for c in currencies}
-    underwriter_cash_demand={c:0 for c in currencies}
-    for ex in exogeneous_agents:
-        auxCB = {}
-        auxU = {}
-        for a in portfolios:
-            out=a.par.maturity * (1-a.var.default_rate)    
-            if ex == "central_bank_domestic":
-                auxCB[a]=((out * exogeneous_agents[ex].var_previous.assets[a]-exogeneous_agents[ex].var.assets[a]) * a.var.price)
-                for c in currencies:
-                    if exogeneous_agents[ex].par.country == a.par.country and a.par.country == c.par.country :
-                        cb_cash_demand[c] = cb_cash_demand[c] + auxCB[a]
+def cash_excess_demand_and_correction_factors(funds, currencies):
 
-            if ex == "underwriter":
-                auxU[a]=((-exogeneous_agents[ex].var.asset_demand[a]) - exogeneous_agents[ex].var.assets[a]) * a.var.price
-                for c in currencies:
-                    if a.par.country == c.par.country :
-                        underwriter_cash_demand[c] = underwriter_cash_demand[c] + auxU[a]
-
-        
     #compute correcting factors for portfolios of assets
     piC = {}
     nuC = {}
@@ -125,16 +104,6 @@ def cash_excess_demand_and_correction_factors(funds, portfolios, currencies, exo
     set_of_negative = {c:0 for c in currencies}
         
     for c in currencies:
-        if underwriter_cash_demand[c] > 0:
-            set_of_positive[c] = set_of_positive[c] + underwriter_cash_demand[c]
-        if underwriter_cash_demand[c] < 0:
-            set_of_negative[c] = set_of_negative[c] + underwriter_cash_demand[c]
-        if cb_cash_demand[c] > 0:
-            set_of_positive[c] = set_of_positive[c] + cb_cash_demand[c]
-        if cb_cash_demand[c] < 0:
-            set_of_negative[c] = set_of_negative[c] + cb_cash_demand[c]
-
-
         # computing excess cash demand for investor agents (independent)
         for f in funds:
             if f.var.currency_demand[c] > 0:
@@ -157,7 +126,7 @@ def cash_excess_demand_and_correction_factors(funds, portfolios, currencies, exo
     return nuC, piC, excess_demandC
 
 
-def fund_cash_adjustments(nuC, piC, excess_demandC, currencies, fund, environment):
+def fund_cash_adjustments(nuC, piC, excess_demandC, currencies, fund):
     new_cash_position = {}
     
     for c in currencies:    
