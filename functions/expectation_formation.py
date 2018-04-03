@@ -11,7 +11,7 @@ def dr_expectations(fund, portfolios, delta_news):
     :param delta_news: float the difference in the news process about the default rate
     :return: dictionary of assets and corresponding floats of expected default rates
     """
-    expected_dr = {}
+    expected_dr = {} #TODO: rethink this!
     for portfolio in portfolios:
 
         previously_exp_dr = fund.exp.default_rates[portfolio]
