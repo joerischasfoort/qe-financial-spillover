@@ -11,7 +11,7 @@ parameters = {
     "n_foreign_assets": 1,
     "n_domestic_funds": 1,
     "n_foreign_funds": 1,
-    "days": 2,
+    "days": 50,
     "p_change_intensity": 0.01,
     "fx_change_intensity": 0.1,
     "cov_memory": 0.01,
