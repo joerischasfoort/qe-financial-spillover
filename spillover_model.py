@@ -1,9 +1,6 @@
 """Main model"""
-import numpy as np
-import random
+
 import copy
-import pandas as pd
-from functions.payouts_and_share_value import *
 from functions.port_opt import *
 from functions.asset_demands import *
 from functions.ex_agent_asset_demands import *
@@ -13,7 +10,6 @@ from functions.expectation_formation import *
 from functions.market_mechanism import *
 from functions.profits_and_payouts import *
 from functions.show import *
-#from functions.realised_returns import *
 from functions.supercopy import *
 
 from functions.measurement import *
@@ -108,11 +104,11 @@ def spillover_model(portfolios, currencies, environment, exogeneous_agents, fund
             Deltas.update(Delta_Demand)
             Deltas.update({"Delta_FX": Delta_Capital})
 
-            convergence = sum(abs(Deltas[i])<0.00000001 for i in Deltas)==len(Deltas) and tau >30
+            convergence = sum(abs(Deltas[i])<0.00001 for i in Deltas)==len(Deltas) and tau >30
 
 
 
-            print tau, convergence, Deltas
+            print "day:",day,"tau:",tau, convergence, Deltas
             #Update intraday data points
             data = update_data(data, funds, portfolios, currencies, environment, Deltas)
             #this is where intraday simulation ends
@@ -126,6 +122,7 @@ def spillover_model(portfolios, currencies, environment, exogeneous_agents, fund
         for fund in funds:
             fund.var.assets = fund_asset_adjustments(fund, portfolios, excess_demand, pi, nu)
             fund.var.currency_inventory = fund_cash_inventory_adjustment(fund, portfolios, currencies)
+            temp, fund.var.currency_demand = asset_demand(fund, portfolios, currencies, environment)
 
         for ex in exogeneous_agents:
             exogeneous_agents[ex].var.assets = ex_asset_adjustments(ex, portfolios, excess_demand, pi, nu, exogeneous_agents)

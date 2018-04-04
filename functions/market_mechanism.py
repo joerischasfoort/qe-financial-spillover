@@ -78,18 +78,8 @@ def fx_adjustment(portfolios, currencies, environment, exogeneous_agents, funds,
             row = row + 1
             combinations.append(combination_tuple)
 
-    K_delta = 0  # net capital flows
-    fx_rate = 0
-
     for el in combinations:
 
-        weight_f = 0  # This is the sum of   weights per fund DEMANDING a currency (the first sum in equation 1.23)
-        aux = 0  # helper variable
-
-        weight_fd = 0  # This is the sum of   weights per fund from the other perspective (the second term in the nominator term inequation 1.23 )
-        aux_2 = 0  # helper variable
-
-        tot_red_shares = 0
 
         red_share_fx_corr={}
 
