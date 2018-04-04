@@ -51,10 +51,11 @@ def price_adjustment(portfolios, environment, exogeneous_agents, funds, a):
     price = convert_R2P(a, exp(log_new_ret))
 
     Delta_Demand = total_demand[a] / a.par.quantity
+    Delta_Demand_string = "Delta_"+ str(a)
 
     # print "Price:", a, price, total_demand[a]/a.par.quantity
 
-    return price, exp(log_new_ret), Delta_Demand
+    return price, exp(log_new_ret), Delta_Demand_string, Delta_Demand
 
 
 def fx_adjustment(portfolios, currencies, environment, exogeneous_agents, funds, noise):

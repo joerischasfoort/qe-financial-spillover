@@ -1,6 +1,6 @@
 
 
-def initdatadict(funds, portfolios, currencies, environment):
+def initdatadict(funds, portfolios, currencies, environment, deltas):
 
     data = {str(a) + 'price': [environment.par.global_parameters["init_asset_price"]] for a in portfolios}
 
@@ -25,25 +25,22 @@ def initdatadict(funds, portfolios, currencies, environment):
             c_demands = {"c_demand_" + str(c) + "_fund_" + str(fund.name): [fund.var.currency_demand[c]] for demand in fund.var.currency_demand}
             data.update(c_demands)
 
+    for i in deltas:
+        data[i] = [deltas[i]]
 
-    data["Delta_Capital"] = [0]
-    data["FX_rate_domestic_foreign"] = [environment.var.fx_rates.loc["domestic"][ "foreign"]]  #Todo: general case!
-
+    data["FX_domestic_foreign"] = [environment.var.fx_rates.loc["domestic"][ "foreign"]]  #Todo: general case!
 
     for fund in funds:
         for idx_x, asset_x in enumerate(fund.var.covariance_matrix.columns):
             for idx_y, asset_y in enumerate(fund.var.covariance_matrix.columns):
                 if idx_x <= idx_y:
                     varcovar =  { "var_covar_" +   "fund_" + str(fund.name) + "_" + str(asset_x) + "_"  + str(asset_y): [ fund.var.covariance_matrix.loc[asset_x][asset_y]]}
-
                     data.update(varcovar)
                     #print idx_x, asset_x, idx_y ,asset_y
-
-
     return data
 
 
-def update_data(data, funds, portfolios, currencies, environment, Delta_Capital):
+def update_data(data, funds, portfolios, currencies, environment, Deltas):
     all_assets = portfolios + currencies
     for a in portfolios:
         data[str(a) + 'price'].append(a.var.price)  # TODO remove when done
@@ -67,9 +64,11 @@ def update_data(data, funds, portfolios, currencies, environment, Delta_Capital)
                 if idx_x <= idx_y:
                     data["var_covar_" +   "fund_" + str(fund.name)+ "_"  + str(asset_x) + "_"  + str(asset_y)].append(fund.var.covariance_matrix.loc[asset_x][asset_y])
 
+    for i in Deltas:
+        data[i].append(Deltas[i])
 
-    data["Delta_Capital"].append(Delta_Capital)
-    data["FX_rate_domestic_foreign"].append(environment.var.fx_rates.loc["domestic"]["foreign"]) #Todo: general case!
+    data["FX_domestic_foreign"].append(environment.var.fx_rates.loc["domestic"]["foreign"]) #Todo: general case!
+
     return data
 
 def reset_intraday(data):
