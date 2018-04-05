@@ -27,8 +27,8 @@ def initdatadict(funds, portfolios, currencies, environment, deltas):
             data.update(ass)
 
         for c in currencies:
-            #cs = {"c_quantity" + str(a) + "_fund_" + str(fund.name): [fund.var.currency[c]] for c in fund.var.currency}
-            #data.update(cs)
+            cs = {"c_quantity" + str(c) + "_fund_" + str(fund.name): [fund.var.currency[c]] for c in fund.var.currency}
+            data.update(cs)
             c_demands = {"c_demand_" + str(c) + "_fund_" + str(fund.name): [fund.var.currency_demand[c]] for demand in fund.var.currency_demand}
             data.update(c_demands)
 
@@ -63,7 +63,7 @@ def update_data(data, funds, portfolios, currencies, environment, Deltas):
 
         for c in currencies:
             data["c_demand_" + str(c) + "_fund_" + str(fund.name)].append(fund.var.currency_demand[c])
-            #data["c_quantity" + str(a) + "_fund_" + str(fund.name)].append(fund.var.currency[c])
+            data["c_quantity" + str(c) + "_fund_" + str(fund.name)].append(fund.var.currency[c])
 
 
         for a in all_assets:
