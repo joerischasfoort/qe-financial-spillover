@@ -5,13 +5,13 @@ from init_objects import *
 from spillover_model import *
 
 # 1 setup parameters
-parameters = {
+parameters = { #Todo: cleaning and spell checking!!
     # global parameters
     "n_domestic_assets": 1,
     "n_foreign_assets": 1,
     "n_domestic_funds": 1,
     "n_foreign_funds": 1,
-    "days": 500,
+    "days": 1000,
     "p_change_intensity": 0.1,
     "fx_change_intensity": 0.1,
     "cov_memory": 0.01,
@@ -40,7 +40,7 @@ parameters = {
     "init_profits": 0,
     # shock processes parameters
     "fx_shock_mu": 0.0,
-    "fx_shock_std": 0.00001,
+    "fx_shock_std": 0.01,
     "default_rate_mu": 0.0001,
     "default_rate_std": 0.04,
     "default_rate_mean_reversion": 0.01,
@@ -55,5 +55,3 @@ portfolios, currencies, funds, environment, exogeneous_agents = init_objects(par
 # 3 simulate model
 portfolios, currencies, environment, exogeneous_agents, funds, data_t = spillover_model(portfolios, currencies, environment, exogeneous_agents, funds,  seed=1)
 
-# 4 Measurement
-pd.DataFrame(data_t).to_csv('data' + '/' + "data_t.csv")

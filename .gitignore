@@ -43,6 +43,8 @@ coverage.xml
 *.sqlite
 *.json
 *.csv
+*.pkl
+*.xlsx
 
 #ignore al pictures
 *.png

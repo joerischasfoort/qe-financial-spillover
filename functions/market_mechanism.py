@@ -116,3 +116,42 @@ def fx_adjustment(portfolios, currencies, environment, exogeneous_agents, funds,
 
     return environment.var.fx_rates, Delta_Capital
 
+
+
+def   intensity_parameter_adjustment(jump_counter, test_sign, Deltas, environment, convergence_bound):
+
+    test = {}
+    jump = 0
+    jump_fx = 0
+    convergence = {}
+    for i in Deltas:
+        test[i] = test_sign[i] / np.sign(Deltas[i])
+        test_sign[i] = np.sign(Deltas[i])
+
+        convergence[i]=abs(Deltas[i]) < convergence_bound
+
+        if test[i] == -1 and i != 'Delta_FX':
+            jump = 1
+        if test[i] == -1 and i == 'Delta_FX':
+            jump_fx = 1
+
+    if jump == 1 or jump_fx ==1:
+        jump_counter += 1
+
+    if jump_counter > 1 and jump == 0 and jump_fx ==0:
+        jump_counter = 0
+
+    if jump_counter > 3 and jump==1:
+        environment.par.global_parameters['p_change_intensity'] = environment.par.global_parameters[
+                                                                      'p_change_intensity'] / 10
+        jump_counter = 0
+
+    if jump_counter > 3 and jump == 0 and jump_fx == 1:
+        environment.par.global_parameters['fx_change_intensity'] = environment.par.global_parameters[
+                                                                       'fx_change_intensity'] / 10
+        jump_counter = 0
+
+
+
+
+    return  jump_counter, test_sign, environment

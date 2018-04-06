@@ -1,6 +1,7 @@
 """Main model"""
 
 import copy
+import pickle
 from functions.port_opt import *
 from functions.asset_demands import *
 from functions.ex_agent_asset_demands import *
@@ -29,7 +30,7 @@ def spillover_model(portfolios, currencies, environment, exogeneous_agents, fund
 
     #Measurements
     deltas = {"Delta_" + str(i): 0 for i in portfolios}
-    deltas["Delta_FX"] = 0 # Todo: general case
+    deltas["Delta_FX"] = 0
 
     data = initdatadict(funds, portfolios, currencies, environment, deltas ) # create tau data dictionary
     data_t = copy.deepcopy(data) # create t data dictionary
@@ -47,7 +48,16 @@ def spillover_model(portfolios, currencies, environment, exogeneous_agents, fund
         if a.var.aux_ret<=0:
             a.var.aux_ret=0.0001
 
-    for day in range(1, environment.par.global_parameters["days"]):
+    # intensity parameters need to be flexible to avoid jumps in the weights
+    original_p_change_intensity = environment.par.global_parameters['p_change_intensity']
+    original_fx_change_intensity = environment.par.global_parameters['fx_change_intensity']
+
+
+    if 'start_day' not in environment.par.global_parameters:
+        environment.par.global_parameters['start_day'] = 1
+        environment.par.global_parameters['end_day'] = environment.par.global_parameters["days"]
+
+    for day in range(environment.par.global_parameters['start_day'], environment.par.global_parameters['end_day']):
         # initialise intraday prices at current price
         delta_news = news_process[day] - news_process[day-1]
 
@@ -58,7 +68,16 @@ def spillover_model(portfolios, currencies, environment, exogeneous_agents, fund
         convergence=False
         intraday_over=False
 
+
         tau=0
+
+        # resetting intensity adjustment parameters
+        environment.par.global_parameters['p_change_intensity'] = original_p_change_intensity
+        environment.par.global_parameters['fx_change_intensity'] = original_fx_change_intensity
+        jump_counter = 0
+        test_sign={'Delta_'+str(a):0 for a in portfolios}
+        test_sign.update({"Delta_FX": 0})
+
         while intraday_over == False:
             tau += 1
 
@@ -98,20 +117,38 @@ def spillover_model(portfolios, currencies, environment, exogeneous_agents, fund
                 for a in portfolios:
                     a.var.price, a.var.aux_ret, Delta_str, delta_demand  = price_adjustment(portfolios, environment, exogeneous_agents, funds, a)
                     Delta_Demand[Delta_str] = delta_demand
-                environment.var.fx_rates, Delta_Capital = fx_adjustment(portfolios, currencies, environment, exogeneous_agents , funds, 0.0)#fx_shock[day])
+                environment.var.fx_rates, Delta_Capital = fx_adjustment(portfolios, currencies, environment, exogeneous_agents , funds, fx_shock[day])
+
 
             Deltas = {}
             Deltas.update(Delta_Demand)
             Deltas.update({"Delta_FX": Delta_Capital})
 
-            convergence = sum(abs(Deltas[i])<0.00001 for i in Deltas)==len(Deltas) and tau >30
+            convergence_bound = 0.001
+            convergence = sum(abs(Deltas[i])<convergence_bound for i in Deltas)==len(Deltas) and tau >30
+
+            jump_counter, test_sign, environment = intensity_parameter_adjustment(jump_counter, test_sign, Deltas, environment, convergence_bound)
+
+
+
 
             print "day:",day,"tau:",tau, convergence, Deltas
             #Update intraday data points
             data = update_data(data, funds, portfolios, currencies, environment, Deltas)
             #this is where intraday simulation ends
 
+            # saving objects when there is no convergence
+            if tau > 10000:
+                save_objects = open('data/Objects/objects_nonConv.pkl', 'wb')
+                seed = 1
+                list_of_objects = [portfolios, currencies, environment, exogeneous_agents, funds, seed]
+                pickle.dump(list_of_objects, save_objects)
+                save_objects.close()
+
         pd.DataFrame(data).to_csv('data' + '/' + "intraday" + "/" + "intraday_data_day_" + str(day) + ".csv")
+
+
+        # balance sheet adjustment
 
         #computing new asset and cash positions
         excess_demand, pi, nu = asset_excess_demand_and_correction_factors(funds, portfolios, currencies, exogeneous_agents)
@@ -125,7 +162,6 @@ def spillover_model(portfolios, currencies, environment, exogeneous_agents, fund
         for ex in exogeneous_agents:
             exogeneous_agents[ex].var.assets = ex_asset_adjustments(ex, portfolios, excess_demand, pi, nu, exogeneous_agents)
 
-        # balance sheet adjustment
         for fund in funds:
             fund.var.currency_demand = cash_demand_correction(fund, currencies,environment)
 
@@ -159,5 +195,16 @@ def spillover_model(portfolios, currencies, environment, exogeneous_agents, fund
             data = reset_intraday(data)
             #Update data_t
             data_t = update_data(data_t, funds, portfolios, currencies, environment, Deltas)
+
+        # 4 Measurement
+        pd.DataFrame(data_t).to_csv('data' + '/' + "data_t.csv")
+
+        # saving objects
+        file_name = 'data/Objects/objects_day_' + str(day) + '.pkl'
+        save_objects = open(file_name, 'wb')
+        seed = 1
+        list_of_objects = [portfolios, currencies, environment, exogeneous_agents, funds, seed]
+        pickle.dump(list_of_objects, save_objects)
+        save_objects.close()
 
     return portfolios, currencies, environment, exogeneous_agents, funds,  data_t

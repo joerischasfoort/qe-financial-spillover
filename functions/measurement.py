@@ -5,9 +5,11 @@ def initdatadict(funds, portfolios, currencies, environment, deltas):
     data = {str(a) + 'price': [environment.par.global_parameters["init_asset_price"]] for a in portfolios}
 
     all_assets = portfolios + currencies
+
     for fund in funds:
         redeem_s = {"redeemable_shares" + "_fund_" + str(fund.name): [fund.var.redeemable_shares]}
         data.update(redeem_s)
+
         for a in all_assets:
 
             exp_returns = {"exp_return_" + str(a) + "_fund_" + str(fund.name): [fund.exp.returns[a]] for return_ in fund.exp.returns}

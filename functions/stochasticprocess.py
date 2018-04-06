@@ -2,7 +2,7 @@ import math
 import numpy as np
 import random
 
-def ornstein_uhlenbeck_levels(time=500, init_level=10e-7, sigma=0.125, mean_reversion=0.99):
+def ornstein_uhlenbeck_levels(time=500, init_level=10e-7, sigma=0.125, mean_reversion=0.99): # Todo: why are values for parameters hard coded?
     """
     This function returns news about the as a mean-reverting ornstein uhlenbeck process.
     :param init_level: starting point of the default probability
@@ -17,7 +17,7 @@ def ornstein_uhlenbeck_levels(time=500, init_level=10e-7, sigma=0.125, mean_reve
     #np.random.seed(2) #remeber to take out
     default_probability = [init_level]
      
-    for t in range(1, 100000):
+    for t in range(1, 100000): # Todo: why 100000 periods? For initializing covariance a long history may be useful, it isn't for the simulation
 
         error = np.random.normal(0, sigma)
         new_dr = default_probability[-1] + mean_reversion * (init_level - default_probability[-1]) + error
