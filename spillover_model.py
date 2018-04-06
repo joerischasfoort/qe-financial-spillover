@@ -132,7 +132,7 @@ def spillover_model(portfolios, currencies, environment, exogeneous_agents, fund
 
 
 
-            print "day:",day,"tau:",tau, convergence, Deltas
+            print ("day:",day,"tau:",tau, convergence, Deltas)
             #Update intraday data points
             data = update_data(data, funds, portfolios, currencies, environment, Deltas)
             #this is where intraday simulation ends

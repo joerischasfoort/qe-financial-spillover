@@ -86,6 +86,6 @@ def update_data(data, funds, portfolios, currencies, environment, Deltas):
     return data
 
 def reset_intraday(data):
-    for key, value in data.iteritems():
+    for key, value in data.items():
         del value[:-1]
     return data

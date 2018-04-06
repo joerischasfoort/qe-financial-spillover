@@ -49,9 +49,9 @@ parameters = { #Todo: cleaning and spell checking!!
 }
 
 # 2 initalise model objects
-portfolios, currencies, funds, environment, exogeneous_agents = init_objects(parameters)
+portfolios, currencies, funds, environment, exogenous_agents = init_objects(parameters)
 #print(portfolios, currencies, funds, environment, exogeneous_agents)
 
 # 3 simulate model
-portfolios, currencies, environment, exogeneous_agents, funds, data_t = spillover_model(portfolios, currencies, environment, exogeneous_agents, funds,  seed=1)
+portfolios, currencies, environment, exogenous_agents, funds, data_t = spillover_model(portfolios, currencies, environment, exogenous_agents, funds, seed=1)
 
