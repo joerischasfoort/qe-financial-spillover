@@ -72,8 +72,6 @@ def spillover_model(portfolios, currencies, environment, exogeneous_agents, fund
         tau=0
 
         # resetting intensity adjustment parameters
-        environment.par.global_parameters['p_change_intensity'] = original_p_change_intensity
-        environment.par.global_parameters['fx_change_intensity'] = original_fx_change_intensity
         jump_counter = 0
         test_sign={'Delta_'+str(a):0 for a in portfolios}
         test_sign.update({"Delta_FX": 0})
@@ -83,6 +81,24 @@ def spillover_model(portfolios, currencies, environment, exogeneous_agents, fund
 
             if convergence == True:
                 intraday_over = True
+
+                # shocking prices and exchange rates
+                if intraday_over == True:
+                    Delta_Demand = {}
+                    environment.par.global_parameters['p_change_intensity'] = 0
+                    environment.par.global_parameters['fx_change_intensity'] = 0
+                    for a in portfolios:
+                        a.var.price, a.var.aux_ret, Delta_str, delta_demand = price_adjustment(portfolios, environment,
+                                                                                               exogeneous_agents, funds,
+                                                                                               a)
+                        Delta_Demand[Delta_str] = delta_demand
+
+                    environment.var.fx_rates.iloc[0, 1] = environment.var.fx_rates.iloc[0, 1] * (1 + fx_shock[day])
+                    environment.var.fx_rates.iloc[1, 0] = 1 / environment.var.fx_rates.iloc[0, 1]
+                    environment.var.fx_rates, Delta_Capital = fx_adjustment(portfolios, currencies, environment, funds)
+                    environment.par.global_parameters['p_change_intensity'] = original_p_change_intensity
+                    environment.par.global_parameters['fx_change_intensity'] = original_fx_change_intensity
+
 
             for fund in funds:
                 # shareholder dividends and fund profits 
@@ -111,14 +127,11 @@ def spillover_model(portfolios, currencies, environment, exogeneous_agents, fund
 
 
             if intraday_over == False:
-
                 Delta_Demand = { }
-
                 for a in portfolios:
                     a.var.price, a.var.aux_ret, Delta_str, delta_demand  = price_adjustment(portfolios, environment, exogeneous_agents, funds, a)
                     Delta_Demand[Delta_str] = delta_demand
-                environment.var.fx_rates, Delta_Capital = fx_adjustment(portfolios, currencies, environment, exogeneous_agents , funds, fx_shock[day])
-
+                environment.var.fx_rates, Delta_Capital = fx_adjustment(portfolios, currencies, environment , funds)
 
             Deltas = {}
             Deltas.update(Delta_Demand)
@@ -128,8 +141,6 @@ def spillover_model(portfolios, currencies, environment, exogeneous_agents, fund
             convergence = sum(abs(Deltas[i])<convergence_bound for i in Deltas)==len(Deltas) and tau >30
 
             jump_counter, test_sign, environment = intensity_parameter_adjustment(jump_counter, test_sign, Deltas, environment, convergence_bound)
-
-
 
 
             print "day:",day,"tau:",tau, convergence, Deltas

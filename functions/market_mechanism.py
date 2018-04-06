@@ -58,7 +58,7 @@ def price_adjustment(portfolios, environment, exogeneous_agents, funds, a):
     return price, exp(log_new_ret), Delta_Demand_string, Delta_Demand
 
 
-def fx_adjustment(portfolios, currencies, environment, exogeneous_agents, funds, noise):
+def fx_adjustment(portfolios, currencies, environment, funds):
     """
     Find the new fxrate
     """
@@ -101,7 +101,7 @@ def fx_adjustment(portfolios, currencies, environment, exogeneous_agents, funds,
 
 
 
-        Delta_Capital = noise + (capital_DF - capital_FD ) / sum(red_share_fx_corr.values())
+        Delta_Capital = (capital_DF - capital_FD ) / sum(red_share_fx_corr.values())
 
 
         log_new_fx_rate = log(environment.var.fx_rates.loc[el[0]][el[1]]) + environment.par.global_parameters["fx_change_intensity"] * Delta_Capital
