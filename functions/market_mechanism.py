@@ -135,21 +135,24 @@ def   intensity_parameter_adjustment(jump_counter, test_sign, Deltas, environmen
         if test[i] == -1 and i == 'Delta_FX':
             jump_fx = 1
 
-    if jump == 1 or jump_fx ==1:
-        jump_counter += 1
+    if jump == 1:
+        jump_counter[0] += 1
 
-    if jump_counter > 1 and jump == 0 and jump_fx ==0:
-        jump_counter = 0
+    if jump_fx == 1:
+        jump_counter[1] += 1
+    #if jump_counter > 1 and jump == 0 and jump_fx ==0:
+    #    jump_counter = 0
 
-    if jump_counter > 3 and jump==1:
+    if jump_counter[0] > 3:
         environment.par.global_parameters['p_change_intensity'] = environment.par.global_parameters[
                                                                       'p_change_intensity'] / 10
-        jump_counter = 0
+        jump_counter[0] = 0
+        jump_counter[1] = 0
 
-    if jump_counter > 3 and jump == 0 and jump_fx == 1:
+    if jump_counter[1] > 3:
         environment.par.global_parameters['fx_change_intensity'] = environment.par.global_parameters[
                                                                        'fx_change_intensity'] / 10
-        jump_counter = 0
+        jump_counter[1] = 0
 
 
 

@@ -19,12 +19,12 @@ parameters = { #Todo: cleaning and spell checking!!
     "face_value": 5000,
     "nominal_interest_rate": 0.003,
     "currency_rate": 0.004,
-    "maturity" : 0.99,
+    "maturity" : 0.995,
     "quantity" : 5000,
     # agent parameters
     "price_memory": 0.0,
     "fx_memory": 0.0,
-    "risk_aversion": 1.0,
+    "risk_aversion": 5.0,
     "news_evaluation_error": 0.0001,
     # cb parameters
     "cb_country": 'domestic',
@@ -40,9 +40,9 @@ parameters = { #Todo: cleaning and spell checking!!
     "init_profits": 0,
     # shock processes parameters
     "fx_shock_mu": 0.0,
-    "fx_shock_std": 0.01,
+    "fx_shock_std": 0.001,
     "default_rate_mu": 0.0001,
-    "default_rate_std": 0.04,
+    "default_rate_std": 0.0001,
     "default_rate_mean_reversion": 0.01,
     "default_rate_delta_t": 0.003968253968253968,
     "adaptive_param": 0.5

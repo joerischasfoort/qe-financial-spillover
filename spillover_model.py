@@ -72,7 +72,7 @@ def spillover_model(portfolios, currencies, environment, exogeneous_agents, fund
         tau=0
 
         # resetting intensity adjustment parameters
-        jump_counter = 0
+        jump_counter = [0,0]
         test_sign={'Delta_'+str(a):0 for a in portfolios}
         test_sign.update({"Delta_FX": 0})
 
@@ -151,8 +151,8 @@ def spillover_model(portfolios, currencies, environment, exogeneous_agents, fund
 
             # saving objects when there is no convergence
             if tau > 10000:
-                save_objects = open('data/Objects/objects_nonConv.pkl', 'wb')
-                seed = 1
+                file_name = 'data/Objects/objects_nonConv_day' + str(day) + '.pkl'
+                save_objects = open(file_name, 'wb')
                 list_of_objects = [portfolios, currencies, environment, exogeneous_agents, funds, seed]
                 pickle.dump(list_of_objects, save_objects)
                 save_objects.close()
@@ -214,7 +214,6 @@ def spillover_model(portfolios, currencies, environment, exogeneous_agents, fund
         # saving objects
         file_name = 'data/Objects/objects_day_' + str(day) + '.pkl'
         save_objects = open(file_name, 'wb')
-        seed = 1
         list_of_objects = [portfolios, currencies, environment, exogeneous_agents, funds, seed]
         pickle.dump(list_of_objects, save_objects)
         save_objects.close()
