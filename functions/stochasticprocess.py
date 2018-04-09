@@ -1,8 +1,7 @@
-import math
 import numpy as np
-import random
 
-def ornstein_uhlenbeck_levels(time, init_level, sigma, mean_reversion): # Todo: why are values for parameters hard coded?
+
+def ornstein_uhlenbeck_levels(time, init_level, sigma, mean_reversion):
     """
     This function returns news about the as a mean-reverting ornstein uhlenbeck process.
     :param init_level: starting point of the default probability
@@ -14,7 +13,6 @@ def ornstein_uhlenbeck_levels(time, init_level, sigma, mean_reversion): # Todo: 
     :return: list : simulatated default probability simulated over time
     """
     default_probability = [init_level]
-    time = 100000
     for t in range(1, time):
 
         error = np.random.normal(0, sigma)
