@@ -37,11 +37,15 @@ def portfolio_optimization(f):
         test = weights[:-1] < 0
         #the idea is to take out shorted assets in the order of the size of their partial derivatives (under the assumptions that the agent holds a marginal amount of each asset)
 
-        derivatives = [E_ret_assets[i]-risk_aversion*sum([Cov_assets.iloc[i,j]*0.0000001 for j in range(len(E_ret_assets))]) for i in range(len(E_ret_assets))]
+        #derivatives = [E_ret_assets[i]-risk_aversion*sum([Cov_assets.iloc[i,j]*0.0000001 for j in range(len(E_ret_assets))]) for i in range(len(E_ret_assets))]
+        w = [weights[i] if test[i]==False else 0.0000001 for i in range(len(E_ret_assets))]
+        derivatives_new = [E_ret_assets[i]-risk_aversion*sum([Cov_assets.iloc[i,j]*w[j] for j in range(len(E_ret_assets))]) for i in range(len(E_ret_assets))]
+        select_derivative_new = [max(derivatives_new)+1 if test[i]==False else derivatives_new[i] for i in range(len(derivatives_new))]
 
-        select_derivative = [max(derivatives)+1 if test[i]==False else derivatives[i] for i in range(len(derivatives))]
+        #select_derivative = [max(derivatives)+1 if test[i]==False else derivatives[i] for i in range(len(derivatives))]
+
         while sum(test)>0:
-            i = np.argmin(select_derivative)
+            i = np.argmin(select_derivative_new)
             if test[i]==True:
                aux_cov[i,:]=0
                aux_cov[i,i]=1
@@ -50,10 +54,12 @@ def portfolio_optimization(f):
             inv_aux_cov=np.linalg.inv(aux_cov)
             weights=np.matmul(inv_aux_cov, aux_ret)*(1/float(risk_aversion))      
             test = weights[:-1] < -1e-10
-            select_derivative = [max(derivatives)+1 if test[i] == False else derivatives[i] for i in
-                                 range(len(derivatives))]
+            #select_derivative = [max(derivatives)+1 if test[i] == False else derivatives[i] for i in range(len(derivatives))]
+            w = [weights[i] if test[i] == False else 0.0000001 for i in range(len(E_ret_assets))]
+            derivatives_new = [E_ret_assets[i] - risk_aversion * sum([Cov_assets.iloc[i, j] * w[j] for j in range(len(E_ret_assets))]) for i in range(len(E_ret_assets))]
+            select_derivative_new = [max(derivatives_new) + 1 if test[i] == False else derivatives_new[i] for i in range(len(derivatives_new))]
 
-        output = {}    
+        output = {}
 
         for i, a in enumerate(Cov_assets.columns.values):
             output[a] = weights[i]
