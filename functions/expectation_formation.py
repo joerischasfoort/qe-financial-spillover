@@ -3,7 +3,7 @@ from math import exp
 import numpy as np
 
 
-def dr_expectations(fund, portfolios, delta_news):
+def dr_expectations(fund, portfolios, delta_news, fundamental_default_rates):
     """
     Calculate default rate expectations
     :param fund: Fund object for which to calculate default rate expectations
@@ -11,18 +11,19 @@ def dr_expectations(fund, portfolios, delta_news):
     :param delta_news: float the difference in the news process about the default rate
     :return: dictionary of assets and corresponding floats of expected default rates
     """
-    expected_dr = {} #TODO: rethink this! Idiosyncratic error terms don't show. Avoid expectations of zero default rate
-    for portfolio in portfolios:
 
-        previously_exp_dr = fund.exp.default_rates[portfolio]
-        default_rate = portfolio.var.default_rate
+
+    expected_dr = {} #TODO: rethink this! Idiosyncratic error terms don't show. Avoid expectations of zero default rate
+    for a in portfolios:
+
+        previously_exp_dr = fund.exp.default_rates[a]
+        fdr = fundamental_default_rates[a]
+
         noise = np.random.normal(0, fund.par.news_evaluation_error)
-        if previously_exp_dr <= 0:
-            expected_dr[portfolio] = 0
-        else:
-            log_exp_dr = log(previously_exp_dr) + delta_news + noise + fund.par.adaptive_param * (
-                    log(default_rate) - log(previously_exp_dr))
-            expected_dr[portfolio] = exp(log_exp_dr)
+
+        log_exp_dr = log(previously_exp_dr) + delta_news[a] + noise + fund.par.adaptive_param * (
+                    log(fdr) - log(previously_exp_dr))
+        expected_dr[a] = exp(log_exp_dr)
 
     return expected_dr
 
@@ -104,7 +105,7 @@ def return_expectations(fund, portfolios, currencies, environment):
     return exp_returns
 
 
-def covariance_estimate(fund, portfolios, environment, currencies):
+def covariance_estimate(fund, environment, prev_exp_ret):
     """
     Calculate expected weighted moving average of returns and covariance matrix between them
     :param fund: the Fund object for which to make the calculation
@@ -128,7 +129,7 @@ def covariance_estimate(fund, portfolios, environment, currencies):
     for idx_x, asset_x in enumerate(new_covariance_matrix.columns):
         for idx_y, asset_y in enumerate(new_covariance_matrix.columns):
            if idx_x <= idx_y:
-                covar = (hypothetical_returns[asset_x] - ewma_returns[asset_x]) * (hypothetical_returns[asset_y] - ewma_returns[asset_y])
+                covar = (hypothetical_returns[asset_x] - prev_exp_ret[asset_x]) * (hypothetical_returns[asset_y] - prev_exp_ret[asset_y])
                 ewma_covar = compute_ewma(covar, fund.var_previous.covariance_matrix.loc[asset_x][asset_y], environment.par.global_parameters["cov_memory"])
                 new_covariance_matrix.loc[asset_x][asset_y] = ewma_covar
                 new_covariance_matrix.loc[asset_y][asset_x] = ewma_covar

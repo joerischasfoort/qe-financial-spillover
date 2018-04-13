@@ -28,6 +28,7 @@ def copy_agent_variables(fund_var_object):
                          payouts=new_variables['payouts'], weights=new_variables['weights'],
                          hypothetical_returns=new_variables['hypothetical_returns'],
                          profits=new_variables['profits'], size_target=new_variables['size_target'],
+                         losses= new_variables['losses'],
                          currency_inventory=new_variables['currency_inventory'])
     return obj
 

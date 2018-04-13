@@ -2,6 +2,10 @@
 import numpy as np
 
 
+
+
+
+
 def realised_profits_asset(default_rate, face_value, previous_price, price, quantity,
                            interest_rate, maturity, previous_exchange_rate=1, exchange_rate=1):
     """

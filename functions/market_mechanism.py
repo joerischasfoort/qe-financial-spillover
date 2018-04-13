@@ -44,11 +44,15 @@ def price_adjustment(portfolios, environment, exogeneous_agents, funds, a):
     # print a.var.price, total_demand[a]
 
     # Equation 1.17 : price adjustment
-    log_new_price = log(a.var.price) + environment.par.global_parameters['p_change_intensity'] * total_demand[a] / a.par.quantity
+    log_new_price = log(a.var.price) + a.par.change_intensity * total_demand[a] / a.par.quantity
 
-    log_new_ret = log(a.var.aux_ret) - environment.par.global_parameters['p_change_intensity'] * total_demand[a] / a.par.quantity
+    log_new_ret = log(a.var.aux_ret) - a.par.change_intensity * total_demand[a] / a.par.quantity
+
+
 
     price = convert_R2P(a, exp(log_new_ret))
+
+    price = exp(log_new_price)
 
     Delta_Demand = total_demand[a] / a.par.quantity
     Delta_Demand_string = "Delta_"+ str(a)
@@ -118,43 +122,54 @@ def fx_adjustment(portfolios, currencies, environment, funds):
 
 
 
-def   intensity_parameter_adjustment(jump_counter, test_sign, Deltas, environment, convergence_bound):
+def   intensity_parameter_adjustment(jump_counter, no_jump_counter, test_sign, Deltas, environment, convergence_bound):
 
     test = {}
-    jump = 0
-    jump_fx = 0
+    jump = {x:0 for x in jump_counter}
+    no_jump = {x:0 for x in jump_counter}
     convergence = {}
-    for i in Deltas:
+    for i in jump_counter:
         test[i] = test_sign[i] / np.sign(Deltas[i])
         test_sign[i] = np.sign(Deltas[i])
 
         convergence[i]=abs(Deltas[i]) < convergence_bound
 
-        if test[i] == -1 and i != 'Delta_FX':
-            jump = 1
-        if test[i] == -1 and i == 'Delta_FX':
-            jump_fx = 1
+        if test[i] == -1:
+            jump[i] = 1
+        if test[i] == 1:
+            no_jump[i] = 1
 
-    if jump == 1:
-        jump_counter[0] += 1
+        if jump[i] == 1:
+            jump_counter[i] += 1
+            no_jump_counter[i] = 0
 
-    if jump_fx == 1:
-        jump_counter[1] += 1
-    #if jump_counter > 1 and jump == 0 and jump_fx ==0:
-    #    jump_counter = 0
+        if no_jump[i] == 1:
+            no_jump_counter[i] += 1
 
-    if jump_counter[0] > 3:
-        environment.par.global_parameters['p_change_intensity'] = environment.par.global_parameters[
-                                                                      'p_change_intensity'] / 10
-        jump_counter[0] = 0
-        jump_counter[1] = 0
-
-    if jump_counter[1] > 3:
-        environment.par.global_parameters['fx_change_intensity'] = environment.par.global_parameters[
-                                                                       'fx_change_intensity'] / 10
-        jump_counter[1] = 0
+        if jump_counter[i] > 4 and i!="FX" and convergence[i] == False:
+            i.par.change_intensity = i.par.change_intensity  / 2
+            jump_counter[i] = 0
+            no_jump_counter[i]=0
 
 
+        if jump_counter[i] > 4 and i == "FX" and convergence[i] == False:
+            environment.par.global_parameters['fx_change_intensity'] = environment.par.global_parameters[
+                                                                       'fx_change_intensity'] / 2
+            jump_counter[i] = 0
+            no_jump_counter[i]=0
 
 
-    return  jump_counter, test_sign, environment
+        if no_jump_counter[i] > 20 and i!="FX" and convergence[i] == False:
+            i.par.change_intensity =  min(0.1, i.par.change_intensity * 1.1)
+            no_jump_counter[i] = 0
+            jump_counter[i] = 0
+
+
+        if no_jump_counter[i] > 20 and i=="FX" and convergence[i] == False:
+            environment.par.global_parameters['fx_change_intensity'] = min(0.1, environment.par.global_parameters[
+                                                                          'fx_change_intensity'] * 1.1)
+            no_jump_counter[i] = 0
+            jump_counter[i] = 0
+
+
+    return  jump_counter, no_jump_counter, test_sign, environment

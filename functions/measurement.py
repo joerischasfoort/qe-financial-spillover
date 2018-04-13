@@ -12,28 +12,29 @@ def initdatadict(funds, portfolios, currencies, environment, deltas):
 
         for a in all_assets:
 
-            exp_returns = {"exp_return_" + str(a) + "_fund_" + str(fund.name): [fund.exp.returns[a]] for return_ in fund.exp.returns}
+            exp_returns = {"exp_return_" + str(a) + "_fund_" + str(fund.name): [fund.exp.returns[a]]}
             data.update(exp_returns)
-            weights = { "weight_" +str(a) + "_fund_" + str(fund.name):  [fund.var.weights[a]]  for weight in fund.var.weights }
+            weights = { "weight_" +str(a) + "_fund_" + str(fund.name):  [fund.var.weights[a]]}
             data.update(weights)
 
         for a in portfolios:
-            exp_df = {"exp_default_" + str(a) + "_fund_" + str(fund.name): [fund.exp.default_rates[a]] for df in fund.exp.default_rates}
+            exp_df = {"exp_default_" + str(a) + "_fund_" + str(fund.name): [fund.exp.default_rates[a]]}
             data.update(exp_df)
-            exp_df = {"exp_default_" + str(a) + "_fund_" + str(fund.name): [fund.exp.default_rates[a]] for df in fund.exp.default_rates}
+            exp_df = {"exp_default_" + str(a) + "_fund_" + str(fund.name): [fund.exp.default_rates[a]]}
 
-            a_demands = {"a_demand_" + str(a) + "_fund_" + str(fund.name): [fund.var.asset_demand[a]] for demand in fund.var.asset_demand}
+            a_demands = {"a_demand_" + str(a) + "_fund_" + str(fund.name): [fund.var.asset_demand[a]]}
             data.update(a_demands)
 
-            ass = {"a_quantity" + str(a) + "_fund_" + str(fund.name): [fund.var.assets[a]] for a in fund.var.assets}
+            ass = {"a_quantity" + str(a) + "_fund_" + str(fund.name): [fund.var.assets[a]]}
             data.update(ass)
 
         for c in currencies:
-            cs = {"c_quantity" + str(c) + "_fund_" + str(fund.name): [fund.var.currency[c]] for c in fund.var.currency}
+            cs = {"c_quantity_" + str(c) + "_fund_" + str(fund.name): [fund.var.currency[c]]}
             data.update(cs)
-            c_demands = {"c_demand_" + str(c) + "_fund_" + str(fund.name): [fund.var.currency_demand[c]] for demand in fund.var.currency_demand}
+            c_demands = {"c_demand_" + str(c) + "_fund_" + str(fund.name): [fund.var.currency_demand[c]]}
             data.update(c_demands)
-
+            c_losses = {"c_losses_" + str(c) + "_fund_" + str(fund.name): [fund.var.losses[c]]}
+            data.update(c_losses)
 
 
     for i in deltas:
@@ -65,7 +66,8 @@ def update_data(data, funds, portfolios, currencies, environment, Deltas):
 
         for c in currencies:
             data["c_demand_" + str(c) + "_fund_" + str(fund.name)].append(fund.var.currency_demand[c])
-            data["c_quantity" + str(c) + "_fund_" + str(fund.name)].append(fund.var.currency[c])
+            data["c_quantity_" + str(c) + "_fund_" + str(fund.name)].append(fund.var.currency[c])
+            data["c_losses_" + str(c) + "_fund_" + str(fund.name)].append(fund.var.losses[c])
 
 
         for a in all_assets:
@@ -79,7 +81,8 @@ def update_data(data, funds, portfolios, currencies, environment, Deltas):
                     data["var_covar_" +   "fund_" + str(fund.name)+ "_"  + str(asset_x) + "_"  + str(asset_y)].append(fund.var.covariance_matrix.loc[asset_x][asset_y])
 
     for i in Deltas:
-        data[i].append(Deltas[i])
+        string = "Delta_" +str(i)
+        data[string].append(Deltas[i])
 
     data["FX_domestic_foreign"].append(environment.var.fx_rates.loc["domestic"]["foreign"]) #Todo: general case!
 

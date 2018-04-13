@@ -17,15 +17,15 @@ parameters = { #Todo: cleaning and spell checking!!
     "cov_memory": 0.01,
     # asset parameters
     "face_value": 5000,
-    "nominal_interest_rate": 0.003,
-    "currency_rate": 0.004,
+    "nominal_interest_rate": 0.04/250,
+    "currency_rate": 0.003/250,
     "maturity" : 0.995,
     "quantity" : 5000,
     # agent parameters
     "price_memory": 0.0,
     "fx_memory": 0.0,
-    "risk_aversion": 5.0,
-    "news_evaluation_error": 0.0001,
+    "risk_aversion": 2.0,
+    "news_evaluation_error": 0.05,
     # cb parameters
     "cb_country": 'domestic',
     # initial values
@@ -37,15 +37,19 @@ parameters = { #Todo: cleaning and spell checking!!
     "init_asset_demand": 0,
     "init_currency_demand": 0,
     "init_payouts": 0,
+    "init_losses": 0,
     "init_profits": 0,
     # shock processes parameters
     "fx_shock_mu": 0.0,
-    "fx_shock_std": 0.001,
-    "default_rate_mu": 0.0001,
-    "default_rate_std": 0.0001,
-    "default_rate_mean_reversion": 0.01,
+    "fx_shock_std": 0.01,
+    "avg_yearly_default_events": 80,
+    "avg_yearly_default_events_std":0,#0.05,
+    "avg_yearly_default_events_mean_reversion": 1,# 0.001,
+    "default_rate_mu": -7.6, #the mean and standard deviation are not the values for the distribution itself, but of the underlying normal distribution it is derived from.
+    "default_rate_std": 0.4,
+    "default_rate_mean_reversion": 1,
     "default_rate_delta_t": 0.003968253968253968,
-    "adaptive_param": 0.5
+    "adaptive_param": 0.1
 }
 
 # 2 initalise model objects
