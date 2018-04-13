@@ -4,5 +4,5 @@ from functions.stochasticprocess import *
 
 def test_ornstein_uhlenbeck_levels():
     """Basic checks for ornstein uhlenbeck function"""
-    assert_equal(len(ornstein_uhlenbeck_levels(time=20)), 20)
-    assert_equal(ornstein_uhlenbeck_levels(time=20, init_level=10e-7)[0], 0.000001)
+    assert_equal(len(ornstein_uhlenbeck_levels(time=20, init_level=10e-7, sigma=0.01, mean_reversion=0.99)), 20)
+    assert_equal(ornstein_uhlenbeck_levels(time=20, init_level=10e-7, sigma=0.01, mean_reversion=0.99)[0], 0.000001)

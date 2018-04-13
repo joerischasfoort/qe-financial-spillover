@@ -1,6 +1,5 @@
-import math
 import numpy as np
-import random
+
 
 
 def exogenous_defaults(environment, portfolios):
@@ -33,6 +32,7 @@ def exogenous_defaults(environment, portfolios):
     return default_rates, fundamental_default_rate_expectation
 
 def ornstein_uhlenbeck_levels(time, init_level, sigma, mean_reversion): # Todo: why are values for parameters hard coded?
+
     """
     This function returns news about the as a mean-reverting ornstein uhlenbeck process.
     :param init_level: starting point of the default probability
@@ -43,7 +43,9 @@ def ornstein_uhlenbeck_levels(time, init_level, sigma, mean_reversion): # Todo: 
     :param long_run_average_level:
     :return: list : simulatated default probability simulated over time
     """
+
     default_events = [init_level]
+
     for t in range(1, time):
 
         error = np.random.normal(0, sigma)

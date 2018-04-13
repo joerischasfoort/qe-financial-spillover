@@ -2,6 +2,7 @@
 
 import copy
 import pickle
+import random
 from functions.port_opt import *
 from functions.asset_demands import *
 from functions.ex_agent_asset_demands import *

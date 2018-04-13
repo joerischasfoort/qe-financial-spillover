@@ -14,10 +14,12 @@ def dr_expectations(fund, portfolios, delta_news, fundamental_default_rates):
 
 
     expected_dr = {} #TODO: rethink this! Idiosyncratic error terms don't show. Avoid expectations of zero default rate
+
     for a in portfolios:
 
         previously_exp_dr = fund.exp.default_rates[a]
         fdr = fundamental_default_rates[a]
+
 
         noise = np.random.normal(0, fund.par.news_evaluation_error)
 

@@ -52,7 +52,6 @@ def test_compute_ewma():
 #                  currencies[0].par.nominal_interest_rate)
 #     # return on cash from a foreign country should not be equal to the interest rate
 #     #assert_equal(exp_return_cash(fund1, currency2, fx_matrix) != currency2.par.nominal_interest_rate, True)
-#     # TODO test direction
 
 
 # def test_update_expectations(parameters):
