@@ -83,6 +83,7 @@ def return_expectations(fund, portfolios, currencies, environment):
                                      currency.par.country]) / environment.var.fx_rates.loc[fund.par.country][
                                     currency.par.country]
 
+
     for asset in portfolios:
         out = asset.par.maturity * (1 - fund.exp.default_rates[asset])
         mat = (1 - asset.par.maturity) * (1 - fund.exp.default_rates[asset])
@@ -131,7 +132,8 @@ def covariance_estimate(fund, environment, prev_exp_ret):
     for idx_x, asset_x in enumerate(new_covariance_matrix.columns):
         for idx_y, asset_y in enumerate(new_covariance_matrix.columns):
            if idx_x <= idx_y:
-                covar = (hypothetical_returns[asset_x] - prev_exp_ret[asset_x]) * (hypothetical_returns[asset_y] - prev_exp_ret[asset_y])
+                inflation_var = (asset_x.par.country == asset_y.par.country)*environment.par.global_parameters[asset_x.par.country + "_inflation_std"]**2
+                covar = (hypothetical_returns[asset_x] - prev_exp_ret[asset_x]) * (hypothetical_returns[asset_y] - prev_exp_ret[asset_y]) + inflation_var
                 ewma_covar = compute_ewma(covar, fund.var_previous.covariance_matrix.loc[asset_x][asset_y], environment.par.global_parameters["cov_memory"])
                 new_covariance_matrix.loc[asset_x][asset_y] = ewma_covar
                 new_covariance_matrix.loc[asset_y][asset_x] = ewma_covar

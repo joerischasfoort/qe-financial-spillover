@@ -29,6 +29,9 @@ def spillover_model(portfolios, currencies, environment, exogeneous_agents, fund
     random.seed(seed)
     np.random.seed(seed)
 
+
+
+
     # defining start days
     if 'start_day' not in environment.par.global_parameters:
         environment.par.global_parameters['start_day'] = 1
@@ -172,7 +175,7 @@ def spillover_model(portfolios, currencies, environment, exogeneous_agents, fund
             Deltas.update(Delta_Demand)
             Deltas.update({"FX": Delta_Capital})
 
-            convergence_bound = 0.001
+            convergence_bound = 0.0001
             convergence = sum(abs(Deltas[i])<convergence_bound for i in Deltas)==len(Deltas) and tau >30
 
             jump_counter, no_jump_counter, test_sign, environment = intensity_parameter_adjustment(jump_counter, no_jump_counter, test_sign, Deltas, environment, convergence_bound)

@@ -127,6 +127,12 @@ def init_objects(parameters):
                 # add the variance to covariance matrix
                 cov_matr.loc[currency][currency] = parameters["fx_shock_std"]**2
 
+        for i in currencies + portfolios:
+            for j in currencies + portfolios:
+                if i.par.country == j.par.country:
+                    cov_matr.loc[i,j]=cov_matr.loc[i,j]+parameters[i.par.country + "_inflation_std"]**2
+
+
         fund_redeemable_share_size = sum(asset_portfolio.values()) + divide_by_funds(parameters["total_money"])
          
         fund_vars = AgentVariables(asset_portfolio,

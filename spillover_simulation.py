@@ -11,7 +11,9 @@ parameters = { #Todo: cleaning and spell checking!!
     "n_foreign_assets": 1,
     "n_domestic_funds": 1,
     "n_foreign_funds": 1,
-    "days": 1000,
+    "domestic_inflation_std": 0.01,
+    "foreign_inflation_std": 0.02,
+    "days": 100,
     "p_change_intensity": 0.1,
     "fx_change_intensity": 0.1,
     "cov_memory": 0.01,
@@ -41,7 +43,7 @@ parameters = { #Todo: cleaning and spell checking!!
     "init_profits": 0,
     # shock processes parameters
     "fx_shock_mu": 0.0,
-    "fx_shock_std": 0.01,
+    "fx_shock_std": 0.00001,
     "avg_yearly_default_events": 80,
     "avg_yearly_default_events_std":0,#0.05,
     "avg_yearly_default_events_mean_reversion": 1,# 0.001,
@@ -49,7 +51,7 @@ parameters = { #Todo: cleaning and spell checking!!
     "default_rate_std": 0.4,
     "default_rate_mean_reversion": 1,
     "default_rate_delta_t": 0.003968253968253968,
-    "adaptive_param": 0.1
+    "adaptive_param": 0.1,
 }
 
 # 2 initalise model objects

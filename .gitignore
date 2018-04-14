@@ -45,6 +45,8 @@ coverage.xml
 *.csv
 *.pkl
 *.xlsx
+*.xls
+
 
 #ignore al pictures
 *.png
