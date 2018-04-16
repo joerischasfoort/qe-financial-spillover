@@ -20,7 +20,7 @@ parameters = { #Todo: cleaning and spell checking!!
     # asset parameters
     "face_value": 5000,
     "nominal_interest_rate": 0.04/250,
-    "currency_rate": 0.003/250,
+    "currency_rate": 0.03/250,
     "maturity" : 0.995,
     "quantity" : 5000,
     # agent parameters

@@ -77,6 +77,7 @@ def return_expectations(fund, portfolios, currencies, environment):
     :return: Dictionary of portfolio and currency object keys with float return expectations
     """
     exp_returns = {}
+
     for currency in currencies:
         exp_returns[currency] = (fund.exp.exchange_rates.loc[fund.par.country][currency.par.country] * (
                     1 + currency.par.nominal_interest_rate) - environment.var.fx_rates.loc[fund.par.country][
@@ -104,6 +105,8 @@ def return_expectations(fund, portfolios, currencies, environment):
 
         exp_returns[asset] = (repayment_effect + price_effect + interest_effect - default_effect) / (
                     environment.var.fx_rates.loc[fund.par.country, asset.par.country] * asset.var.price)
+
+
 
     return exp_returns
 

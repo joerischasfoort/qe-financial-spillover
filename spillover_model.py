@@ -94,6 +94,10 @@ def spillover_model(portfolios, currencies, environment, exogeneous_agents, fund
             fund.exp.default_rates = dr_expectations(fund, portfolios, delta_news, fundamental_default_rates)
             previous_return_exp[fund]=fund.exp.returns.copy() # needed to compute the covariance matrix
 
+
+        funds[1].exp.default_rates = funds[0].exp.default_rates
+
+
         convergence=False
         intraday_over=False
 

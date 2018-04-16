@@ -26,7 +26,9 @@ def portfolio_optimization(f):
         
         # adding the budget constraint to the return vector - to solve the model using linear algebra
         aux_ret=np.append(E_ret_assets,risk_aversion)
+
         
+
         # compute matrix inverse
         inv_aux_cov=np.linalg.inv(aux_cov)
         
@@ -43,6 +45,13 @@ def portfolio_optimization(f):
         select_derivative_new = [max(derivatives_new)+1 if test[i]==False else derivatives_new[i] for i in range(len(derivatives_new))]
 
         #select_derivative = [max(derivatives)+1 if test[i]==False else derivatives[i] for i in range(len(derivatives))]
+
+
+        #compute utility
+        U={}
+        for i in range(len(E_ret_assets)):
+            U[i] = weights[i]*E_ret_assets[i] - 0.5*risk_aversion * sum([(weights[j]*weights[i])*Cov_assets.iloc[i,j] for j in range(len(E_ret_assets))])
+
 
         while sum(test)>0:
             i = np.argmin(select_derivative_new)
