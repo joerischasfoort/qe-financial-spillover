@@ -52,10 +52,10 @@ def spillover_model(portfolios, currencies, environment, exogeneous_agents, fund
     # initial default expectations
     for fund in funds:
         for a in portfolios:
-            fund.exp.default_rates[a]=fundamental_default_rate_expectation[a][0]
+            fund.exp.default_rates[a]=fundamental_default_rate_expectation[a][environment.par.global_parameters['start_day']-1]
 
     # Random fx noise
-    fx_shock = [ np.random.normal(0, environment.par.global_parameters["fx_shock_std"]) for i in range(environment.par.global_parameters["days"]) ]
+    fx_shock = [ np.random.normal(0, environment.par.global_parameters["fx_shock_std"]) for i in range(environment.par.global_parameters["end_day"]) ]
 
     # pricing with returns instead of prices requires an initialized return (NOTE, THIS IS A PRACTICAL MODELING CHOICE WITH NO ECONOMIC MEANING)
     for a in portfolios:
