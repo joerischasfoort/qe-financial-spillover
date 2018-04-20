@@ -32,36 +32,42 @@ def spillover_model(portfolios, currencies, environment, exogeneous_agents, fund
 
 
 
-    # defining start days
-    if 'start_day' not in environment.par.global_parameters:
-        environment.par.global_parameters['start_day'] = 1
-        environment.par.global_parameters['end_day'] = environment.par.global_parameters["days"]
-
-    #Measurements
+    ######################################################################
+    ############### INITIALIZING MEASUREMENTS#############################
+    ######################################################################
     deltas = {"Delta_" + str(i): 0 for i in portfolios}
     deltas["Delta_FX"] = 0
-
     data = initdatadict(funds, portfolios, currencies, environment, deltas ) # create tau data dictionary
     data_t = copy.deepcopy(data) # create t data dictionary
+    #######################################################################
+    #######################################################################
 
 
+
+
+
+
+    ##################################################################################
+    ###################### COMPUTING STOCHASTIC PROCESSES ############################
+    ##################################################################################
     # calculating stochastic components default
-    default_rates, fundamental_default_rate_expectation = exogenous_defaults(environment, portfolios)
-
+    days = environment.par.global_parameters["end_day"]
+    default_rates, fundamental_default_rate_expectation, shock_processes = stochastic_timeseries(environment.par.global_parameters, portfolios,days)
 
     # initial default expectations
+    noise = {}
+    idiosyncratic_default_rate_noise = {}
     for fund in funds:
         for a in portfolios:
+            noise[a]=[np.random.normal(0, fund.par.news_evaluation_error) for idx in range(days)]
             fund.exp.default_rates[a]=fundamental_default_rate_expectation[a][environment.par.global_parameters['start_day']-1]
+        idiosyncratic_default_rate_noise[fund]=noise
+    ####################################################################################
+    ####################################################################################
 
-    # Random fx noise
-    fx_shock = [ np.random.normal(0, environment.par.global_parameters["fx_shock_std"]) for i in range(environment.par.global_parameters["end_day"]) ]
 
-    # pricing with returns instead of prices requires an initialized return (NOTE, THIS IS A PRACTICAL MODELING CHOICE WITH NO ECONOMIC MEANING)
-    for a in portfolios:
-        a.var.aux_ret = convert_P2R(a,a.var.price)
-        if a.var.aux_ret<=0:
-            a.var.aux_ret=0.0001
+
+
 
     # creating individual intensity parameters
     for a in portfolios:
@@ -74,7 +80,20 @@ def spillover_model(portfolios, currencies, environment, exogeneous_agents, fund
 
 
 
+
+
+    ##############################################################################################################
+    ############################################### DAY LOOP #####################################################
+    ##############################################################################################################
+
     for day in range(environment.par.global_parameters['start_day'], environment.par.global_parameters['end_day']):
+
+
+
+
+        ######################################################################################
+        ################ UPDATING THE STOCHASTIC SHOCK VARIABLES #############################
+        #######################################################################################
         # initialise intraday prices at current price
         delta_news = {}
         fundamental_default_rates = {}
@@ -85,23 +104,37 @@ def spillover_model(portfolios, currencies, environment, exogeneous_agents, fund
             fundamental_default_rates[a] = fundamental_default_rate_expectation[a][day]
             a.var.default_rate = default_rates[a][day]
 
+        default_expectation_noise = {}
+        for f in funds:
+            default_expectation_noise[f] = {a: idiosyncratic_default_rate_noise[f][a][day] for a in portfolios}
+
+
+        todays_shocks = {i: shock_processes[i][day] for i in shock_processes}
+        fx_shock = todays_shocks["fx_shock"]
+
+        inflation_shock = {}
+        for key in todays_shocks:
+            if key.split("_")[1] == "inflation":
+                inflation_shock[key] = todays_shocks[key]
+
         # calculate expected default rates
-        previous_return_exp = {}
+        previous_return_exp = {} #TODO: This should be done when passing all other values to "var_previous
 
-        random.seed(seed+day)
-        np.random.seed(seed+day)
         for fund in funds:
-            fund.exp.default_rates = dr_expectations(fund, portfolios, delta_news, fundamental_default_rates)
-            previous_return_exp[fund]=fund.exp.returns.copy() # needed to compute the covariance matrix
+            fund.exp.default_rates = dr_expectations(fund, portfolios, delta_news, fundamental_default_rates, default_expectation_noise[fund])
+            previous_return_exp[fund]=fund.exp.returns.copy() # TODO: This should be done when passing all other values to "var_previous
+        ###################################################################################################
+        ###################################################################################################
 
 
-        funds[1].exp.default_rates = funds[0].exp.default_rates
 
 
+
+        ###########################################################
+        ############# RESETTING INTRADAY PARAMETERS ###############
+        ###########################################################
         convergence=False
         intraday_over=False
-
-
         tau=0
 
         # resetting intensity adjustment parameters
@@ -111,34 +144,32 @@ def spillover_model(portfolios, currencies, environment, exogeneous_agents, fund
         no_jump_counter.update({"FX": 0})
         test_sign={a:0 for a in portfolios}
         test_sign.update({"FX": 0})
+        ###########################################################
+        ###########################################################
+
 
         while intraday_over == False:
             tau += 1
 
+
+
+
+
+
+            ############################################################################
+            ################ SHOCKING FX RATES AT THE END OF A PERIOD ##################
+            ############################################################################
             if convergence == True:
                 intraday_over = True
+                environment, Delta_Demand, Delta_Capital = shock_FX(portfolios, environment, exogeneous_agents, funds, currencies, fx_shock)
 
-                # shocking prices and exchange rates
-                if intraday_over == True:
-                    Delta_Demand = {}
-                    lastP={a: a.par.change_intensity for a in portfolios}
-                    lastFX=environment.par.global_parameters['fx_change_intensity']
-                    for a in portfolios:
-                        a.par.change_intensity = 0
-                    environment.par.global_parameters['fx_change_intensity'] = 0
-                    for a in portfolios:
-                        a.var.price, a.var.aux_ret, Delta_str, delta_demand = price_adjustment(portfolios, environment,
-                                                                                               exogeneous_agents, funds,
-                                                                                               a)
-                        Delta_Demand.update({a: delta_demand})
+            #############################################################################
+            #############################################################################
 
-                    environment.var.fx_rates.iloc[0, 1] = environment.var.fx_rates.iloc[0, 1] * (1 + fx_shock[day])
-                    environment.var.fx_rates.iloc[1, 0] = 1 / environment.var.fx_rates.iloc[0, 1]
-                    environment.var.fx_rates, Delta_Capital = fx_adjustment(portfolios, currencies, environment, funds)
 
-                    for a in portfolios:
-                        a.par.change_intensity = lastP[a]
-                    environment.par.global_parameters['fx_change_intensity'] = lastFX
+
+
+
 
 
             for fund in funds:
@@ -153,7 +184,7 @@ def spillover_model(portfolios, currencies, environment, exogeneous_agents, fund
                 fund.exp.prices, \
                 fund.exp.exchange_rates = price_fx_expectations(fund, portfolios, currencies, environment)
                 fund.exp.returns = return_expectations(fund, portfolios, currencies, environment)
-                fund.var.ewma_returns, fund.var.covariance_matrix, fund.var.hypothetical_returns = covariance_estimate(fund,  environment, previous_return_exp[fund])
+                fund.var.ewma_returns, fund.var.covariance_matrix, fund.var.hypothetical_returns = covariance_estimate(fund,  environment, previous_return_exp[fund], inflation_shock)
 
                 # compute the weights of optimal balance sheet positions
                 fund.var.weights = portfolio_optimization(fund)
@@ -171,7 +202,7 @@ def spillover_model(portfolios, currencies, environment, exogeneous_agents, fund
             if intraday_over == False:
                 Delta_Demand = { }
                 for a in portfolios:
-                    a.var.price, a.var.aux_ret, Delta_str, delta_demand  = price_adjustment(portfolios, environment, exogeneous_agents, funds, a)
+                    a.var.price, Delta_str, delta_demand  = price_adjustment(portfolios, environment, exogeneous_agents, funds, a) # TODO: is the Delta_str really necessary?
                     Delta_Demand.update({a: delta_demand})
                 environment.var.fx_rates, Delta_Capital = fx_adjustment(portfolios, currencies, environment , funds)
 
@@ -179,21 +210,13 @@ def spillover_model(portfolios, currencies, environment, exogeneous_agents, fund
             Deltas.update(Delta_Demand)
             Deltas.update({"FX": Delta_Capital})
 
-            convergence_bound = 0.0001
+            convergence_bound = 0.001
             convergence = sum(abs(Deltas[i])<convergence_bound for i in Deltas)==len(Deltas) and tau >30
 
             jump_counter, no_jump_counter, test_sign, environment = intensity_parameter_adjustment(jump_counter, no_jump_counter, test_sign, Deltas, environment, convergence_bound)
 
 
             print ("day:",day,"tau:",tau, convergence, Deltas)
-            #print ("-")
-            #print(funds[0].var.asset_demand , funds[0].var.currency_demand,funds[0].exp.returns)
-            #print (funds[1].var.asset_demand,funds[1].var.currency_demand, funds[1].exp.returns )
-            #print (funds[0].var.hypothetical_returns, funds[0].var.covariance_matrix.iloc[2,2],funds[0].var.covariance_matrix.iloc[3,3])
-            #print (funds[1].var.hypothetical_returns,funds[1].var.covariance_matrix.iloc[2,2],funds[1].var.covariance_matrix.iloc[3,3])
-            #print(funds[0].var.weights)
-            #print(funds[1].var.weights)
-            #print("-")
 
 
             #Update intraday data points

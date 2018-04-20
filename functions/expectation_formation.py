@@ -1,9 +1,10 @@
 from math import log
 from math import exp
 import numpy as np
+import pandas as pd
 
 
-def dr_expectations(fund, portfolios, delta_news, fundamental_default_rates):
+def dr_expectations(fund, portfolios, delta_news, fundamental_default_rates, noise):
     """
     Calculate default rate expectations
     :param fund: Fund object for which to calculate default rate expectations
@@ -20,10 +21,7 @@ def dr_expectations(fund, portfolios, delta_news, fundamental_default_rates):
         previously_exp_dr = fund.exp.default_rates[a]
         fdr = fundamental_default_rates[a]
 
-
-        noise = np.random.normal(0, fund.par.news_evaluation_error)
-
-        log_exp_dr = log(previously_exp_dr) + delta_news[a] + noise + fund.par.adaptive_param * (
+        log_exp_dr = log(previously_exp_dr) + delta_news[a] + noise[a] + fund.par.adaptive_param * (
                     log(fdr) - log(previously_exp_dr))
         expected_dr[a] = exp(log_exp_dr)
 
@@ -95,11 +93,14 @@ def return_expectations(fund, portfolios, currencies, environment):
                                                                                                  float(
                                                                                                      asset.par.quantity)) -
                     environment.var.fx_rates.loc[fund.par.country, asset.par.country] * asset.var.price)
+
         price_effect = out * (
                     fund.exp.exchange_rates.loc[fund.par.country, asset.par.country] * fund.exp.prices[asset] -
                     environment.var.fx_rates.loc[fund.par.country, asset.par.country] * asset.var.price)
+
         interest_effect = alla * fund.exp.exchange_rates.loc[fund.par.country, asset.par.country] * np.divide(
             asset.par.face_value, float(asset.par.quantity)) * asset.par.nominal_interest_rate
+
         default_effect = fund.exp.default_rates[asset] * fund.exp.exchange_rates.loc[
             fund.par.country, asset.par.country] * fund.exp.prices[asset]
 
@@ -108,10 +109,12 @@ def return_expectations(fund, portfolios, currencies, environment):
 
 
 
+
+
     return exp_returns
 
 
-def covariance_estimate(fund, environment, prev_exp_ret):
+def covariance_estimate(fund, environment, prev_exp_ret, inflation_shock):
     """
     Calculate expected weighted moving average of returns and covariance matrix between them
     :param fund: the Fund object for which to make the calculation
@@ -126,17 +129,25 @@ def covariance_estimate(fund, environment, prev_exp_ret):
         ewma_returns[asset] = compute_ewma(hypothetical_returns[asset], fund.var_previous.ewma_returns[asset],
                                            environment.par.global_parameters["cov_memory"])
 
+        # correcting profits with the inflation shock
+        key = asset.par.country + "_inflation"
+        hypothetical_returns[asset]=((1+ hypothetical_returns[asset]) / (1+inflation_shock[key]))-1
+
     for cash in fund.var.currency:
         hypothetical_returns[cash] = fund.var.profits[cash] / (environment.var_previous.fx_rates.loc[fund.par.country, cash.par.country])
         ewma_returns[cash] = compute_ewma(hypothetical_returns[cash], fund.var_previous.ewma_returns[cash],
                                           environment.par.global_parameters["cov_memory"])
 
+        # correcting profits with the inflation shock
+        key = cash.par.country + "_inflation"
+        hypothetical_returns[cash] = ((1 + hypothetical_returns[cash]) / (1 + inflation_shock[key])) - 1
+
+
     new_covariance_matrix = fund.var.covariance_matrix.copy()
     for idx_x, asset_x in enumerate(new_covariance_matrix.columns):
         for idx_y, asset_y in enumerate(new_covariance_matrix.columns):
            if idx_x <= idx_y:
-                inflation_var = (asset_x.par.country == asset_y.par.country)*environment.par.global_parameters[asset_x.par.country + "_inflation_std"]**2
-                covar = (hypothetical_returns[asset_x] - prev_exp_ret[asset_x]) * (hypothetical_returns[asset_y] - prev_exp_ret[asset_y]) + inflation_var
+                covar = (hypothetical_returns[asset_x] - prev_exp_ret[asset_x]) * (hypothetical_returns[asset_y] - prev_exp_ret[asset_y])
                 ewma_covar = compute_ewma(covar, fund.var_previous.covariance_matrix.loc[asset_x][asset_y], environment.par.global_parameters["cov_memory"])
                 new_covariance_matrix.loc[asset_x][asset_y] = ewma_covar
                 new_covariance_matrix.loc[asset_y][asset_x] = ewma_covar

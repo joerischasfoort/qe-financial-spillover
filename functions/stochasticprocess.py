@@ -1,48 +1,83 @@
 import numpy as np
+import matplotlib.pyplot as plt
+from functions.market_mechanism import *
 
 
 
-def exogenous_defaults(environment, portfolios):
-    average_yearly_default_events = {}
-    daily_default_events = {}
-    default_rates_per_default_event = {}
+
+
+def stochastic_timeseries(parameters,portfolios,days):
+    shock_processes = correlated_shocks(parameters,days)
+
     default_rates = {}
     fundamental_default_rate_expectation = {}
 
-    time = environment.par.global_parameters['end_day']
-    avg_y_default_events = environment.par.global_parameters["avg_yearly_default_events"]
-    std_y_default_events = environment.par.global_parameters["avg_yearly_default_events_std"]
-    mean_reversion_default_events = environment.par.global_parameters["avg_yearly_default_events_mean_reversion"]
+    for a in portfolios:
+        default_rates[a], fundamental_default_rate_expectation[a] =exogenous_defaults(parameters, a,days)
 
-    for  i, a in enumerate(portfolios):
-        # making one asset riskier than the other
-        avg_y_default_events = avg_y_default_events * (i+1)
+    return default_rates, fundamental_default_rate_expectation, shock_processes
 
-        average_yearly_default_events[a] = ornstein_uhlenbeck_levels(time, avg_y_default_events,std_y_default_events,mean_reversion_default_events)
-        daily_default_events[a] = [np.random.poisson(np.divide(average_yearly_default_events[a][idx], float(250))) for idx
-                                   in range(len(average_yearly_default_events[a]))]
-        default_rates_per_default_event[a] = np.random.lognormal(environment.par.global_parameters["default_rate_mu"],
-                                                                 environment.par.global_parameters["default_rate_std"],
-                                                                 len(daily_default_events[a]))
-        default_rates[a] = [default_rates_per_default_event[a][idx] * daily_default_events[a][idx] for idx in
-                            range(len(default_rates_per_default_event[a]))]
-        fundamental_default_rate_expectation[a] = [(average_yearly_default_events[a][idx] / float(250)) * np.exp(
-            environment.par.global_parameters["default_rate_mu"]) for idx in range(len(default_rates[a]))]
 
-    return default_rates, fundamental_default_rate_expectation
+
+
+
+def correlated_shocks(parameters, days):
+
+    risk_components = ["domestic_inflation","foreign_inflation","fx_shock"]
+
+    corrs=np.zeros((len(risk_components),len(risk_components)))
+    stds=corrs.copy()
+    means = np.zeros((len(risk_components)))
+    for i, rc in enumerate(risk_components):
+        means[i]=parameters[rc + "_mean"]
+        stds[i,i]=parameters[rc + "_std"]
+        for i2, rc2 in enumerate(risk_components):
+            var=rc + "_and_" + rc2
+            if rc==rc2:
+                corrs[i, i2] = 1
+            if var in parameters["list_risk_corr"].keys():
+                corrs[i,i2]= parameters["list_risk_corr"][var]
+
+    covs = np.dot(np.dot(stds,corrs),stds)
+    m = np.random.multivariate_normal(means, covs, days).T
+    shock_processes = {rc: m[i] for i, rc in enumerate(risk_components)}
+
+    return shock_processes
+
+
+
+
+
+
+def exogenous_defaults(parameters, a,days):
+
+    time = days
+    default_events_mean_reversion = parameters["default_events_mean_reversion"]
+
+
+    default_events_mean = parameters[a.par.country + "_default_events_mean"]
+    default_events_std =  parameters[a.par.country + "_default_events_std"]
+    default_rate_mean = parameters[a.par.country + "_default_rate_mean"]
+    default_rate_std = parameters[a.par.country + "_default_rate_std"]
+
+    TS_default_events = ornstein_uhlenbeck_levels(time, default_events_mean,default_events_std,default_events_mean_reversion)
+
+    TS_defaults = [np.random.poisson(TS_default_events[idx]) for idx in range(len(TS_default_events))]
+
+
+    TS_default_rate_per_event = np.random.normal(default_rate_mean, default_rate_std,len(TS_default_events))
+
+    TS_default_rates = [TS_default_rate_per_event[idx] * TS_defaults[idx] for idx in range(len(TS_default_events))]
+
+    TS_true_default_rate_expectation = [TS_default_events[idx] * default_rate_mean for idx in range(len(TS_default_events))]
+
+    return TS_default_rates, TS_true_default_rate_expectation
+
+
+
+
 
 def ornstein_uhlenbeck_levels(time, init_level, sigma, mean_reversion): # Todo: why are values for parameters hard coded?
-
-    """
-    This function returns news about the as a mean-reverting ornstein uhlenbeck process.
-    :param init_level: starting point of the default probability
-    :param time: total time over which the simulation takes place
-    :param rate_of_time: e.g. daily, monthly, annually (default is daily)
-    :param sigma: volatility of the stochastic processes
-    :param mean_reversion: tendency to revert to the long run average
-    :param long_run_average_level:
-    :return: list : simulatated default probability simulated over time
-    """
 
     default_events = [init_level]
 
@@ -57,3 +92,28 @@ def ornstein_uhlenbeck_levels(time, init_level, sigma, mean_reversion): # Todo: 
     return default_events
 
 
+def shock_FX(portfolios, environment, exogeneous_agents, funds, currencies, shock):
+    # shocking prices and exchange rates
+    Delta_Demand = {}
+    lastP = {a: a.par.change_intensity for a in portfolios}
+    lastFX = environment.par.global_parameters['fx_change_intensity']
+    for a in portfolios:
+        a.par.change_intensity = 0
+    environment.par.global_parameters['fx_change_intensity'] = 0
+
+    for a in portfolios:
+        a.var.price, Delta_str, delta_demand = price_adjustment(portfolios, environment,
+                                                                               exogeneous_agents, funds,
+                                                                               a)
+        Delta_Demand.update({a: delta_demand})
+
+    environment.var.fx_rates.iloc[0, 1] = environment.var.fx_rates.iloc[0, 1] * (1 + shock)
+    environment.var.fx_rates.iloc[1, 0] = 1 / environment.var.fx_rates.iloc[0, 1]
+    environment.var.fx_rates, Delta_Capital = fx_adjustment(portfolios, currencies, environment, funds)
+
+    for a in portfolios:
+        a.par.change_intensity = lastP[a]
+
+    environment.par.global_parameters['fx_change_intensity'] = lastFX
+
+    return environment, Delta_Demand, Delta_Capital

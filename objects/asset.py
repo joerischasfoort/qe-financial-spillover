@@ -14,10 +14,9 @@ class AssetVariables:
     """
     Holds the initial variables for the assets, for now empty
     """
-    def __init__(self, price, default_rate, avg_yearly_default_events):
+    def __init__(self, price, default_rate):
         self.price = price
         self.default_rate = default_rate
-        self.avg_yearly_default_events = avg_yearly_default_events
 
 
 class AssetParameters:

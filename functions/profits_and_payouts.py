@@ -33,10 +33,9 @@ def profit_and_payout(fund, portfolios, currencies, environment):
 
         profit_per_asset[a] = repayment_effect + price_effect + interest_effect - default_effect
 
-        total_profit = total_profit + profit_per_asset[a] * fund.var.assets[a]
+        total_profit = (total_profit + profit_per_asset[a] * fund.var.assets[a])
 
         payouts[a] = fund.var.assets[a] * (rep_effect_barEx + int_effect_barEx - def_effect_barEx)
-
 
 
         for c in currencies:

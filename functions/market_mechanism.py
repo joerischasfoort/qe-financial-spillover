@@ -46,11 +46,6 @@ def price_adjustment(portfolios, environment, exogeneous_agents, funds, a):
     # Equation 1.17 : price adjustment
     log_new_price = log(a.var.price) + a.par.change_intensity * total_demand[a] / a.par.quantity
 
-    log_new_ret = log(a.var.aux_ret) - a.par.change_intensity * total_demand[a] / a.par.quantity
-
-
-
-    price = convert_R2P(a, exp(log_new_ret))
 
     price = exp(log_new_price)
 
@@ -59,7 +54,7 @@ def price_adjustment(portfolios, environment, exogeneous_agents, funds, a):
 
     # print "Price:", a, price, total_demand[a]/a.par.quantity
 
-    return price, exp(log_new_ret), Delta_Demand_string, Delta_Demand
+    return price, Delta_Demand_string, Delta_Demand
 
 
 def fx_adjustment(portfolios, currencies, environment, funds):

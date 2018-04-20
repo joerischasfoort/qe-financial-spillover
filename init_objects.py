@@ -31,19 +31,20 @@ def init_objects(parameters):
                                        parameters["nominal_interest_rate"],
                                        parameters["maturity"], parameters["quantity"])
         init_asset_vars = AssetVariables(parameters["init_asset_price"],
-                                         0, # initial default rate
-                                         parameters["avg_yearly_default_events"])
+                                         0 # initial default rate
+                                         )
         previous_assets_vars = AssetVariables(parameters["init_asset_price"],
-                                              0,  # initial default rate
-                                              parameters["avg_yearly_default_events"])
+                                              0  # initial default rate
+                                              )
         portfolios.append(Asset(idx, init_asset_vars, previous_assets_vars, asset_params))
-        asset_return_variance.append(simulated_return_variance(portfolios[-1], parameters["days"], parameters))
+        #####
+        #asset_return_variance.append(simulated_return_variance(portfolios[-1], 10000, parameters))
         asset_values.append(portfolios[idx].var.price * portfolios[idx].par.quantity)
         default_rates.append(portfolios[idx].var.default_rate)
         returns.append(realised_profits_asset(portfolios[idx].var.default_rate, portfolios[idx].par.face_value,
                                               portfolios[idx].var.price, portfolios[idx].var.price,
                                               portfolios[idx].par.quantity, portfolios[idx].par.nominal_interest_rate,
-                                              portfolios[idx].par.maturity))
+                                              portfolios[idx].par.maturity,previous_exchange_rate=1,exchange_rate=1))
 
     # 2 Initialize currencies
     currencies = []
@@ -57,8 +58,10 @@ def init_objects(parameters):
     # 3 Create covariance matrix for assets
     covs = np.zeros((total_assets + len(currencies), total_assets + len(currencies)))
     # insert variance into the diagonal of the matrix
-    for idx, var in enumerate(asset_return_variance):
-        covs[idx][idx] = var
+
+    ######
+    #for idx, var in enumerate(asset_return_variance):
+    #    covs[idx][idx] = var
 
     assets = portfolios + currencies
     covariance_matrix = pd.DataFrame(covs, index=assets, columns=assets)
@@ -157,6 +160,17 @@ def init_objects(parameters):
         funds.append(Fund(idx, fund_vars,  copy_agent_variables(fund_vars), fund_params, fund_expectations))
 
 
+    # create covariance matrix
+    simulated_time_series = simulated_asset_return(funds, portfolios, currencies, 10000, parameters)
+    for fund in funds:
+        for i in assets:
+            for j in assets:
+                fund.var.covariance_matrix.loc[i,j]=np.cov(simulated_time_series[fund][i],simulated_time_series[fund][j])[0][1]
+
+
+
+
+
     # 6 create central bank
     cb_assets = {asset: 0 for asset in portfolios}
     cb_currency = {}
@@ -183,31 +197,39 @@ def init_objects(parameters):
     return portfolios, currencies, funds, environment, exogeneous_agents
 
 
-def simulated_return_variance(asset, days, parameters):
-    """
-    Calculate an approximate variance for an asset by simulating the average underlying default probability
-    :param asset: Asset object of interest
-    :param days: integer amount of days over which to conduct the simulation
-    :param parameters: dictionary with model parameters
-    :return: float initial variance of the asset
-    """
+def simulated_asset_return(funds,portfolios, currencies, days, parameters):
+    TS_for_funds = {}
+    for asset in portfolios:
+        #compute default rates for an asset
+        TS_default_rates, fundamental_default_rate_expectation = exogenous_defaults(parameters, asset, days)
 
-    simulated_yearly_default_events = ornstein_uhlenbeck_levels(max(10000,days), parameters["avg_yearly_default_events"],
-                                                        parameters["avg_yearly_default_events_std"],
-                                                        parameters["avg_yearly_default_events_mean_reversion"])
+        #compute inflation and fx shocks
+        exogenous_shocks = correlated_shocks(parameters, days)
 
-    daily_default_events=[np.random.poisson(np.divide(simulated_yearly_default_events[idx],float(250))) for idx in range(len(simulated_yearly_default_events))]
+    for fund in funds:
+        simulated_real_returns = {}
+        for asset in portfolios:
+            if fund.par.country == asset.par.country:
+                new_fx = [1 for idx, val in enumerate(TS_default_rates)]
+            if fund.par.country != asset.par.country:
+                if asset.par.country == "foreign":
+                    new_fx = [(1+exogenous_shocks["fx_shock"][idx]) for idx, val in enumerate(TS_default_rates)]
+                if asset.par.country == "domestic":
+                    new_fx = [1/(1+exogenous_shocks["fx_shock"][idx]) for idx, val in enumerate(TS_default_rates)]
 
-    default_rate_per_default_event = np.random.lognormal(parameters["default_rate_mu"],parameters["default_rate_std"],len(daily_default_events))
+            simulated_nominal_returns = [realised_profits_asset(df, face_value=asset.par.face_value, previous_price=1,
+                                                    price=1, quantity=asset.par.quantity,
+                                                    interest_rate=asset.par.nominal_interest_rate,
+                                                    maturity=asset.par.maturity, previous_exchange_rate=1, exchange_rate=new_fx[idx]) for idx, df in enumerate(TS_default_rates)]
 
-    simulated_default_rates = [default_rate_per_default_event[idx] * daily_default_events[idx] for idx in range(len(default_rate_per_default_event))]
+            simulated_real_returns[asset] = [((1+simulated_nominal_returns[idx])/(1+exogenous_shocks[asset.par.country + "_inflation"][idx]))-1 for idx, val in enumerate(simulated_nominal_returns)]
 
-    average_default_rate = [(simulated_yearly_default_events[idx]/float(250))*np.exp(-8.5) for idx in range(len(simulated_default_rates))]
+        for cur in currencies:
+            simulated_nominal_returns = [realised_profits_currency(cur.par.nominal_interest_rate, previous_exchange_rate=1, exchange_rate=new_fx[idx]) for idx, df in enumerate(TS_default_rates)]
+            simulated_real_returns[cur] = [
+                ((1 + simulated_nominal_returns[idx]) / (1 + exogenous_shocks[cur.par.country + "_inflation"][idx])) - 1
+                for idx, val in enumerate(simulated_nominal_returns)]
 
-    simulated_returns = [realised_profits_asset(df, face_value=asset.par.face_value, previous_price=1,
-                                                price=1, quantity=asset.par.quantity,
-                                                interest_rate=asset.par.nominal_interest_rate,
-                                                maturity=asset.par.maturity) for df in simulated_default_rates]
+        TS_for_funds[fund]=simulated_real_returns
 
-
-    return np.var(simulated_returns)
+    return TS_for_funds
