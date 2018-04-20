@@ -33,7 +33,7 @@ parameters = { #Todo: cleaning and spell checking!!
     "end_day": 1000,
     "p_change_intensity": 0.1,
     "fx_change_intensity": 0.1,
-    "cov_memory": 0.01,
+    "cov_memory": 0.001,
     # asset parameters
     "face_value": 5000,
     "nominal_interest_rate": 0.04/250,
