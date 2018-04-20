@@ -52,13 +52,15 @@ def spillover_model(portfolios, currencies, environment, exogeneous_agents, fund
     ##################################################################################
     # calculating stochastic components default
     days = environment.par.global_parameters["end_day"]
-    default_rates, fundamental_default_rate_expectation, shock_processes = stochastic_timeseries(environment.par.global_parameters, portfolios,days)
+    default_rates, fundamental_default_rate_expectation, shock_processes = stochastic_timeseries(environment.par.global_parameters, portfolios,days,seed)
 
     # initial default expectations
     noise = {}
     idiosyncratic_default_rate_noise = {}
-    for fund in funds:
-        for a in portfolios:
+    for j,fund in enumerate(funds):
+        for i,a in enumerate(portfolios):
+            random.seed(seed + j + i)
+            np.random.seed(seed + j + i)
             noise[a]=[np.random.normal(0, fund.par.news_evaluation_error) for idx in range(days)]
             fund.exp.default_rates[a]=fundamental_default_rate_expectation[a][environment.par.global_parameters['start_day']-1]
         idiosyncratic_default_rate_noise[fund]=noise
@@ -136,6 +138,7 @@ def spillover_model(portfolios, currencies, environment, exogeneous_agents, fund
         convergence=False
         intraday_over=False
         tau=0
+        Deltas = {}
 
         # resetting intensity adjustment parameters
         jump_counter = {a:0 for a in portfolios}
@@ -148,12 +151,17 @@ def spillover_model(portfolios, currencies, environment, exogeneous_agents, fund
         ###########################################################
 
 
+
+
+        ###################################################################################################################
+        ################################################ INTRADAY LOOP ####################################################
+        ###################################################################################################################
         while intraday_over == False:
             tau += 1
 
 
 
-
+            old_Deltas = Deltas.copy()
 
 
             ############################################################################
@@ -184,7 +192,7 @@ def spillover_model(portfolios, currencies, environment, exogeneous_agents, fund
                 fund.exp.prices, \
                 fund.exp.exchange_rates = price_fx_expectations(fund, portfolios, currencies, environment)
                 fund.exp.returns = return_expectations(fund, portfolios, currencies, environment)
-                fund.var.ewma_returns, fund.var.covariance_matrix, fund.var.hypothetical_returns = covariance_estimate(fund,  environment, previous_return_exp[fund], inflation_shock)
+                #fund.var.ewma_returns, fund.var.covariance_matrix, fund.var.hypothetical_returns = covariance_estimate(fund,  environment, previous_return_exp[fund], inflation_shock)
 
                 # compute the weights of optimal balance sheet positions
                 fund.var.weights = portfolio_optimization(fund)
@@ -199,6 +207,26 @@ def spillover_model(portfolios, currencies, environment, exogeneous_agents, fund
                 exogeneous_agents[ex].var.asset_demand = ex_agent_asset_demand(ex, exogeneous_agents, portfolios )
 
 
+            #Test improvement
+            if intraday_over == False:
+                Delta_Demand = { }
+                for a in portfolios:
+                    price, Delta_str, delta_demand  = price_adjustment(portfolios, environment, exogeneous_agents, funds, a) # TODO: is the Delta_str really necessary?
+                    Delta_Demand.update({a: delta_demand})
+                fx_rates, Delta_Capital = fx_adjustment(portfolios, currencies, environment , funds)
+
+            Deltas = {}
+            Deltas.update(Delta_Demand)
+            Deltas.update({"FX": Delta_Capital})
+
+            if bool(old_Deltas) == True:
+                for i in Deltas:
+                    improvement[i] = abs(Deltas[i]) < abs(old_Deltas[i])
+            else:
+                improvement = {i: True for i in Deltas}
+
+
+
             if intraday_over == False:
                 Delta_Demand = { }
                 for a in portfolios:
@@ -209,6 +237,12 @@ def spillover_model(portfolios, currencies, environment, exogeneous_agents, fund
             Deltas = {}
             Deltas.update(Delta_Demand)
             Deltas.update({"FX": Delta_Capital})
+
+            if bool(old_Deltas)==True:
+                for i in Deltas :
+                    improvement[i]=abs(Deltas[i])<abs(old_Deltas[i])
+            else:
+                improvement = {i: True for i in Deltas}
 
             convergence_bound = 0.001
             convergence = sum(abs(Deltas[i])<convergence_bound for i in Deltas)==len(Deltas) and tau >30
@@ -234,7 +268,13 @@ def spillover_model(portfolios, currencies, environment, exogeneous_agents, fund
         pd.DataFrame(data).to_csv('data' + '/' + "intraday" + "/" + "intraday_data_day_" + str(day) + ".csv")
 
 
-        # balance sheet adjustment
+        ##########################################################################################################################
+        ############################################## BALANCE SHEET ADJUSTMENT ##################################################
+        ###########################################################################################################################
+
+        # updating the covariance matrices
+        for fund in funds:
+            fund.var.ewma_returns, fund.var.covariance_matrix, fund.var.hypothetical_returns = covariance_estimate(fund,  environment, previous_return_exp[fund], inflation_shock)
 
         #computing new asset and cash positions
         excess_demand, pi, nu = asset_excess_demand_and_correction_factors(funds, portfolios, currencies, exogeneous_agents)

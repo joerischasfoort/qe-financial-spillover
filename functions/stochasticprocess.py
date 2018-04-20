@@ -1,19 +1,20 @@
 import numpy as np
 import matplotlib.pyplot as plt
+import random
 from functions.market_mechanism import *
 
 
 
 
 
-def stochastic_timeseries(parameters,portfolios,days):
-    shock_processes = correlated_shocks(parameters,days)
+def stochastic_timeseries(parameters,portfolios,days,seed):
+    shock_processes = correlated_shocks(parameters,days,seed)
 
     default_rates = {}
     fundamental_default_rate_expectation = {}
 
     for a in portfolios:
-        default_rates[a], fundamental_default_rate_expectation[a] =exogenous_defaults(parameters, a,days)
+        default_rates[a], fundamental_default_rate_expectation[a] =exogenous_defaults(parameters, a,days,seed)
 
     return default_rates, fundamental_default_rate_expectation, shock_processes
 
@@ -21,7 +22,7 @@ def stochastic_timeseries(parameters,portfolios,days):
 
 
 
-def correlated_shocks(parameters, days):
+def correlated_shocks(parameters, days,seed):
 
     risk_components = ["domestic_inflation","foreign_inflation","fx_shock"]
 
@@ -39,6 +40,8 @@ def correlated_shocks(parameters, days):
                 corrs[i,i2]= parameters["list_risk_corr"][var]
 
     covs = np.dot(np.dot(stds,corrs),stds)
+    random.seed(seed+10)
+    np.random.seed(seed+10)
     m = np.random.multivariate_normal(means, covs, days).T
     shock_processes = {rc: m[i] for i, rc in enumerate(risk_components)}
 
@@ -49,7 +52,7 @@ def correlated_shocks(parameters, days):
 
 
 
-def exogenous_defaults(parameters, a,days):
+def exogenous_defaults(parameters, a,days,seed):
 
     time = days
     default_events_mean_reversion = parameters["default_events_mean_reversion"]
@@ -60,8 +63,10 @@ def exogenous_defaults(parameters, a,days):
     default_rate_mean = parameters[a.par.country + "_default_rate_mean"]
     default_rate_std = parameters[a.par.country + "_default_rate_std"]
 
-    TS_default_events = ornstein_uhlenbeck_levels(time, default_events_mean,default_events_std,default_events_mean_reversion)
+    TS_default_events = ornstein_uhlenbeck_levels(time, default_events_mean,default_events_std,default_events_mean_reversion,seed)
 
+    random.seed(seed+1)
+    np.random.seed(seed+1)
     TS_defaults = [np.random.poisson(TS_default_events[idx]) for idx in range(len(TS_default_events))]
 
 
@@ -77,12 +82,12 @@ def exogenous_defaults(parameters, a,days):
 
 
 
-def ornstein_uhlenbeck_levels(time, init_level, sigma, mean_reversion): # Todo: why are values for parameters hard coded?
+def ornstein_uhlenbeck_levels(time, init_level, sigma, mean_reversion,seed): # Todo: why are values for parameters hard coded?
 
     default_events = [init_level]
-
+    random.seed(seed+2)
+    np.random.seed(seed+2)
     for t in range(1, time):
-
         error = np.random.normal(0, sigma)
         new_dr = (default_events[-1]*(1+error) + mean_reversion * (init_level - default_events[-1]))
         new_dr = max(1e-10,new_dr)

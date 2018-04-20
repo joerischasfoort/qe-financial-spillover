@@ -30,7 +30,7 @@ parameters = { #Todo: cleaning and spell checking!!
     "domestic_inflation_std": 0.01,
     "foreign_inflation_std": 0.02,
     "start_day": 1,
-    "end_day": 100,
+    "end_day": 1000,
     "p_change_intensity": 0.1,
     "fx_change_intensity": 0.1,
     "cov_memory": 0.01,
@@ -60,7 +60,7 @@ parameters = { #Todo: cleaning and spell checking!!
     "init_profits": 0,
     # shock processes parameters
     "fx_shock_mean": 0.0,
-    "fx_shock_std": 0.001,
+    "fx_shock_std": 0.01,
     "domestic_default_events_mean": 80 / float(250),
     "foreign_default_events_mean": 160 / float(250),
     "domestic_default_events_std": 40 / float(250),

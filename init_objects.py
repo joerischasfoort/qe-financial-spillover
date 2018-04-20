@@ -37,8 +37,6 @@ def init_objects(parameters):
                                               0  # initial default rate
                                               )
         portfolios.append(Asset(idx, init_asset_vars, previous_assets_vars, asset_params))
-        #####
-        #asset_return_variance.append(simulated_return_variance(portfolios[-1], 10000, parameters))
         asset_values.append(portfolios[idx].var.price * portfolios[idx].par.quantity)
         default_rates.append(portfolios[idx].var.default_rate)
         returns.append(realised_profits_asset(portfolios[idx].var.default_rate, portfolios[idx].par.face_value,
@@ -59,9 +57,6 @@ def init_objects(parameters):
     covs = np.zeros((total_assets + len(currencies), total_assets + len(currencies)))
     # insert variance into the diagonal of the matrix
 
-    ######
-    #for idx, var in enumerate(asset_return_variance):
-    #    covs[idx][idx] = var
 
     assets = portfolios + currencies
     covariance_matrix = pd.DataFrame(covs, index=assets, columns=assets)
@@ -161,7 +156,7 @@ def init_objects(parameters):
 
 
     # create covariance matrix
-    simulated_time_series = simulated_asset_return(funds, portfolios, currencies, 10000, parameters)
+    simulated_time_series = simulated_asset_return(funds, portfolios, currencies, 10000, parameters) # TODO: delete other covar initializations
     for fund in funds:
         for i in assets:
             for j in assets:
@@ -201,10 +196,10 @@ def simulated_asset_return(funds,portfolios, currencies, days, parameters):
     TS_for_funds = {}
     for asset in portfolios:
         #compute default rates for an asset
-        TS_default_rates, fundamental_default_rate_expectation = exogenous_defaults(parameters, asset, days)
+        TS_default_rates, fundamental_default_rate_expectation = exogenous_defaults(parameters, asset, days,seed=1)
 
         #compute inflation and fx shocks
-        exogenous_shocks = correlated_shocks(parameters, days)
+        exogenous_shocks = correlated_shocks(parameters, days,seed=1)
 
     for fund in funds:
         simulated_real_returns = {}
