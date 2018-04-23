@@ -206,27 +206,6 @@ def spillover_model(portfolios, currencies, environment, exogeneous_agents, fund
             for ex in exogeneous_agents:
                 exogeneous_agents[ex].var.asset_demand = ex_agent_asset_demand(ex, exogeneous_agents, portfolios )
 
-
-            #Test improvement
-            if intraday_over == False:
-                Delta_Demand = { }
-                for a in portfolios:
-                    price, Delta_str, delta_demand  = price_adjustment(portfolios, environment, exogeneous_agents, funds, a) # TODO: is the Delta_str really necessary?
-                    Delta_Demand.update({a: delta_demand})
-                fx_rates, Delta_Capital = fx_adjustment(portfolios, currencies, environment , funds)
-
-            Deltas = {}
-            Deltas.update(Delta_Demand)
-            Deltas.update({"FX": Delta_Capital})
-
-            if bool(old_Deltas) == True:
-                for i in Deltas:
-                    improvement[i] = abs(Deltas[i]) < abs(old_Deltas[i])
-            else:
-                improvement = {i: True for i in Deltas}
-
-
-
             if intraday_over == False:
                 Delta_Demand = { }
                 for a in portfolios:
