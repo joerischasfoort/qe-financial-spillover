@@ -30,7 +30,7 @@ parameters = { #Todo: cleaning and spell checking!!
     "domestic_inflation_std": 0.01,
     "foreign_inflation_std": 0.02,
     "start_day": 1,
-    "end_day": 1000,
+    "end_day": 10000,
     "p_change_intensity": 0.1,
     "fx_change_intensity": 0.1,
     "cov_memory": 0.001,

@@ -141,26 +141,26 @@ def   intensity_parameter_adjustment(jump_counter, no_jump_counter, test_sign, D
         if no_jump[i] == 1:
             no_jump_counter[i] += 1
 
-        if jump_counter[i] > 4 and i!="FX" and convergence[i] == False:
+        if jump_counter[i] > 4 and i!="FX":# and convergence[i] == False:
             i.par.change_intensity = i.par.change_intensity  / 2
             jump_counter[i] = 0
             no_jump_counter[i]=0
 
 
-        if jump_counter[i] > 4 and i == "FX" and convergence[i] == False:
+        if jump_counter[i] > 4 and i == "FX" :#and convergence[i] == False:
             environment.par.global_parameters['fx_change_intensity'] = environment.par.global_parameters[
                                                                        'fx_change_intensity'] / 2
             jump_counter[i] = 0
             no_jump_counter[i]=0
 
 
-        if no_jump_counter[i] > 20 and i!="FX" and convergence[i] == False:
+        if no_jump_counter[i] > 20 and i!="FX":# and convergence[i] == False:
             i.par.change_intensity =  min(0.1, i.par.change_intensity * 1.1)
             no_jump_counter[i] = 0
             jump_counter[i] = 0
 
 
-        if no_jump_counter[i] > 20 and i=="FX" and convergence[i] == False:
+        if no_jump_counter[i] > 20 and i=="FX":# and convergence[i] == False:
             environment.par.global_parameters['fx_change_intensity'] = min(0.1, environment.par.global_parameters[
                                                                           'fx_change_intensity'] * 1.1)
             no_jump_counter[i] = 0

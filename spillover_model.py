@@ -158,6 +158,7 @@ def spillover_model(portfolios, currencies, environment, exogeneous_agents, fund
         ###################################################################################################################
         while intraday_over == False:
             tau += 1
+            environment.var.tau = tau
 
 
 
@@ -244,7 +245,7 @@ def spillover_model(portfolios, currencies, environment, exogeneous_agents, fund
                 pickle.dump(list_of_objects, save_objects)
                 save_objects.close()
 
-        pd.DataFrame(data).to_csv('data' + '/' + "intraday" + "/" + "intraday_data_day_" + str(day) + ".csv")
+        #pd.DataFrame(data).to_csv('data' + '/' + "intraday" + "/" + "intraday_data_day_" + str(day) + ".csv")
 
 
         ##########################################################################################################################

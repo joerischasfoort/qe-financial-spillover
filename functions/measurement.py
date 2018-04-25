@@ -11,7 +11,6 @@ def initdatadict(funds, portfolios, currencies, environment, deltas):
         data.update(redeem_s)
 
         for a in all_assets:
-
             exp_returns = {"exp_return_" + str(a) + "_fund_" + str(fund.name): [fund.exp.returns[a]]}
             data.update(exp_returns)
             weights = { "weight_" +str(a) + "_fund_" + str(fund.name):  [fund.var.weights[a]]}
