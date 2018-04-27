@@ -15,8 +15,6 @@ list_of_risk_correlation.update({'domestic_inflation'+"_and_" +'fx_shock': -0.3}
 
 
 
-
-
 # 1 setup parameters
 parameters = { #Todo: cleaning and spell checking!!
     # global parameters
@@ -74,6 +72,7 @@ parameters = { #Todo: cleaning and spell checking!!
     "default_rate_delta_t": 0.003968253968253968,
     "adaptive_param": 0.0,
 }
+
 
 # 2 initalise model objects
 portfolios, currencies, funds, environment, exogenous_agents = init_objects(parameters)
