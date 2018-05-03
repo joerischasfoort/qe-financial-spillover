@@ -65,6 +65,14 @@ def price_fx_expectations(fund, portfolios, currencies, environment):
     return ewma_delta_prices, ewma_delta_fx, expected_prices, exp_exchange_rates
 
 
+def anchored_FX_expectations(fund, environment):
+    exp_exchange_rates = environment.var.fx_rates.copy()
+    for c in environment.var.fx_rates:
+        if fund.par.country != c:
+            exp_exchange_rates.loc[fund.par.country,c] = environment.var.fx_rates.loc[fund.par.country,c] + (0.01/250) * (1 - environment.var.fx_rates.loc[fund.par.country,c])
+
+    return exp_exchange_rates
+
 def return_expectations(fund, portfolios, currencies, environment):
     """
     Calcuate expectated returns on a fund's asset portfolios and currencies

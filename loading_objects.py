@@ -2,7 +2,7 @@
 import  pickle
 from spillover_model import *
 
-data = open('data/Objects/objects_day_9999.pkl', 'rb')
+data = open('data/Objects/objects_day_11999.pkl', 'rb')
 #data = open('data/Objects/objects_nonConv_day8890.pkl', 'rb')
 
 list_of_objects = pickle.load(data)
@@ -16,8 +16,8 @@ seed = list_of_objects[5]
 
 data.close()
 
-environment.par.global_parameters["start_day"]=10000
-environment.par.global_parameters["end_day"]=11000
+environment.par.global_parameters["start_day"]=12000
+environment.par.global_parameters["end_day"]=12001
 
 #environment.par.global_parameters["cov_memory"]=0.001
 
