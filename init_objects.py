@@ -95,7 +95,8 @@ def init_objects(parameters):
 
         fund_params = AgentParameters(fund_countries[idx], parameters["price_memory"],
                                       parameters["fx_memory"], parameters["risk_aversion"],
-                                      parameters["adaptive_param"], parameters["news_evaluation_error"])
+                                      parameters["adaptive_param"], parameters["news_evaluation_error"],
+                                      parameters["fx_elasticity"])
         asset_portfolio = {asset: divide_by_funds(value) for (asset, value) in zip(portfolios, asset_values)}
         asset_demand = {asset: parameters["init_asset_demand"] for asset, value in zip(portfolios, asset_values)}
         ewma_returns = {asset: rt for (asset, rt) in zip(assets, returns)}

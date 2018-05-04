@@ -41,13 +41,14 @@ class AgentParameters:
     """
     Holds the the agent parameters
     """
-    def __init__(self, country, price_memory, fx_memory, risk_aversion, adaptive_param, news_evaluation_error):
+    def __init__(self, country, price_memory, fx_memory, risk_aversion, adaptive_param, news_evaluation_error, fx_elasticity):
         self.country = country
         self.price_memory = price_memory
         self.fx_memory = fx_memory
         self.risk_aversion = risk_aversion
         self.adaptive_param = adaptive_param
         self.news_evaluation_error = news_evaluation_error
+        self.fx_elasticity = fx_elasticity
 
 
 class AgentExpectations:

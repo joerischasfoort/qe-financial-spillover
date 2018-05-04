@@ -13,8 +13,6 @@ list_of_risk_correlation.update({'domestic_inflation'+"_and_" +'fx_shock': -0.3}
 #list_of_risk_correlation.update({'foreign_inflation'+"_and_" +'domestic_fx_shock': -0.17})
 
 
-
-
 # 1 setup parameters
 parameters = { #Todo: cleaning and spell checking!!
     # global parameters
@@ -43,6 +41,7 @@ parameters = { #Todo: cleaning and spell checking!!
     "fx_memory": 0.0,
     "risk_aversion": 2.0,
     "news_evaluation_error": 0.00,
+    "fx_elasticity": 0.01/250,
     # cb parameters
     "cb_country": 'domestic',
     # initial values
