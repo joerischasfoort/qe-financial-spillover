@@ -44,8 +44,8 @@ def price_fx_expectations(fund, portfolios, currencies, environment):
         realised_dp = asset.var.price / asset.var_previous.price
         ewma_delta_prices[asset] = compute_ewma(realised_dp, fund.var.ewma_delta_prices[asset],
                                                 fund.par.price_memory)
-        expected_prices[asset] = exp_price(asset.var.price, asset.var_previous.price,
-                                           fund.var.ewma_delta_prices[asset], fund.par.price_memory)
+        expected_prices[asset] = exp_price_or_fx(asset.var.price, asset.var_previous.price,
+                                                 fund.var.ewma_delta_prices[asset], fund.par.price_memory)
 
     ewma_delta_fx = {}
     exp_exchange_rates = environment.var.fx_rates.copy()
@@ -57,11 +57,10 @@ def price_fx_expectations(fund, portfolios, currencies, environment):
         ewma_delta_fx[currency] = compute_ewma(realised_dfx, fund.var.ewma_delta_fx[currency],
                                                fund.par.fx_memory)
         # calculate expected fx price
-        exp_exchange_rates.loc[fund.par.country][currency.par.country] = exp_fx(current_fx, previous_fx,
-                                                                                fund.var.ewma_delta_fx[currency],
-                                                                                fund.par.fx_memory,
-                                                                                fund.par.fx_elasticity,
-                                                                                environment.par.global_parameters["init_exchange_rate"])
+        exp_exchange_rates.loc[fund.par.country][currency.par.country] = exp_price_or_fx(current_fx, previous_fx,
+                                                                                         fund.var.ewma_delta_fx[
+                                                                                             currency],
+                                                                                         fund.par.fx_memory)
 
     return ewma_delta_prices, ewma_delta_fx, expected_prices, exp_exchange_rates
 
@@ -70,10 +69,11 @@ def anchored_FX_expectations(fund, environment):
     exp_exchange_rates = environment.var.fx_rates.copy()
     for c in environment.var.fx_rates:
         if fund.par.country != c:
-            exp_exchange_rates.loc[fund.par.country,c] = environment.var.fx_rates.loc[fund.par.country,c] + (0.01/250) * (1 - environment.var.fx_rates.loc[fund.par.country,c])
+            anchor = environment.var.ewma_fx_rates.loc[fund.par.country,c]
+            fx_reversion_speed = environment.par.global_parameters["fx_reversion_speed"]
+            exp_exchange_rates.loc[fund.par.country,c] = environment.var.fx_rates.loc[fund.par.country,c] + (fx_reversion_speed) * (anchor - environment.var.fx_rates.loc[fund.par.country,c])
 
     return exp_exchange_rates
-
 
 def return_expectations(fund, portfolios, currencies, environment):
     """
@@ -91,6 +91,7 @@ def return_expectations(fund, portfolios, currencies, environment):
                     1 + currency.par.nominal_interest_rate) - environment.var.fx_rates.loc[fund.par.country][
                                      currency.par.country]) / environment.var.fx_rates.loc[fund.par.country][
                                     currency.par.country]
+
 
     for asset in portfolios:
         out = asset.par.maturity * (1 - fund.exp.default_rates[asset])
@@ -115,6 +116,10 @@ def return_expectations(fund, portfolios, currencies, environment):
 
         exp_returns[asset] = (repayment_effect + price_effect + interest_effect - default_effect) / (
                     environment.var.fx_rates.loc[fund.par.country, asset.par.country] * asset.var.price)
+
+
+
+
 
     return exp_returns
 
@@ -160,11 +165,12 @@ def covariance_estimate(fund, environment, prev_exp_ret, inflation_shock):
     return ewma_returns, new_covariance_matrix, hypothetical_returns
 
 
-def exp_price(current_price, previous_price, previous_ewma_delta_price, memory_parameter):
+
+def exp_price_or_fx(current_price, previous_price, previous_ewma_delta_price, memory_parameter):
     """
-    Equation 1.9-a calculate expected price
-    :param current_price: float current price
-    :param previous_price: float previous price
+    Equation 1.11 calculate expected price or exchange rate
+    :param current_price: float current price or exchange rate
+    :param previous_price: float previous price or exchange rate
     :param previous_ewma_delta_price: float previous exponentially weighted moving average of delta price
     :param memory_parameter: float agent memory
     :return: float of the expected price or exchange rate
@@ -172,20 +178,6 @@ def exp_price(current_price, previous_price, previous_ewma_delta_price, memory_p
     delta_price = current_price / previous_price
     exp_price = compute_ewma(delta_price, previous_ewma_delta_price, memory_parameter) * current_price
     return exp_price
-
-
-def exp_fx(current_fx, previous_fx, previous_ewma_delta_fx, memory_parameter, elasticity, fundamental_fx):
-    """
-    Equation 1.9-b calculate expected price or exchange rate
-    :param current_price: float current price or exchange rate
-    :param previous_price: float previous price or exchange rate
-    :param previous_ewma_delta_price: float previous exponentially weighted moving average of delta price
-    :param memory_parameter: float agent memory
-    :return: float of the expected price or exchange rate
-    """
-    delta_fx = current_fx / previous_fx
-    exp_fx = (compute_ewma(delta_fx, previous_ewma_delta_fx, memory_parameter) * current_fx) + elasticity * (fundamental_fx - current_fx)
-    return exp_fx
 
 
 def compute_ewma(variable, previous_ewma, memory_parameter):

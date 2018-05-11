@@ -48,6 +48,10 @@ def correlated_shocks(parameters, days,seed):
     return shock_processes
 
 
+
+
+
+
 def exogenous_defaults(parameters, a,days,seed):
 
     time = days

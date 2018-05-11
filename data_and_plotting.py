@@ -18,7 +18,7 @@ r1 = []
 
 
 for day in range(10000,12000):
-    filename = "data/Objects/objects_day_" + str(day) +".pkl"
+    filename = "qe/data/Objects/objects_day_" + str(day) +".pkl"
     data = open(filename,"rb")
     list_of_objects = pickle.load(data)
 
