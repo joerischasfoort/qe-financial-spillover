@@ -292,11 +292,11 @@ def spillover_model(portfolios, currencies, environment, exogeneous_agents, fund
         if day>=environment.par.global_parameters["end_day"]-1000 or (day-1) % 250 == 0:
             dir = local_dir
             if obj_label!= 0:
-                file_name = dir + 'data/Objects/objects_day_' + str(day) + "_seed_" + str(seed) +  "heeee"  + obj_label + '.pkl'
+                file_name = dir + 'data/Objects/objects_day_' + str(day) + "_seed_" + str(seed) + obj_label + '.pkl'
                 save_objects = open(file_name, 'wb')
                 list_of_objects = [portfolios, currencies, environment, exogeneous_agents, funds, seed, obj_label]
             else:
-                file_name = dir + 'data/Objects/objects_day_' + str(day) + "_seed_" + str(seed) +"hoooo"  + '.pkl'
+                file_name = dir + 'data/Objects/objects_day_' + str(day) + "_seed_" + str(seed)   + '.pkl'
                 save_objects = open(file_name, 'wb')
                 list_of_objects = [portfolios, currencies, environment, exogeneous_agents, funds, seed]
             pickle.dump(list_of_objects, save_objects)
