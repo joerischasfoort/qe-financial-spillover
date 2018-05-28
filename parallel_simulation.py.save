@@ -1,18 +1,19 @@
-
-import  pickle
-import pp, time
+import codecs
+import time
 import multiprocessing
 from spillover_model import *
 import os
 
 from multiprocessing import Process
 
+import pickle
 
+#data = codecs.open('/home/kzltin001/qe/data/Objects/objects_start.pkl', 'rb')
 
-data = open('data/Objects/objects_start.pkl', 'rb')
 #data = open('data/Objects/objects_nonConv_day8890.pkl', 'rb')
 
-list_of_objects = pickle.load(data)
+list_of_objects = pickle.load(data, encoding='latin1')   
+pd.read_pickle('data')
 
 portfolios = list_of_objects[0]
 currencies = list_of_objects[1]
@@ -23,14 +24,12 @@ seed = list_of_objects[5]
 
 data.close()
 
-environment.par.global_parameters["start_day"]=12000
-environment.par.global_parameters["end_day"]=12010
-
-
+environment.par.global_parameters["start_day"]=1
+environment.par.global_parameters["end_day"]=100
 
 
 if __name__ == '__main__':
-    seed = range(1,20)
+    seed = range(1,100)
     procs = []
 
     for index, number in enumerate(seed):

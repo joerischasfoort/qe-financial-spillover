@@ -1,18 +1,15 @@
 """Simulation file used to run the model"""
 import pandas as pd
+import numpy 
 
 from init_objects import *
 from spillover_model import *
-
-
 
 list_of_risk_correlation = {}
 list_of_risk_correlation.update({'domestic_inflation'+"_and_" +'foreign_inflation': 0.3})
 list_of_risk_correlation.update({'foreign_inflation'+"_and_" +'domestic_inflation': list_of_risk_correlation['domestic_inflation'+"_and_" +'foreign_inflation']})
 list_of_risk_correlation.update({'domestic_inflation'+"_and_" +'fx_shock': -0.3})
 #list_of_risk_correlation.update({'foreign_inflation'+"_and_" +'domestic_fx_shock': -0.17})
-
-
 
 
 # 1 setup parameters
@@ -43,7 +40,7 @@ parameters = { #Todo: cleaning and spell checking!!
     "fx_memory": 0.0,
     "fx_reversion_speed": 0.5/250,
     "risk_aversion": 2.0,
-    "news_evaluation_error": 0.00,
+    "news_evaluation_error": 0,
     # cb parameters
     "cb_country": 'domestic',
     # initial values
@@ -71,9 +68,9 @@ parameters = { #Todo: cleaning and spell checking!!
     "foreign_default_rate_std": 0,
     "default_rate_mean_reversion": 1,
     "default_rate_delta_t": 0.003968253968253968,
+
     "adaptive_param": 0.0,
 }
-
 
 # 2 initalise model objects
 portfolios, currencies, funds, environment, exogenous_agents = init_objects(parameters)
@@ -84,5 +81,7 @@ seed = 1
 
 
 # 3 simulate model
-portfolios, currencies, environment, exogenous_agents, funds, data_t = spillover_model(portfolios, currencies, environment, exogenous_agents, funds, seed, obj_label)
+portfolios, currencies, environment, exogenous_agents, funds, data_t = spillover_model(portfolios, currencies, environment, exogenous_agents, funds, seed=1, obj_label=0)
 
+print("DONE!!!")
+print(pd.__version__)

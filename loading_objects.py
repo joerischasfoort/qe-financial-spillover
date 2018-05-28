@@ -1,4 +1,3 @@
-
 import  pickle
 from spillover_model import *
 
@@ -23,3 +22,4 @@ environment.par.global_parameters["end_day"]=3
 #environment.par.global_parameters["cov_memory"]=0.001
 
 portfolios, currencies, environment, exogeneous_agents, funds, data_t = spillover_model(portfolios, currencies, environment, exogeneous_agents, funds,  seed, obj_label)
+

@@ -1,3 +1,4 @@
+
 class Environment():
     """Class holding environment properties"""
     def __init__(self, variables, previous_variables, parameters):
@@ -23,4 +24,4 @@ class EnvironmentParameters:
     Holds the global parameters in a dictionary
     """
     def __init__(self, global_parameters):
-        self.global_parameters = global_parameters
+    self.global_parameters = global_parameters

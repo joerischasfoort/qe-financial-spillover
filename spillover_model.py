@@ -30,8 +30,6 @@ def spillover_model(portfolios, currencies, environment, exogeneous_agents, fund
     np.random.seed(seed)
 
 
-
-
     ######################################################################
     ############### INITIALIZING MEASUREMENTS#############################
     ######################################################################
@@ -39,7 +37,14 @@ def spillover_model(portfolios, currencies, environment, exogeneous_agents, fund
     deltas["Delta_FX"] = 0
     data = initdatadict(funds, portfolios, currencies, environment, deltas ) # create tau data dictionary
     data_t = copy.deepcopy(data) # create t data dictionary
-    #######################################################################
+    ######################################################################
+    ##### Determine directoring for saving objects and measurement########
+    ######################################################################
+    hex_home = '/home/kzltin001/qe/'
+    hex_fhgfs = '/researchdata/fhgfs/aifmrm_shared/qe-financial-spillover/'
+    local_dir = ''
+    # this will be used in lines near 224, 288, 292
+    ######################################################################
     #######################################################################
 
 
@@ -68,20 +73,12 @@ def spillover_model(portfolios, currencies, environment, exogeneous_agents, fund
     ####################################################################################
 
 
-
-
-
     # creating individual intensity parameters
     for a in portfolios: #TODO: this should be taken care of in the initialization
         try:
             a.par.change_intensity
         except AttributeError:
             a.par.change_intensity = environment.par.global_parameters['p_change_intensity']
-
-
-
-
-
 
 
     ##############################################################################################################
@@ -132,9 +129,6 @@ def spillover_model(portfolios, currencies, environment, exogeneous_agents, fund
         ###################################################################################################
 
 
-
-
-
         ###########################################################
         ############# RESETTING INTRADAY PARAMETERS ###############
         ###########################################################
@@ -154,15 +148,12 @@ def spillover_model(portfolios, currencies, environment, exogeneous_agents, fund
         ###########################################################
 
 
-
-
         ###################################################################################################################
         ################################################ INTRADAY LOOP ####################################################
         ###################################################################################################################
         while intraday_over == False:
             tau += 1
             environment.var.tau = tau
-
 
             ############################################################################
             ################ SHOCKING FX RATES AT THE END OF A PERIOD ##################
@@ -173,8 +164,6 @@ def spillover_model(portfolios, currencies, environment, exogeneous_agents, fund
 
             #############################################################################
             #############################################################################
-
-
 
             for fund in funds:
                 # shareholder dividends and fund profits 
@@ -232,13 +221,14 @@ def spillover_model(portfolios, currencies, environment, exogeneous_agents, fund
 
             # saving objects when there is no convergence (for diagnostic purpose)
             if tau > 10000:
-                file_name = 'data/Objects/objects_nonConv_day' + str(day) + '.pkl'
+                dir = local_dir
+                file_name = dir + 'data/Objects/objects_nonConv_day' + str(day) + '.pkl'
                 save_objects = open(file_name, 'wb')
                 list_of_objects = [portfolios, currencies, environment, exogeneous_agents, funds, seed]
                 pickle.dump(list_of_objects, save_objects)
                 save_objects.close()
 
-        #pd.DataFrame(data).to_csv('data' + '/' + "intraday" + "/" + "intraday_data_day_" + str(day) + ".csv")
+        #pd.DataFrame(data).to_csv( local_dir  + 'data' + '/' + "intraday" + "/" + "intraday_data_day_" + str(day) + ".csv")
 
 
         ##########################################################################################################################
@@ -296,7 +286,7 @@ def spillover_model(portfolios, currencies, environment, exogeneous_agents, fund
             data_t = update_data(data_t, funds, portfolios, currencies, environment, Deltas)
 
         # 4 Measurement
-        #pd.DataFrame(data_t).to_csv('data' + '/' + "data_t.csv")
+        #pd.DataFrame(data_t).to_csv( local_dir + 'data/' + "data_t.csv")
 
         # saving objects
         if day>=environment.par.global_parameters["end_day"]-1000 or (day-1) % 250 == 0:

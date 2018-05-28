@@ -78,6 +78,7 @@ parameters = { #Todo: cleaning and spell checking!!
 seed = 1
 if __name__ == '__main__':
     elasticities = [0.45,0.5]
+
     procs = []
 
     for index, number in enumerate(elasticities):
