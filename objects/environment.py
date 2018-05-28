@@ -13,8 +13,9 @@ class EnvironmentVariables:
     """
     Holds a matrix of exchange rates
     """
-    def __init__(self, fx_rates):
+    def __init__(self, fx_rates, ewma_fx_rates):
         self.fx_rates = fx_rates
+        self.ewma_fx_rates = ewma_fx_rates
 
 
 class EnvironmentParameters:

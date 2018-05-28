@@ -76,7 +76,7 @@ def init_objects(parameters):
     fx_matrix.rename(index=currency_countries, inplace=True)
     fx_matrix.rename(columns=currency_countries, inplace=True)
 
-    environment = Environment(EnvironmentVariables(fx_matrix), EnvironmentVariables(fx_matrix.copy()),
+    environment = Environment(EnvironmentVariables(fx_matrix,fx_matrix.copy()), EnvironmentVariables(fx_matrix.copy(),fx_matrix.copy()),
                               EnvironmentParameters(parameters))
 
     # 5 Create funds

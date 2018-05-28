@@ -26,7 +26,7 @@ data.close()
 environment.par.global_parameters["start_day"]=12000
 environment.par.global_parameters["end_day"]=12010
 
-start_time = time.time()
+
 
 
 if __name__ == '__main__':
@@ -40,10 +40,3 @@ if __name__ == '__main__':
 
     for proc in procs:
         proc.join()
-print "parallel: Time elapsed: ", time.time() - start_time, "s"
-
-
-#start_time = time.time()
-#for seed in [5, 10, 15, 20, 25]:
-#    spillover_model(portfolios, currencies, environment, exogeneous_agents, funds, seed)
-#print "serial: Time elapsed: ", time.time() - start_time, "s"

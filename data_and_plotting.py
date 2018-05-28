@@ -10,6 +10,7 @@ cov = []
 cov_00 = []
 cov_11 = []
 fx = []
+ewma_fx =[]
 tau = []
 p1 = []
 p0 = []
@@ -17,8 +18,8 @@ r0 = []
 r1 = []
 
 
-for day in range(10000,12000):
-    filename = "data/Objects/objects_day_" + str(day) +".pkl"
+for day in range(9000,9999):
+    filename = "data/Objects/objects_day_" + str(day) + "_seed_1"  + ".pkl"
     data = open(filename,"rb")
     list_of_objects = pickle.load(data)
 
@@ -38,6 +39,9 @@ for day in range(10000,12000):
     cov_00.append(funds[1].var.covariance_matrix.loc[portfolios[0], portfolios[0]])
 
     fx.append(1/environment.var.fx_rates.iloc[0,1])
+
+    ewma_fx.append(1/environment.var.ewma_fx_rates.iloc[0,1])
+
     p1.append(portfolios[1].var.price)
     p0.append(portfolios[0].var.price)
     r1.append(funds[1].exp.returns[portfolios[1]])

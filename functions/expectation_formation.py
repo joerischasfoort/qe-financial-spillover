@@ -69,7 +69,9 @@ def anchored_FX_expectations(fund, environment):
     exp_exchange_rates = environment.var.fx_rates.copy()
     for c in environment.var.fx_rates:
         if fund.par.country != c:
-            exp_exchange_rates.loc[fund.par.country,c] = environment.var.fx_rates.loc[fund.par.country,c] + (0.01/250) * (1 - environment.var.fx_rates.loc[fund.par.country,c])
+            anchor = environment.var.ewma_fx_rates.loc[fund.par.country,c]
+            fx_reversion_speed = environment.par.global_parameters["fx_reversion_speed"]
+            exp_exchange_rates.loc[fund.par.country,c] = environment.var.fx_rates.loc[fund.par.country,c] + (fx_reversion_speed) * (anchor - environment.var.fx_rates.loc[fund.par.country,c])
 
     return exp_exchange_rates
 

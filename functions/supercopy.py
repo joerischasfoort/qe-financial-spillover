@@ -97,5 +97,5 @@ def copy_env_variables(env_var_object):
         else:
             new_variables[variable] = variables[variable].copy()
 
-    obj = EnvironmentVariables(fx_rates=new_variables['fx_rates'])
+    obj = EnvironmentVariables(fx_rates=new_variables['fx_rates'], ewma_fx_rates=new_variables['ewma_fx_rates'])
     return obj

@@ -16,7 +16,7 @@ from functions.supercopy import *
 from functions.measurement import *
 
 
-def spillover_model(portfolios, currencies, environment, exogeneous_agents, funds,  seed):
+def spillover_model(portfolios, currencies, environment, exogeneous_agents, funds,  seed, obj_label):
 
     """
     Koziol, Riedler & Schasfoort Agent-based simulation model of financial spillovers
@@ -91,6 +91,9 @@ def spillover_model(portfolios, currencies, environment, exogeneous_agents, fund
     for day in range(environment.par.global_parameters['start_day'], environment.par.global_parameters['end_day']):
 
 
+        for row in environment.var.fx_rates.index:
+            for col in environment.var.fx_rates.columns:
+                environment.var.ewma_fx_rates.loc[row, col] = compute_ewma(environment.var.fx_rates.loc[row, col], environment.var.ewma_fx_rates.loc[row, col],0.001)
 
 
         ######################################################################################
@@ -220,7 +223,7 @@ def spillover_model(portfolios, currencies, environment, exogeneous_agents, fund
             jump_counter, no_jump_counter, test_sign, environment = intensity_parameter_adjustment(jump_counter, no_jump_counter, test_sign, Deltas, environment, convergence_bound)
 
 
-            #print ("day:",day,"tau:",tau, convergence, Deltas)
+            print ("day:",day,"tau:",tau, convergence, Deltas)
 
 
             #Update intraday data points
@@ -296,10 +299,11 @@ def spillover_model(portfolios, currencies, environment, exogeneous_agents, fund
         #pd.DataFrame(data_t).to_csv('data' + '/' + "data_t.csv")
 
         # saving objects
-        file_name = 'data/Objects/objects_day_' + str(day) + "_seed_" + str(seed) + '.pkl'
-        save_objects = open(file_name, 'wb')
-        list_of_objects = [portfolios, currencies, environment, exogeneous_agents, funds, seed]
-        pickle.dump(list_of_objects, save_objects)
-        save_objects.close()
+        if day>=environment.par.global_parameters["end_day"]-1000 or (day-1) % 250 == 0:
+            file_name = 'data/Objects/objects_day_' + str(day) + "_seed_" + str(seed) + "_" + obj_label + '.pkl'
+            save_objects = open(file_name, 'wb')
+            list_of_objects = [portfolios, currencies, environment, exogeneous_agents, funds, seed, obj_label]
+            pickle.dump(list_of_objects, save_objects)
+            save_objects.close()
 
     return portfolios, currencies, environment, exogeneous_agents, funds,  data_t
