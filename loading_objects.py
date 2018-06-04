@@ -1,7 +1,7 @@
 import  pickle
 from spillover_model import *
 
-data = open('data/Objects/objects_day_1_seed_1.pkl', 'rb')
+data = open('data/Objects/objects_day_9999_seed_1_fx_rev_speed_0.pkl', 'rb')
 #data = open('data/Objects/objects_nonConv_day8890.pkl', 'rb')
 
 list_of_objects = pickle.load(data)

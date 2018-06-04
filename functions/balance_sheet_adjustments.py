@@ -15,7 +15,7 @@ def asset_excess_demand_and_correction_factors(funds, portfolios, currencies, ex
     for a in portfolios:        
         for ex in exogeneous_agents:
             if exogeneous_agents[ex].var.asset_demand[a] > 0:
-                set_of_positive = set_of_positive + exogeneous_agents[ex].var.asset_demand[a]           
+                set_of_positive[a] = set_of_positive[a] + exogeneous_agents[ex].var.asset_demand[a]
             if exogeneous_agents[ex].var.asset_demand[a] < 0:
                 set_of_negative[a] = set_of_negative[a] + exogeneous_agents[ex].var.asset_demand[a]
             

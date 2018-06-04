@@ -18,8 +18,8 @@ r0 = []
 r1 = []
 
 
-for day in range(9000,9999):
-    filename = "data/Objects/objects_day_" + str(day) + "_seed_1"  + ".pkl"
+for day in range(10000,10249):
+    filename = "data/Objects/objects_day_" + str(day) + "_seed_1"  + "0.01"+".pkl"
     data = open(filename,"rb")
     list_of_objects = pickle.load(data)
 

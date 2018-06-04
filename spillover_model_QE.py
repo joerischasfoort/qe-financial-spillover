@@ -16,7 +16,7 @@ from functions.supercopy import *
 from functions.measurement import *
 
 
-def spillover_model(portfolios, currencies, environment, exogeneous_agents, funds,  seed, obj_label):
+def spillover_model_QE(portfolios, currencies, environment, exogeneous_agents, funds,  seed, obj_label):
 
     """
     Koziol, Riedler & Schasfoort Agent-based simulation model of financial spillovers
@@ -40,7 +40,7 @@ def spillover_model(portfolios, currencies, environment, exogeneous_agents, fund
     ######################################################################
     ##### Determine directoring for saving objects and measurement########
     ######################################################################
-    hex_home = '/home/kzltin001/qe/'
+    hex_home = '/home/jriedler/qe-financial-spillover/'
     hex_fhgfs = '/researchdata/fhgfs/aifmrm_shared/qe-financial-spillover/'
     local_dir = ''
     # this will be used in lines near 224, 288, 292
@@ -206,8 +206,8 @@ def spillover_model(portfolios, currencies, environment, exogeneous_agents, fund
             Deltas.update(Delta_Demand)
             Deltas.update({"FX": Delta_Capital})
 
-            convergence_bound = environment.par.global_parameters["convergence_bound"]
-            convergence = sum(abs(Deltas[i])<convergence_bound for i in Deltas)==len(Deltas) and tau >1
+            convergence_bound = 0.001
+            convergence = sum(abs(Deltas[i])<convergence_bound for i in Deltas)==len(Deltas) and tau >30
 
             jump_counter, no_jump_counter, test_sign, environment = intensity_parameter_adjustment(jump_counter, no_jump_counter, test_sign, Deltas, environment, convergence_bound)
 
@@ -222,7 +222,7 @@ def spillover_model(portfolios, currencies, environment, exogeneous_agents, fund
             # saving objects when there is no convergence (for diagnostic purpose)
             if tau > 10000:
                 dir = local_dir
-                file_name = dir + 'data/Objects/objects_nonConv_day' + str(day) + '.pkl'
+                file_name = local_dir + 'data/Objects_QE/objects_nonConv_day' + str(day) + obj_label + '.pkl'
                 save_objects = open(file_name, 'wb')
                 list_of_objects = [portfolios, currencies, environment, exogeneous_agents, funds, seed]
                 pickle.dump(list_of_objects, save_objects)
@@ -290,8 +290,8 @@ def spillover_model(portfolios, currencies, environment, exogeneous_agents, fund
 
         # saving objects
         #if day>=environment.par.global_parameters["end_day"]-1000 or (day-1) % 250 == 0:
-        if day>=0:
-            file_name = 'data/Objects/objects_day_' + str(day) + "_seed_" + str(seed) + "_" + obj_label + '.pkl'
+	if day>= 0:
+            file_name = local_dir  + 'data/Objects_QE/objects_day_' + str(day) + "_seed_" + str(seed) + "_" + obj_label +  '.pkl'
             save_objects = open(file_name, 'wb')
             list_of_objects = [portfolios, currencies, environment, exogeneous_agents, funds, seed, obj_label]
             pickle.dump(list_of_objects, save_objects)
