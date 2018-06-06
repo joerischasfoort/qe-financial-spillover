@@ -90,7 +90,7 @@ def spillover_model(portfolios, currencies, environment, exogeneous_agents, fund
 
         for row in environment.var.fx_rates.index:
             for col in environment.var.fx_rates.columns:
-                environment.var.ewma_fx_rates.loc[row, col] = compute_ewma(environment.var.fx_rates.loc[row, col], environment.var.ewma_fx_rates.loc[row, col],0.001)
+                environment.var.ewma_fx_rates.loc[row, col] = compute_ewma(environment.var.fx_rates.loc[row, col], environment.var.ewma_fx_rates.loc[row, col],0.01)
 
 
         ######################################################################################
@@ -206,13 +206,13 @@ def spillover_model(portfolios, currencies, environment, exogeneous_agents, fund
             Deltas.update(Delta_Demand)
             Deltas.update({"FX": Delta_Capital})
 
-            convergence_bound = environment.par.global_parameters["convergence_bound"]
+            convergence_bound = 0.001
             convergence = sum(abs(Deltas[i])<convergence_bound for i in Deltas)==len(Deltas) and tau >1
 
             jump_counter, no_jump_counter, test_sign, environment = intensity_parameter_adjustment(jump_counter, no_jump_counter, test_sign, Deltas, environment, convergence_bound)
 
 
-            #print ("day:",day,"tau:",tau, convergence, Deltas)
+            print ("day:",day,"tau:",tau, convergence, Deltas)
 
 
             #Update intraday data points

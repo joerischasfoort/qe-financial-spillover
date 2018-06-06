@@ -7,6 +7,7 @@ class Fund():
         self.par = parameters
         self.exp = expectations
 
+
     def __repr__(self):
         return 'fund' + str(self.name)
     

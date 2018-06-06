@@ -25,7 +25,7 @@ parameters = { #Todo: cleaning and spell checking!!
     "domestic_inflation_std": 0.01,
     "foreign_inflation_std": 0.02,
     "start_day": 1,
-    "end_day": 4,
+    "end_day": 100,
     "p_change_intensity": 0.1,
     "fx_change_intensity": 0.1,
     "cov_memory": 0.001,
@@ -38,7 +38,7 @@ parameters = { #Todo: cleaning and spell checking!!
     # agent parameters
     "price_memory": 0.0,
     "fx_memory": 0.0,
-    "fx_reversion_speed": 0.5/250,
+    "fx_reversion_speed": 0.1/250,
     "risk_aversion": 2.0,
     "news_evaluation_error": 0,
     # cb parameters
@@ -58,9 +58,9 @@ parameters = { #Todo: cleaning and spell checking!!
     "fx_shock_mean": 0.0,
     "fx_shock_std": 0.001,
     "domestic_default_events_mean": 80 / float(250),
-    "foreign_default_events_mean": 160 / float(250),
+    "foreign_default_events_mean": 80 / float(250),
     "domestic_default_events_std": 40 / float(250),
-    "foreign_default_events_std": 80 / float(250),
+    "foreign_default_events_std": 40 / float(250),
     "default_events_mean_reversion": 1,# 0.001,
     "domestic_default_rate_mean": 0.02 / float(80),
     "foreign_default_rate_mean": 0.02 / float(80),
@@ -81,7 +81,7 @@ seed = 1
 
 
 # 3 simulate model
-portfolios, currencies, environment, exogenous_agents, funds, data_t = spillover_model(portfolios, currencies, environment, exogenous_agents, funds, seed=1, obj_label=0)
+portfolios, currencies, environment, exogenous_agents, funds, data_t = spillover_model(portfolios, currencies, environment, exogenous_agents, funds, seed, obj_label)
 
 print("DONE!!!")
 print(pd.__version__)
