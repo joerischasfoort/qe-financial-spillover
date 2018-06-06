@@ -4,7 +4,7 @@ from functions.initialize_agents import *
 
 
 
-def init_objects2(parameters):
+def init_objects(parameters):
     """
     Function to initialise the model objects: first assets, then funds
     :param parameters: object which holds all model parameters
