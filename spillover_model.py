@@ -11,7 +11,6 @@ from functions.stochasticprocess import *
 from functions.expectation_formation import *
 from functions.market_mechanism import *
 from functions.profits_and_payouts import *
-from functions.show import *
 from functions.supercopy import *
 from functions.measurement import *
 
@@ -85,8 +84,14 @@ def spillover_model(portfolios, currencies, environment, exogeneous_agents, fund
     ############################################### DAY LOOP #####################################################
     ##############################################################################################################
 
+
+
+
     for day in range(environment.par.global_parameters['start_day'], environment.par.global_parameters['end_day']):
 
+        # these two variables are needed for the pricing algorithm
+        var = copy.copy(portfolios)
+        var_t1 = []
 
         for row in environment.var.fx_rates.index:
             for col in environment.var.fx_rates.columns:
@@ -113,6 +118,7 @@ def spillover_model(portfolios, currencies, environment, exogeneous_agents, fund
 
         todays_shocks = {i: shock_processes[i][day] for i in shock_processes}
         fx_shock = todays_shocks["fx_shock"]
+        #fx_shock = 0
 
         inflation_shock = {}
         for key in todays_shocks:
@@ -184,7 +190,8 @@ def spillover_model(portfolios, currencies, environment, exogeneous_agents, fund
 
 
                 # compute the weights of optimal balance sheet positions
-                fund.var.weights = portfolio_optimization(fund)
+                fund.var.weights, ow, u, ix  = portfolio_optimization(fund)
+
 
                 # intermediate cash position resulting from interest payments, payouts, maturing and defaulting assets
                 fund.var.currency_inventory = cash_inventory(fund, portfolios, currencies)
@@ -195,24 +202,61 @@ def spillover_model(portfolios, currencies, environment, exogeneous_agents, fund
             for ex in exogeneous_agents:
                 exogeneous_agents[ex].var.asset_demand = ex_agent_asset_demand(ex, exogeneous_agents, portfolios )
 
+
+
+
             if intraday_over == False:
-                Delta_Demand = { }
+                Delta_Demand = {}
+                Delta_Capital = {}
+
                 for a in portfolios:
-                    a.var.price, Delta_str, delta_demand  = price_adjustment(portfolios, environment, exogeneous_agents, funds, a) # TODO: is the Delta_str really necessary?
-                    Delta_Demand.update({a: delta_demand})
-                environment.var.fx_rates, Delta_Capital = fx_adjustment(portfolios, currencies, environment , funds)
+                    if a in var:
+                        a.var.price, Delta_str, delta_demand = price_adjustment(portfolios, environment,
+                                                                                exogeneous_agents, funds, a,
+                                                                                a.par.change_intensity)  # TODO: is the Delta_str really necessary?
+                        Delta_Demand.update({a: delta_demand})
+                    else:
+                        a.var.price, Delta_str, delta_demand = price_adjustment(portfolios, environment,
+                                                                                exogeneous_agents, funds, a,
+                                                                                0)  # TODO: is the Delta_str really necessary?
+                        Delta_Demand.update({a: delta_demand})
+
+                    environment.var.fx_rates, Delta_Capital = fx_adjustment(portfolios, currencies, environment, funds,
+                                                                            0)
+
+                if "FX" in var:
+                    environment.var.fx_rates, Delta_Capital = fx_adjustment(portfolios, currencies, environment, funds,
+                                                                            environment.par.global_parameters[
+                                                                                "fx_change_intensity"])
+
+
+
+
 
             Deltas = {}
             Deltas.update(Delta_Demand)
             Deltas.update({"FX": Delta_Capital})
 
-            convergence_bound = 0.001
-            convergence = sum(abs(Deltas[i])<convergence_bound for i in Deltas)==len(Deltas) and tau >1
+            convergence_bound = {}
+            convergence_bound.update({a: 0.01 for a in portfolios})
+            convergence_bound.update({"FX": 0.001 })
 
-            jump_counter, no_jump_counter, test_sign, environment = intensity_parameter_adjustment(jump_counter, no_jump_counter, test_sign, Deltas, environment, convergence_bound)
+            convergence_condition = {i: abs(Deltas[i]) < convergence_bound[i] for i in Deltas}
+            asset_market_convergence = sum([convergence_condition[a] for a in portfolios])
+            convergence = sum(convergence_condition[i] for i in convergence_condition) == len(Deltas) and tau > 20
+            if tau > 10001: convergence = True
+
+            # jumps only count when they are caused by a change in the price or fx
+            jump_counter, no_jump_counter, test_sign, environment = I_intensity_parameter_adjustment(
+                    jump_counter, no_jump_counter, test_sign, Deltas, environment, convergence_bound,var_t1)
+
+            var_t1 = var
+
+            if asset_market_convergence == len(portfolios) and len(var)<= len(portfolios):
+                var.append("FX")
 
 
-            print ("day:",day,"tau:",tau, convergence, Deltas)
+            print ("day:",day,"tau:",tau, tau%3, convergence, Deltas)
 
 
             #Update intraday data points

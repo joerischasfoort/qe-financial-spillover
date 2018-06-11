@@ -119,7 +119,7 @@ def return_expectations(fund, portfolios, currencies, environment):
                     environment.var.fx_rates.loc[fund.par.country, asset.par.country] * asset.var.price)
 
 
-
+        #print(asset, repayment_effect , price_effect , interest_effect , default_effect)
 
 
     return exp_returns
@@ -134,36 +134,46 @@ def covariance_estimate(fund, environment, prev_exp_ret, inflation_shock):
     a pandas DataFrame of covariances of returns between asset portfolios.
     """
     ewma_returns = {}
-    hypothetical_returns = {}
+    realized_returns = {}
     for asset in fund.var.assets:
-        hypothetical_returns[asset] = fund.var.profits[asset] / (asset.var_previous.price * environment.var_previous.fx_rates.loc[fund.par.country, asset.par.country])
-        ewma_returns[asset] = compute_ewma(hypothetical_returns[asset], fund.var_previous.ewma_returns[asset],
+        realized_returns[asset] = fund.var.profits[asset] / (asset.var_previous.price * environment.var_previous.fx_rates.loc[fund.par.country, asset.par.country])
+        ewma_returns[asset] = compute_ewma(realized_returns[asset], fund.var_previous.ewma_returns[asset],
                                            environment.par.global_parameters["cov_memory"])
 
         # correcting profits with the inflation shock
         key = asset.par.country + "_inflation"
-        hypothetical_returns[asset]=((1+ hypothetical_returns[asset]) / (1+inflation_shock[key]))-1
+        realized_returns[asset]= ((1 + realized_returns[asset]) / (1 + inflation_shock[key])) - 1
 
     for cash in fund.var.currency:
-        hypothetical_returns[cash] = fund.var.profits[cash] / (environment.var_previous.fx_rates.loc[fund.par.country, cash.par.country])
-        ewma_returns[cash] = compute_ewma(hypothetical_returns[cash], fund.var_previous.ewma_returns[cash],
+        realized_returns[cash] = fund.var.profits[cash] / (environment.var_previous.fx_rates.loc[fund.par.country, cash.par.country])
+        ewma_returns[cash] = compute_ewma(realized_returns[cash], fund.var_previous.ewma_returns[cash],
                                           environment.par.global_parameters["cov_memory"])
 
         # correcting profits with the inflation shock
         key = cash.par.country + "_inflation"
-        hypothetical_returns[cash] = ((1 + hypothetical_returns[cash]) / (1 + inflation_shock[key])) - 1
+        realized_returns[cash] = ((1 + realized_returns[cash]) / (1 + inflation_shock[key])) - 1
 
 
     new_covariance_matrix = fund.var.covariance_matrix.copy()
+    new_correlation_matrix = fund.var.covariance_matrix.copy()
+    old_correlation_matrix = fund.var_previous.covariance_matrix.copy()
     for idx_x, asset_x in enumerate(new_covariance_matrix.columns):
         for idx_y, asset_y in enumerate(new_covariance_matrix.columns):
            if idx_x <= idx_y:
-                covar = (hypothetical_returns[asset_x] - prev_exp_ret[asset_x]) * (hypothetical_returns[asset_y] - prev_exp_ret[asset_y])
+                covar = (realized_returns[asset_x] - prev_exp_ret[asset_x]) * (realized_returns[asset_y] - prev_exp_ret[asset_y])
                 ewma_covar = compute_ewma(covar, fund.var_previous.covariance_matrix.loc[asset_x][asset_y], environment.par.global_parameters["cov_memory"])
                 new_covariance_matrix.loc[asset_x][asset_y] = ewma_covar
                 new_covariance_matrix.loc[asset_y][asset_x] = ewma_covar
 
-    return ewma_returns, new_covariance_matrix, hypothetical_returns
+    for idx_x, asset_x in enumerate(new_covariance_matrix.columns):
+        for idx_y, asset_y in enumerate(new_covariance_matrix.columns):
+            if idx_x <= idx_y:
+                new_correlation_matrix.loc[asset_x][asset_y] =(new_covariance_matrix.loc[asset_y][asset_x] / (np.sqrt(new_covariance_matrix.loc[asset_y][asset_y]) * np.sqrt(new_covariance_matrix.loc[asset_x][asset_x])))*100
+                new_correlation_matrix.loc[asset_y][asset_x] = new_correlation_matrix.loc[asset_x][asset_y]
+                old_correlation_matrix.loc[asset_x][asset_y] = (fund.var_previous.covariance_matrix.loc[asset_y][asset_x] / (np.sqrt(fund.var_previous.covariance_matrix.loc[asset_y][asset_y]) * np.sqrt(fund.var_previous.covariance_matrix.loc[asset_x][asset_x])))*100
+                old_correlation_matrix.loc[asset_y][asset_x] = old_correlation_matrix.loc[asset_x][asset_y]
+
+    return ewma_returns, new_covariance_matrix, realized_returns
 
 
 

@@ -4,7 +4,7 @@ from functions.initialize_agents import *
 
 
 
-def init_objects(parameters):
+def init_objects(parameters, seed):
     """
     Function to initialise the model objects: first assets, then funds
     :param parameters: object which holds all model parameters
@@ -20,7 +20,7 @@ def init_objects(parameters):
     environment = init_environment(currencies, parameters)
 
     # 4 initialize funds
-    funds = init_funds(environment,portfolios, currencies, parameters)
+    funds = init_funds(environment,portfolios, currencies, parameters, seed)
 
     # 5 initialize exogenous agents
     exogeneous_agents = init_exogenous_agents(portfolios, currencies, parameters) #Todo: please, please, please correct this spelling mistake (getting tired of saying this)

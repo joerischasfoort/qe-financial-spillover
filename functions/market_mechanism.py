@@ -20,7 +20,7 @@ def convert_R2P(a, ret):
     return price
 
 
-def price_adjustment(portfolios, environment, exogeneous_agents, funds, a):
+def price_adjustment(portfolios, environment, exogeneous_agents, funds, a, adjustment_intensity):
     """
     Find the next  price of asset a.
     Sums over all demands of funds and exogenous agents
@@ -44,7 +44,7 @@ def price_adjustment(portfolios, environment, exogeneous_agents, funds, a):
     # print a.var.price, total_demand[a]
 
     # Equation 1.17 : price adjustment
-    log_new_price = log(a.var.price) + a.par.change_intensity * total_demand[a] / a.par.quantity
+    log_new_price = log(a.var.price) + adjustment_intensity * total_demand[a] / a.par.quantity
 
 
     price = exp(log_new_price)
@@ -57,7 +57,7 @@ def price_adjustment(portfolios, environment, exogeneous_agents, funds, a):
     return price, Delta_Demand_string, Delta_Demand
 
 
-def fx_adjustment(portfolios, currencies, environment, funds):
+def fx_adjustment(portfolios, currencies, environment, funds, adjustment_intensity):
     """
     Find the new fxrate
     """
@@ -103,7 +103,7 @@ def fx_adjustment(portfolios, currencies, environment, funds):
         Delta_Capital = (capital_DF - capital_FD ) / sum(red_share_fx_corr.values())
 
 
-        log_new_fx_rate = log(environment.var.fx_rates.loc[el[0]][el[1]]) + environment.par.global_parameters["fx_change_intensity"] * Delta_Capital
+        log_new_fx_rate = log(environment.var.fx_rates.loc[el[0]][el[1]]) + adjustment_intensity * Delta_Capital
 
         fx_rate = exp(log_new_fx_rate)
 
@@ -117,8 +117,9 @@ def fx_adjustment(portfolios, currencies, environment, funds):
 
 
 
-def   intensity_parameter_adjustment(jump_counter, no_jump_counter, test_sign, Deltas, environment, convergence_bound):
-
+def   I_intensity_parameter_adjustment(jump_counter, no_jump_counter, test_sign, Deltas, environment, convergence_bound, var):
+    jc = 10 # jumps until intensity is adjusted
+    nojc = 10 # consecutive non-jumps until intensity is adjusted
     test = {}
     jump = {x:0 for x in jump_counter}
     no_jump = {x:0 for x in jump_counter}
@@ -134,37 +135,38 @@ def   intensity_parameter_adjustment(jump_counter, no_jump_counter, test_sign, D
         if test[i] == 1:
             no_jump[i] = 1
 
-        if jump[i] == 1:
+        if jump[i] == 1 and i in var:
             jump_counter[i] += 1
             no_jump_counter[i] = 0
 
-        if no_jump[i] == 1:
+        if no_jump[i] == 1 and i in var:
             no_jump_counter[i] += 1
 
-        if jump_counter[i] > 4 and i!="FX":# and convergence[i] == False:
+        if jump_counter[i] > jc and i!="FX" and i in var:# and convergence[i] == False:
             i.par.change_intensity = i.par.change_intensity  / 2
             jump_counter[i] = 0
             no_jump_counter[i]=0
 
 
-        if jump_counter[i] > 4 and i == "FX" :#and convergence[i] == False:
-            environment.par.global_parameters['fx_change_intensity'] = environment.par.global_parameters[
-                                                                       'fx_change_intensity'] / 2
+        if jump_counter[i] > jc and i == "FX" and i in var :#and convergence[i] == False:
+            environment.par.global_parameters['fx_change_intensity'] = environment.par.global_parameters['fx_change_intensity'] / 2
             jump_counter[i] = 0
             no_jump_counter[i]=0
 
 
-        if no_jump_counter[i] > 20 and i!="FX":# and convergence[i] == False:
+        if no_jump_counter[i] > nojc and i!="FX" and i in var:# and convergence[i] == False:
             i.par.change_intensity =  min(0.1, i.par.change_intensity * 1.1)
             no_jump_counter[i] = 0
             jump_counter[i] = 0
 
 
-        if no_jump_counter[i] > 20 and i=="FX":# and convergence[i] == False:
-            environment.par.global_parameters['fx_change_intensity'] = min(0.1, environment.par.global_parameters[
-                                                                          'fx_change_intensity'] * 1.1)
+        if no_jump_counter[i] > nojc and i=="FX" and i in var:# and convergence[i] == False:
+            environment.par.global_parameters['fx_change_intensity'] = min(0.1, environment.par.global_parameters['fx_change_intensity'] * 1.1)
             no_jump_counter[i] = 0
             jump_counter[i] = 0
 
 
     return  jump_counter, no_jump_counter, test_sign, environment
+
+
+

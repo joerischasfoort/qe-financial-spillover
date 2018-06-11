@@ -33,7 +33,8 @@ def portfolio_optimization(f):
         
         # solving for optimal weights
         weights=np.matmul(inv_aux_cov, aux_ret)*(1/float(risk_aversion))
-        
+        original_weights = weights.copy()
+
         # Start of algorithm that takes out shorted assets   
         test = weights[:-1] < 0
 
@@ -127,7 +128,8 @@ def portfolio_optimization(f):
             for i in range(len(E_ret_assets)):
                 U[i] = solution_weights[sol][i] * E_ret_assets[i] - 0.5 * risk_aversion * sum(
                     [(solution_weights[sol][j] * solution_weights[sol][i]) * Cov_assets.iloc[i, j] for j in range(len(E_ret_assets))])
-            Utility.append(sum(U.values()))
+            Utility.append((sum(U.values())))
+
         weights = solution_weights[Utility.index(max(Utility))]
 
 
@@ -135,7 +137,9 @@ def portfolio_optimization(f):
         output = {}
 
 
+
         for i, a in enumerate(Cov_assets.columns.values):
             output[a] = weights[i]
-        
-        return output
+
+
+        return  output, original_weights , max(Utility), Utility.index(max(Utility))

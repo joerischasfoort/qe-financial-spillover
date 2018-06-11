@@ -7,7 +7,7 @@ from objects.exogenous_agents import *
 from functions.realised_returns import *
 
 
-def init_funds(environment, portfolios, currencies, parameters):
+def init_funds(environment, portfolios, currencies, parameters, seed):
 
     funds = []
     total_funds = parameters["n_domestic_funds"] + parameters["n_foreign_funds"]
@@ -110,19 +110,17 @@ def init_funds(environment, portfolios, currencies, parameters):
 
         fund_expectations = AgentExpectations(r, df_rates, exp_fx, exp_prices, exp_fx_returns) #TODO: why is this called exp_fx_returns? In the object this variable is called cash return
 
-
         funds.append(Fund(idx, fund_vars, copy_agent_variables(fund_vars), fund_params, fund_expectations))
 
     #initialize the covariance matrix with simulated values
     simulated_time_series = simulated_asset_return(funds, portfolios, currencies, 10000,
-                                                   parameters)
+                                                   parameters, seed)
     for fund in funds:
         for i in assets:
             for j in assets:
-                fund.var.covariance_matrix.loc[i, j] = \
-                np.cov(simulated_time_series[fund][i], simulated_time_series[fund][j])[0][1]
+                fund.var.covariance_matrix.loc[i][j] = np.cov(simulated_time_series[fund][i], simulated_time_series[fund][j])[0][1]
 
-
+        fund.var_previous.covariance_matrix = fund.var.covariance_matrix.copy()
 
     return funds
 
@@ -177,38 +175,48 @@ def init_exogenous_agents(portfolios, currencies, parameters):
 
 
 
-def simulated_asset_return(funds,portfolios, currencies, days, parameters):
+def simulated_asset_return(funds,portfolios, currencies, days, parameters,seed):
     TS_for_funds = {}
+    TS_default_rates = {}
+    fundamental_default_rate_expectation = {}
     for asset in portfolios:
         #compute default rates for an asset
-        TS_default_rates, fundamental_default_rate_expectation = exogenous_defaults(parameters, asset, days,seed=1)
+        TS_default_rates[asset], fundamental_default_rate_expectation[asset] = exogenous_defaults(parameters, asset, days, seed)
 
         #compute inflation and fx shocks
-        exogenous_shocks = correlated_shocks(parameters, days,seed=1)
+        exogenous_shocks = correlated_shocks(parameters, days,seed)
 
     for fund in funds:
         simulated_real_returns = {}
+        simulated_nominal_returns = {}
         for asset in portfolios:
             if fund.par.country == asset.par.country:
-                new_fx = [1 for idx, val in enumerate(TS_default_rates)]
+                new_fx = [1 for idx in range(days)]
             if fund.par.country != asset.par.country:
                 if asset.par.country == "foreign":
-                    new_fx = [(1+exogenous_shocks["fx_shock"][idx]) for idx, val in enumerate(TS_default_rates)]
+                    new_fx = 1+np.array(exogenous_shocks["fx_shock"])
                 if asset.par.country == "domestic":
-                    new_fx = [1/(1+exogenous_shocks["fx_shock"][idx]) for idx, val in enumerate(TS_default_rates)]
-
-            simulated_nominal_returns = [realised_profits_asset(df, face_value=asset.par.face_value, previous_price=1,
+                    new_fx = 1/(1+np.array(exogenous_shocks["fx_shock"]))
+            simulated_nominal_returns[asset] = np.array([realised_profits_asset(df, face_value=asset.par.face_value, previous_price=1,
                                                     price=1, quantity=asset.par.quantity,
                                                     interest_rate=asset.par.nominal_interest_rate,
-                                                    maturity=asset.par.maturity, previous_exchange_rate=1, exchange_rate=new_fx[idx]) for idx, df in enumerate(TS_default_rates)]
+                                                    maturity=asset.par.maturity, previous_exchange_rate=1, exchange_rate=new_fx[idx]) for idx, df in enumerate(TS_default_rates[asset])])
 
-            simulated_real_returns[asset] = [((1+simulated_nominal_returns[idx])/(1+exogenous_shocks[asset.par.country + "_inflation"][idx]))-1 for idx, val in enumerate(simulated_nominal_returns)]
+            simulated_real_returns[asset] = ((1+simulated_nominal_returns[asset]) / (1+exogenous_shocks[asset.par.country + "_inflation"]))-1
 
         for cur in currencies:
-            simulated_nominal_returns = [realised_profits_currency(cur.par.nominal_interest_rate, previous_exchange_rate=1, exchange_rate=new_fx[idx]) for idx, df in enumerate(TS_default_rates)]
-            simulated_real_returns[cur] = [
-                ((1 + simulated_nominal_returns[idx]) / (1 + exogenous_shocks[cur.par.country + "_inflation"][idx])) - 1
-                for idx, val in enumerate(simulated_nominal_returns)]
+            if fund.par.country == cur.par.country:
+                new_fx = [1 for idx in range(days)]
+            if fund.par.country != cur.par.country:
+                if cur.par.country == "foreign":
+                    new_fx = 1+np.array(exogenous_shocks["fx_shock"])
+                if cur.par.country == "domestic":
+                    new_fx = 1/(1+np.array(exogenous_shocks["fx_shock"]))
+
+            simulated_nominal_returns[cur] = np.array([realised_profits_currency(cur.par.nominal_interest_rate, previous_exchange_rate=1, exchange_rate=new_fx[idx]) for idx, df in enumerate(new_fx)])
+            simulated_real_returns[cur] = ((1+simulated_nominal_returns[cur]) / (1+exogenous_shocks[cur.par.country + "_inflation"]))-1
+
+
 
         TS_for_funds[fund]=simulated_real_returns
 
