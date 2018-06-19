@@ -89,13 +89,16 @@ def spillover_model(portfolios, currencies, environment, exogeneous_agents, fund
 
     for day in range(environment.par.global_parameters['start_day'], environment.par.global_parameters['end_day']):
 
+        if day>=20:
+            environment.par.global_parameters[ "cov_memory"]=0.001
+
         # these two variables are needed for the pricing algorithm
         var = copy.copy(portfolios)
         var_t1 = []
 
         for row in environment.var.fx_rates.index:
             for col in environment.var.fx_rates.columns:
-                environment.var.ewma_fx_rates.loc[row, col] = compute_ewma(environment.var.fx_rates.loc[row, col], environment.var.ewma_fx_rates.loc[row, col],0.01)
+                environment.var.ewma_fx_rates.loc[row, col] = compute_ewma(environment.var.fx_rates.loc[row, col], environment.var.ewma_fx_rates.loc[row, col],0.00)
 
 
         ######################################################################################
@@ -238,13 +241,13 @@ def spillover_model(portfolios, currencies, environment, exogeneous_agents, fund
             Deltas.update({"FX": Delta_Capital})
 
             convergence_bound = {}
-            convergence_bound.update({a: 0.01 for a in portfolios})
+            convergence_bound.update({a: 0.001 for a in portfolios})
             convergence_bound.update({"FX": 0.001 })
 
             convergence_condition = {i: abs(Deltas[i]) < convergence_bound[i] for i in Deltas}
             asset_market_convergence = sum([convergence_condition[a] for a in portfolios])
             convergence = sum(convergence_condition[i] for i in convergence_condition) == len(Deltas) and tau > 20
-            if tau > 10001: convergence = True
+            if tau > 10001: convergence = True # exit iteration after many iterations
 
             # jumps only count when they are caused by a change in the price or fx
             jump_counter, no_jump_counter, test_sign, environment = I_intensity_parameter_adjustment(
@@ -266,7 +269,7 @@ def spillover_model(portfolios, currencies, environment, exogeneous_agents, fund
             # saving objects when there is no convergence (for diagnostic purpose)
             if tau > 10000:
                 dir = local_dir
-                file_name = dir + 'data/Objects/objects_nonConv_day' + str(day) + '.pkl'
+                file_name = dir + 'data/Objects/!objects_nonConv_day' + str(day) + '.pkl'
                 save_objects = open(file_name, 'wb')
                 list_of_objects = [portfolios, currencies, environment, exogeneous_agents, funds, seed]
                 pickle.dump(list_of_objects, save_objects)

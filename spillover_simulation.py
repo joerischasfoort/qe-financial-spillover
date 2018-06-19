@@ -25,20 +25,20 @@ parameters = { #Todo: cleaning and spell checking!!
     "domestic_inflation_std": 0.02/float(250),
     "foreign_inflation_std": 0.02/float(250),
     "start_day": 1,
-    "end_day": 2000,
+    "end_day": 5000,
     "p_change_intensity": 0.1,
     "fx_change_intensity": 0.1,
-    "cov_memory": 0.01,
+    "cov_memory": 0.00,
     # asset parameters
     "face_value": 5000,
     "nominal_interest_rate": 0.02/250,
     "currency_rate": 0.01/250,
-    "maturity" : 0.995,
+    "maturity" : 0.9992,
     "quantity" : 5000,
     # agent parameters
     "price_memory": 0.0,
     "fx_memory": 0.0,
-    "fx_reversion_speed": 0.5/250,
+    "fx_reversion_speed": 0.14/250,
     "risk_aversion": 5.0,
     "news_evaluation_error": 0,
     # cb parameters
@@ -73,7 +73,7 @@ parameters = { #Todo: cleaning and spell checking!!
 }
 
 
-obj_label = "benchHE"
+obj_label = "xx"
 seed = 1
 
 
@@ -82,7 +82,7 @@ seed = 1
 portfolios, currencies, funds, environment, exogenous_agents = init_objects(parameters, seed)
 #print(portfolios, currencies, funds, environment, exogeneous_agents)
 
-
+currencies[1].par.nominal_interest_rate = 0.02/float(250)
 
 # 3 simulate model
 portfolios, currencies, environment, exogenous_agents, funds, data_t = spillover_model(portfolios, currencies, environment, exogenous_agents, funds, seed, obj_label)

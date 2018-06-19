@@ -19,8 +19,8 @@ r0 = []
 r1 = []
 
 
-for day in range(1,200):
-    filename = "data/Objects/objects_day_" + str(day) + "_seed_1"  + "_benchHE"+".pkl"
+for day in range(2000,4000):
+    filename = "data/Objects/objects_day_" + str(day) + "_seed_1"  + "_xx"+".pkl"
     data = open(filename,"rb")
     list_of_objects = pickle.load(data)
 
@@ -36,9 +36,9 @@ for day in range(1,200):
     foreign_weight_in_domestic_assets.append(funds[1].var.weights[portfolios[0]]+funds[1].var.weights[currencies[0]])
     cov.append(funds[1].var.covariance_matrix.loc[portfolios[1],portfolios[1]]-funds[1].var.covariance_matrix.loc[portfolios[0],portfolios[0]])
 
-    cov_11.append(funds[1].var.covariance_matrix.loc[currencies[1],currencies[1]])
-    cov_00.append(funds[0].var.covariance_matrix.loc[currencies[0], currencies[0]])
-    cov_01.append(funds[1].var.covariance_matrix.loc[portfolios[0], portfolios[1]])
+    cov_11.append(funds[0].var.covariance_matrix.loc[portfolios[1],portfolios[1]])
+    cov_00.append(funds[0].var.covariance_matrix.loc[portfolios[0], portfolios[0]])
+    cov_01.append(funds[0].var.covariance_matrix.loc[portfolios[0], portfolios[1]])
 
 
     fx.append(environment.var.fx_rates.iloc[0,1])
@@ -47,8 +47,8 @@ for day in range(1,200):
 
     p1.append(portfolios[1].var.price)
     p0.append(portfolios[0].var.price)
-    r1.append(funds[1].exp.returns[portfolios[1]])
-    r0.append(funds[1].exp.returns[portfolios[0]])
+    r1.append(funds[0].exp.returns[portfolios[1]])
+    r0.append(funds[0].exp.returns[portfolios[0]])
 
 
 
