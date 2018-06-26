@@ -13,8 +13,6 @@ def dr_expectations(fund, portfolios, delta_news, fundamental_default_rates, noi
     :param delta_news: float the difference in the news process about the default rate
     :return: dictionary of assets and corresponding floats of expected default rates
     """
-
-
     expected_dr = {} #TODO: rethink this! Idiosyncratic error terms don't show. Avoid expectations of zero default rate
 
     for a in portfolios:
@@ -76,6 +74,7 @@ def anchored_FX_expectations(fund, environment):
 
     return exp_exchange_rates
 
+
 def return_expectations(fund, portfolios, currencies, environment):
     """
     Calcuate expectated returns on a fund's asset portfolios and currencies
@@ -92,7 +91,6 @@ def return_expectations(fund, portfolios, currencies, environment):
                     1 + currency.par.nominal_interest_rate) - environment.var.fx_rates.loc[fund.par.country][
                                      currency.par.country]) / environment.var.fx_rates.loc[fund.par.country][
                                     currency.par.country]
-
 
     for asset in portfolios:
         out = asset.par.maturity * (1 - fund.exp.default_rates[asset])
@@ -120,7 +118,6 @@ def return_expectations(fund, portfolios, currencies, environment):
 
 
         #print(asset, repayment_effect , price_effect , interest_effect , default_effect)
-
 
     return exp_returns
 
