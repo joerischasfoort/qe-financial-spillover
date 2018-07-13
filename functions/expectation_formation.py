@@ -86,13 +86,27 @@ def return_expectations(fund, portfolios, currencies, environment):
     :return: Dictionary of portfolio and currency object keys with float return expectations
     """
     exp_returns = {}
+    exp_cons_returns = {}
+    exp_local_currency_returns = {}
+    loc_weight=environment.par.global_parameters["local_currency_return_weight"]
+
+    fund_country = fund.par.country
 
     for currency in currencies:
-        exp_returns[currency] = (fund.exp.exchange_rates.loc[fund.par.country][currency.par.country] * (
+        exp_local_currency_returns[currency] = (fund.exp.exchange_rates.loc[fund.par.country][currency.par.country] * (
                     1 + currency.par.nominal_interest_rate) - environment.var.fx_rates.loc[fund.par.country][
                                      currency.par.country]) / environment.var.fx_rates.loc[fund.par.country][
                                     currency.par.country]
 
+        currency_country = currency.par.country
+
+        potential_consumption_of_investment = (1+currency.par.nominal_interest_rate)/environment.par.global_parameters[currency_country + "_price_index"]
+        potential_consumption_local_currency = environment.var.fx_rates.loc[fund.par.country][currency.par.country]/environment.par.global_parameters[fund_country + "_price_index"]
+
+        exp_cons_returns[currency] = potential_consumption_of_investment/potential_consumption_local_currency -1
+
+        exp_returns[currency] = loc_weight * exp_local_currency_returns[currency] + (1 - loc_weight) * \
+                             exp_cons_returns[currency]
 
     for asset in portfolios:
         out = asset.par.maturity * (1 - fund.exp.default_rates[asset])
@@ -105,24 +119,42 @@ def return_expectations(fund, portfolios, currencies, environment):
                                                                                                      asset.par.quantity)) -
                     environment.var.fx_rates.loc[fund.par.country, asset.par.country] * asset.var.price)
 
+        cons_repayment_effect = mat * (np.divide(asset.par.face_value, float(asset.par.quantity)) - asset.var.price)
+
         price_effect = out * (
                     fund.exp.exchange_rates.loc[fund.par.country, asset.par.country] * fund.exp.prices[asset] -
                     environment.var.fx_rates.loc[fund.par.country, asset.par.country] * asset.var.price)
 
+        cons_price_effect = out * (fund.exp.prices[asset] - asset.var.price)
+
         interest_effect = alla * fund.exp.exchange_rates.loc[fund.par.country, asset.par.country] * np.divide(
             asset.par.face_value, float(asset.par.quantity)) * asset.par.nominal_interest_rate
+
+        cons_interest_effect = alla * np.divide(asset.par.face_value, float(asset.par.quantity)) * asset.par.nominal_interest_rate
 
         default_effect = fund.exp.default_rates[asset] * fund.exp.exchange_rates.loc[
             fund.par.country, asset.par.country] * fund.exp.prices[asset]
 
-        exp_returns[asset] = (repayment_effect + price_effect + interest_effect - default_effect) / (
+        cons_default_effect = fund.exp.default_rates[asset] * fund.exp.prices[asset]
+
+        exp_local_currency_returns[asset] = (repayment_effect + price_effect + interest_effect - default_effect) / (
                     environment.var.fx_rates.loc[fund.par.country, asset.par.country] * asset.var.price)
 
+        profit_per_asset_barFX = (cons_repayment_effect + cons_price_effect + cons_interest_effect - cons_default_effect)
 
-        #print(asset, repayment_effect , price_effect , interest_effect , default_effect)
+        asset_country = asset.par.country
+
+        potential_consumption_of_investment = (asset.var.price + profit_per_asset_barFX)/environment.par.global_parameters[asset_country + "_price_index"]
+        potential_consumption_local_currency = (asset.var.price * environment.var.fx_rates.loc[fund.par.country][asset.par.country])/environment.par.global_parameters[fund_country + "_price_index"]
+
+        exp_cons_returns[asset] = potential_consumption_of_investment/potential_consumption_local_currency -1
 
 
-    return exp_returns
+
+        exp_returns[asset] = loc_weight * exp_local_currency_returns[asset] + (1 - loc_weight) * \
+                              exp_cons_returns[asset]
+
+    return exp_local_currency_returns, exp_cons_returns, exp_returns
 
 
 def covariance_estimate(fund, environment, prev_exp_ret, inflation_shock):
@@ -135,24 +167,54 @@ def covariance_estimate(fund, environment, prev_exp_ret, inflation_shock):
     """
     ewma_returns = {}
     realized_returns = {}
+    realized_cons_returns = {}
+    realized_local_currency_returns = {}
+    fund_country = fund.par.country
+
+    loc_weight=environment.par.global_parameters["local_currency_return_weight"]
+
     for asset in fund.var.assets:
-        realized_returns[asset] = fund.var.profits[asset] / (asset.var_previous.price * environment.var_previous.fx_rates.loc[fund.par.country, asset.par.country])
-        ewma_returns[asset] = compute_ewma(realized_returns[asset], fund.var_previous.ewma_returns[asset],
-                                           environment.par.global_parameters["cov_memory"])
+        realized_local_currency_returns[asset] = fund.var.profits[asset] / (asset.var_previous.price * environment.var_previous.fx_rates.loc[fund.par.country, asset.par.country])
+
+        asset_country = asset.par.country
+
+        possible_consumption_with_investment = (asset.var_previous.price + fund.var.cons_profits[asset]) / \
+                                              environment.par.global_parameters[asset_country + "_price_index"]
+        possible_consumption_local_currency = (asset.var_previous.price * environment.var_previous.fx_rates.loc[fund.par.country, asset.par.country]) / environment.par.global_parameters[fund_country + "_price_index"]
+
+        realized_cons_returns[asset] = possible_consumption_with_investment / possible_consumption_local_currency - 1
+
+
+        realized_returns[asset] = loc_weight*realized_local_currency_returns[asset] + (1-loc_weight)*realized_cons_returns[asset]
+
 
         # correcting profits with the inflation shock
         key = asset.par.country + "_inflation"
         realized_returns[asset]= ((1 + realized_returns[asset]) / (1 + inflation_shock[key])) - 1
 
+        ewma_returns[asset] = compute_ewma(realized_returns[asset], fund.var_previous.ewma_returns[asset],
+                                           environment.par.global_parameters["cov_memory"])
+
     for cash in fund.var.currency:
-        realized_returns[cash] = fund.var.profits[cash] / (environment.var_previous.fx_rates.loc[fund.par.country, cash.par.country])
-        ewma_returns[cash] = compute_ewma(realized_returns[cash], fund.var_previous.ewma_returns[cash],
-                                          environment.par.global_parameters["cov_memory"])
+        realized_local_currency_returns[cash] = fund.var.profits[cash] / (environment.var_previous.fx_rates.loc[fund.par.country, cash.par.country])
+
+        cash_country = cash.par.country
+
+        possible_consumption_with_investment = (1 + fund.var.cons_profits[cash]) / \
+                                               environment.par.global_parameters[cash_country + "_price_index"]
+        possible_consumption_local_currency = (environment.var_previous.fx_rates.loc[
+            fund.par.country, cash.par.country]) / environment.par.global_parameters[fund_country + "_price_index"]
+
+        realized_cons_returns[cash] = possible_consumption_with_investment / possible_consumption_local_currency - 1
+
+        realized_returns[cash] = loc_weight*realized_local_currency_returns[cash] + (1-loc_weight)*realized_cons_returns[cash]
 
         # correcting profits with the inflation shock
         key = cash.par.country + "_inflation"
         realized_returns[cash] = ((1 + realized_returns[cash]) / (1 + inflation_shock[key])) - 1
 
+        ewma_returns[cash] = compute_ewma(realized_returns[cash], fund.var_previous.ewma_returns[cash],
+                                          environment.par.global_parameters["cov_memory"])
 
     new_covariance_matrix = fund.var.covariance_matrix.copy()
     new_correlation_matrix = fund.var.covariance_matrix.copy()

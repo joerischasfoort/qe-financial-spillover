@@ -94,7 +94,7 @@ def cash_demand_correction(fund, currencies,environment):
                     
     return new_cash_demand 
         
-def cash_excess_demand_and_correction_factors(funds, currencies):
+def cash_excess_demand_and_correction_factors(funds, currencies, exogeneous_agents):
 
     #compute correcting factors for portfolios of assets
     piC = {}
@@ -110,8 +110,14 @@ def cash_excess_demand_and_correction_factors(funds, currencies):
                 set_of_positive[c] = set_of_positive[c] + f.var.currency_demand[c]
             if f.var.currency_demand[c] < 0:
                 set_of_negative[c] = set_of_negative[c] + f.var.currency_demand[c] # this will be a negative number
-  
-            
+
+
+        if exogeneous_agents["fx_interventionist"].var.currency_demand[c]>0:
+            set_of_positive[c] = set_of_positive[c] + exogeneous_agents["fx_interventionist"].var.currency_demand[c]
+
+        if exogeneous_agents["fx_interventionist"].var.currency_demand[c] < 0:
+            set_of_negative[c] = set_of_negative[c] +  exogeneous_agents["fx_interventionist"].var.currency_demand[c]
+
         excess_demandC[c] = set_of_positive[c] - (- set_of_negative[c])
   
         if set_of_positive[c] != 0:
@@ -139,6 +145,23 @@ def fund_cash_adjustments(nuC, piC, excess_demandC, currencies, fund):
         else:
             new_cash_position[c] = fund.var.currency_inventory[c] + fund.var.currency_demand[c] 
     
+
+    return new_cash_position
+
+def fx_interventionist_cash_adjustment(fx_interventionist, nuC, piC, excess_demandC, currencies):
+    new_cash_position = {}
+
+    for c in currencies:
+        if fx_interventionist.var.currency_demand[c] > 0 and excess_demandC[c] > 0:
+            new_cash_position[c] = fx_interventionist.var.currency[c] + fx_interventionist.var.currency_demand[c]* piC[c]
+
+        elif fx_interventionist.var.currency_demand[c] < 0 and excess_demandC[c] < 0:
+            new_cash_position[c] = fx_interventionist.var.currency[c] + fx_interventionist.var.currency_demand[c] * nuC[c]
+
+        else:
+            new_cash_position[c] =  fx_interventionist.var.currency[c] + fx_interventionist.var.currency_demand[c]
+
+
 
     return new_cash_position
 

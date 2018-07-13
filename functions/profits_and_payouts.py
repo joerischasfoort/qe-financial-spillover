@@ -3,6 +3,7 @@ from __future__ import division
 
 def profit_and_payout(fund, portfolios, currencies, environment):
     profit_per_asset = {}
+    profit_barEx = {}
     payouts = {}
     total_payouts = {c: 0 for c in currencies}
     total_payouts_fx_corr = {}
@@ -22,6 +23,8 @@ def profit_and_payout(fund, portfolios, currencies, environment):
                               environment.var_previous.fx_rates.loc[
                                   fund.par.country, a.par.country] * a.var_previous.price)
 
+        p_effect_barEx = out * ( a.var.price - a.var_previous.price)
+
         interest_effect = all * environment.var.fx_rates.loc[fund.par.country, a.par.country] * (
                     a.par.face_value / a.par.quantity) * a.par.nominal_interest_rate
         int_effect_barEx = all * (
@@ -37,6 +40,7 @@ def profit_and_payout(fund, portfolios, currencies, environment):
 
         payouts[a] = fund.var.assets[a] * (rep_effect_barEx + int_effect_barEx - def_effect_barEx)
 
+        profit_barEx[a] = (rep_effect_barEx + p_effect_barEx +int_effect_barEx - def_effect_barEx)
 
         for c in currencies:
             if a.par.country == c.par.country:
@@ -45,6 +49,8 @@ def profit_and_payout(fund, portfolios, currencies, environment):
     losses = {}
     for c in currencies:
         profit_per_asset[c] = c.par.nominal_interest_rate * environment.var.fx_rates.loc[fund.par.country, c.par.country] + environment.var.fx_rates.loc[fund.par.country, c.par.country] - environment.var_previous.fx_rates.loc[fund.par.country, c.par.country]
+        profit_barEx[c] =  c.par.nominal_interest_rate
+
         total_payouts[c] = (total_payouts[c] + fund.var.currency[c] * c.par.nominal_interest_rate)
         losses[c] = min(0,total_payouts[c]+fund.var_previous.losses[c])
         total_payouts[c] = max(total_payouts[c]+fund.var_previous.losses[c],0)
@@ -57,4 +63,4 @@ def profit_and_payout(fund, portfolios, currencies, environment):
 
     redeemable_shares = fund.var_previous.redeemable_shares + total_profit - sum(total_payouts_fx_corr.values())
 
-    return profit_per_asset, losses, redeemable_shares, total_payouts
+    return profit_per_asset, profit_barEx, losses, redeemable_shares, total_payouts

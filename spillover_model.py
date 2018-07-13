@@ -41,7 +41,7 @@ def spillover_model(portfolios, currencies, environment, exogeneous_agents, fund
     ######################################################################
     hex_home = '/home/kzltin001/qe/'
     hex_fhgfs = '/researchdata/fhgfs/aifmrm_shared/qe-financial-spillover/'
-    local_dir = ''
+    local_dir = 'C:\Users\jrr\Documents\GitHub\qe-financial-spillover\data\Objects'
     # this will be used in lines near 224, 288, 292
     ######################################################################
     #######################################################################
@@ -98,7 +98,7 @@ def spillover_model(portfolios, currencies, environment, exogeneous_agents, fund
 
         for row in environment.var.fx_rates.index:
             for col in environment.var.fx_rates.columns:
-                environment.var.ewma_fx_rates.loc[row, col] = compute_ewma(environment.var.fx_rates.loc[row, col], environment.var.ewma_fx_rates.loc[row, col],0.00)
+                environment.var.ewma_fx_rates.loc[row, col] = compute_ewma(environment.var.fx_rates.loc[row, col], environment.var.ewma_fx_rates.loc[row, col],1.00) # TODO: the last variable needs to be a parameter
 
 
         ######################################################################################
@@ -142,6 +142,7 @@ def spillover_model(portfolios, currencies, environment, exogeneous_agents, fund
         ############# RESETTING INTRADAY PARAMETERS ###############
         ###########################################################
         convergence=False
+        asset_market_convergence = 0
         intraday_over=False
         tau=0
         Deltas = {}
@@ -169,14 +170,14 @@ def spillover_model(portfolios, currencies, environment, exogeneous_agents, fund
             ############################################################################
             if convergence == True:
                 intraday_over = True
-                environment, Delta_Demand, Delta_Capital = shock_FX(portfolios, environment, exogeneous_agents, funds, currencies, fx_shock)
-
+                environment, Deltas = shock_FX(portfolios, environment, exogeneous_agents, funds, currencies, fx_shock)
             #############################################################################
             #############################################################################
 
             for fund in funds:
                 # shareholder dividends and fund profits 
                 fund.var.profits, \
+                fund.var.cons_profits, \
                 fund.var.losses, \
                 fund.var.redeemable_shares, \
                 fund.var.payouts = profit_and_payout(fund, portfolios, currencies, environment)
@@ -189,11 +190,11 @@ def spillover_model(portfolios, currencies, environment, exogeneous_agents, fund
 
                 fund.exp.exchange_rates = anchored_FX_expectations(fund, environment)
 
-                fund.exp.returns = return_expectations(fund, portfolios, currencies, environment)
+                fund.exp.local_currency_returns, fund.exp.cons_returns, fund.exp.returns = return_expectations(fund, portfolios, currencies, environment)
 
 
                 # compute the weights of optimal balance sheet positions
-                fund.var.weights, ow, u, ix  = portfolio_optimization(fund)
+                fund.var.weights  = portfolio_optimization(fund)
 
 
                 # intermediate cash position resulting from interest payments, payouts, maturing and defaulting assets
@@ -205,66 +206,32 @@ def spillover_model(portfolios, currencies, environment, exogeneous_agents, fund
             for ex in exogeneous_agents:
                 exogeneous_agents[ex].var.asset_demand = ex_agent_asset_demand(ex, exogeneous_agents, portfolios )
 
+            for cur in currencies:
+                if asset_market_convergence == len(portfolios):
+                    exogeneous_agents["fx_interventionist"].var.currency_demand[cur]=0
 
-
-
+            # Update prices if convergence has not been achieved yet
             if intraday_over == False:
-                Delta_Demand = {}
-                Delta_Capital = {}
+                portfolios, environment, Deltas = update_market_prices_and_fx(portfolios, currencies, environment, exogeneous_agents, funds, var)
 
-                for a in portfolios:
-                    if a in var:
-                        a.var.price, Delta_str, delta_demand = price_adjustment(portfolios, environment,
-                                                                                exogeneous_agents, funds, a,
-                                                                                a.par.change_intensity)  # TODO: is the Delta_str really necessary?
-                        Delta_Demand.update({a: delta_demand})
-                    else:
-                        a.var.price, Delta_str, delta_demand = price_adjustment(portfolios, environment,
-                                                                                exogeneous_agents, funds, a,
-                                                                                0)  # TODO: is the Delta_str really necessary?
-                        Delta_Demand.update({a: delta_demand})
+            # check for convergece of asset and fx market
+            conv_bound = 0.001
+            convergence, asset_market_convergence = check_convergence(Deltas, conv_bound, portfolios, tau)
 
-                    environment.var.fx_rates, Delta_Capital = fx_adjustment(portfolios, currencies, environment, funds,
-                                                                            0)
-
-                if "FX" in var:
-                    environment.var.fx_rates, Delta_Capital = fx_adjustment(portfolios, currencies, environment, funds,
-                                                                            environment.par.global_parameters[
-                                                                                "fx_change_intensity"])
-
-
-
-
-
-            Deltas = {}
-            Deltas.update(Delta_Demand)
-            Deltas.update({"FX": Delta_Capital})
-
-            convergence_bound = {}
-            convergence_bound.update({a: 0.001 for a in portfolios})
-            convergence_bound.update({"FX": 0.001 })
-
-            convergence_condition = {i: abs(Deltas[i]) < convergence_bound[i] for i in Deltas}
-            asset_market_convergence = sum([convergence_condition[a] for a in portfolios])
-            convergence = sum(convergence_condition[i] for i in convergence_condition) == len(Deltas) and tau > 20
-            if tau > 10001: convergence = True # exit iteration after many iterations
 
             # jumps only count when they are caused by a change in the price or fx
             jump_counter, no_jump_counter, test_sign, environment = I_intensity_parameter_adjustment(
-                    jump_counter, no_jump_counter, test_sign, Deltas, environment, convergence_bound,var_t1)
+                    jump_counter, no_jump_counter, test_sign, Deltas, environment,var_t1)
 
             var_t1 = var
 
             if asset_market_convergence == len(portfolios) and len(var)<= len(portfolios):
                 var.append("FX")
+                for p in portfolios:
+                    p.var.price_pfx=p.var.price
 
 
-            print ("day:",day,"tau:",tau, tau%3, convergence, Deltas)
-
-
-            #Update intraday data points
-            #data = update_data(data, funds, portfolios, currencies, environment, Deltas)
-            #this is where intraday simulation ends
+            print ("day:",day,"tau:",tau, convergence, Deltas)
 
             # saving objects when there is no convergence (for diagnostic purpose)
             if tau > 10000:
@@ -275,7 +242,6 @@ def spillover_model(portfolios, currencies, environment, exogeneous_agents, fund
                 pickle.dump(list_of_objects, save_objects)
                 save_objects.close()
 
-        #pd.DataFrame(data).to_csv( local_dir  + 'data' + '/' + "intraday" + "/" + "intraday_data_day_" + str(day) + ".csv")
 
 
         ##########################################################################################################################
@@ -301,15 +267,13 @@ def spillover_model(portfolios, currencies, environment, exogeneous_agents, fund
         for fund in funds:
             fund.var.currency_demand = cash_demand_correction(fund, currencies,environment)
 
-        nuC, piC, excess_demandC = cash_excess_demand_and_correction_factors(funds, currencies)
+        nuC, piC, excess_demandC = cash_excess_demand_and_correction_factors(funds, currencies,exogeneous_agents)
 
 
         for fund in funds:
             fund.var.currency = fund_cash_adjustments(nuC, piC, excess_demandC, currencies, fund)
 
-        #debugging
-        #show_fund(funds[0], portfolios, currencies, environment)
-        #show_fund(funds[1], portfolios, currencies, environment)
+        exogeneous_agents["fx_interventionist"].var.currency = fx_interventionist_cash_adjustment(exogeneous_agents["fx_interventionist"], nuC, piC, excess_demandC, currencies)
 
         # update previous variables
         for fund in funds:
@@ -324,21 +288,10 @@ def spillover_model(portfolios, currencies, environment, exogeneous_agents, fund
         exogeneous_agents['underwriter'].var_previous = copy_underwriter_variables(exogeneous_agents['underwriter'].var)
 
 
-        #End of day measurements
-        #Update data points for day
-        if convergence == True:
-            #reset intraday datapoints inside value lists of data
-            data = reset_intraday(data)
-            #Update data_t
-            data_t = update_data(data_t, funds, portfolios, currencies, environment, Deltas)
-
-        # 4 Measurement
-        #pd.DataFrame(data_t).to_csv( local_dir + 'data/' + "data_t.csv")
 
         # saving objects
-        #if day>=environment.par.global_parameters["end_day"]-1000 or (day-1) % 250 == 0:
         if day>=0:
-            file_name = 'data/Objects/objects_day_' + str(day) + "_seed_" + str(seed) + "_" + obj_label + '.pkl'
+            file_name = local_dir + '/objects_day_' + str(day) + "_seed_" + str(seed) + "_" + obj_label + '.pkl'
             save_objects = open(file_name, 'wb')
             list_of_objects = [portfolios, currencies, environment, exogeneous_agents, funds, seed, obj_label]
             pickle.dump(list_of_objects, save_objects)

@@ -116,5 +116,9 @@ def shock_FX(portfolios, environment, exogeneous_agents, funds, currencies, shoc
     environment.var.fx_rates.iloc[1, 0] = 1 / environment.var.fx_rates.iloc[0, 1]
     environment.var.fx_rates, Delta_Capital = fx_adjustment(portfolios, currencies, environment, funds,0)
 
+    Deltas = {}
+    Deltas.update(Delta_Demand)
+    Deltas.update({"FX": Delta_Capital})
 
-    return environment, Delta_Demand, Delta_Capital
+
+    return environment, Deltas

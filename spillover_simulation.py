@@ -20,6 +20,8 @@ parameters = { #Todo: cleaning and spell checking!!
     "n_domestic_funds": 1,
     "n_foreign_funds": 1,
     "list_risk_corr": list_of_risk_correlation,
+    "domestic_price_index": 1,
+    "foreign_price_index": 1,
     "domestic_inflation_mean": 0.0,
     "foreign_inflation_mean": 0.0,
     "domestic_inflation_std": 0.02/float(250),
@@ -32,13 +34,14 @@ parameters = { #Todo: cleaning and spell checking!!
     # asset parameters
     "face_value": 5000,
     "nominal_interest_rate": 0.02/250,
-    "currency_rate": 0.01/250,
+    "currency_rate": 0.00/250,
     "maturity" : 0.9992,
     "quantity" : 5000,
     # agent parameters
     "price_memory": 0.0,
     "fx_memory": 0.0,
-    "fx_reversion_speed": 0.14/250,
+    "fx_reversion_speed": 0.0/250,
+    "local_currency_return_weight": 0.999,
     "risk_aversion": 5.0,
     "news_evaluation_error": 0,
     # cb parameters
@@ -56,7 +59,7 @@ parameters = { #Todo: cleaning and spell checking!!
     "init_profits": 0,
     # shock processes parameters
     "fx_shock_mean": 0.0,
-    "fx_shock_std": 0.001,
+    "fx_shock_std": 0.000,
     "domestic_default_events_mean": 80 / float(250),
     "foreign_default_events_mean": 80 / float(250),
     "domestic_default_events_std": 10 / float(250),
@@ -73,7 +76,7 @@ parameters = { #Todo: cleaning and spell checking!!
 }
 
 
-obj_label = "xx"
+obj_label = "x"
 seed = 1
 
 
@@ -82,7 +85,8 @@ seed = 1
 portfolios, currencies, funds, environment, exogenous_agents = init_objects(parameters, seed)
 #print(portfolios, currencies, funds, environment, exogeneous_agents)
 
-currencies[1].par.nominal_interest_rate = 0.02/float(250)
+#portfolios[0].par.maturity=0.984 #average maturity of 3m
+#portfolios[2].par.maturity=0.984
 
 # 3 simulate model
 portfolios, currencies, environment, exogenous_agents, funds, data_t = spillover_model(portfolios, currencies, environment, exogenous_agents, funds, seed, obj_label)

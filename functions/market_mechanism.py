@@ -4,21 +4,34 @@ from math import log
 from math import exp
 import numpy as np
 
+def update_market_prices_and_fx(portfolios, currencies, environment, exogeneous_agents, funds, var):
+    Delta_Demand = {}
+    Delta_Capital = {}
+    for a in portfolios:
+        if a in var:
+            a.var.price, Delta_str, delta_demand = price_adjustment(portfolios, environment,
+                                                                    exogeneous_agents, funds, a,
+                                                                    a.par.change_intensity)  # TODO: is the Delta_str really necessary?
+            Delta_Demand.update({a: delta_demand})
+        else:
+            a.var.price, Delta_str, delta_demand = price_adjustment(portfolios, environment,
+                                                                    exogeneous_agents, funds, a,
+                                                                    0)  # TODO: is the Delta_str really necessary?
+            Delta_Demand.update({a: delta_demand})
 
-def convert_P2R(a, price):
-    mat = (1 - a.par.maturity) * (1 - a.var.default_rate)
-    alla = (1 - a.var.default_rate)
-    ret = ((a.par.face_value / a.par.quantity) * (
-                mat + a.par.nominal_interest_rate * alla) / price) - a.var.default_rate - mat
-    return ret
+        environment.var.fx_rates, Delta_Capital = fx_adjustment(portfolios, currencies, environment, funds,
+                                                                0)
 
+    if "FX" in var:
+        environment.var.fx_rates, Delta_Capital = fx_adjustment(portfolios, currencies, environment, funds,
+                                                                environment.par.global_parameters[
+                                                                    "fx_change_intensity"])
 
-def convert_R2P(a, ret):
-    mat = (1 - a.par.maturity) * (1 - a.var.default_rate)
-    alla = (1 - a.var.default_rate)
-    price = ((a.par.face_value / a.par.quantity) * (mat + a.par.nominal_interest_rate * alla)) / (ret + a.var.default_rate + mat)
-    return price
+    Deltas = {}
+    Deltas.update(Delta_Demand)
+    Deltas.update({"FX": Delta_Capital})
 
+    return portfolios, environment, Deltas
 
 def price_adjustment(portfolios, environment, exogeneous_agents, funds, a, adjustment_intensity):
     """
@@ -84,6 +97,10 @@ def fx_adjustment(portfolios, currencies, environment, funds, adjustment_intensi
 
         capital_DF = 0
         capital_FD = 0
+        for fund in funds:
+            fund.var.aux_cash_dem = {c:0 for c in currencies}
+
+
 
         for fund in funds:
             red_share_fx_corr[fund] = fund.var.redeemable_shares * environment.var.fx_rates.loc[el[0], fund.par.country]
@@ -92,15 +109,27 @@ def fx_adjustment(portfolios, currencies, environment, funds, adjustment_intensi
                     capital_DF = capital_DF + fund.var.asset_demand[a] * a.var.price * environment.var.fx_rates.loc[ el[0], el[1]]
                 if a.par.country != fund.par.country and fund.par.country == el[1]:
                     capital_FD = capital_FD + fund.var.asset_demand[a] * a.var.price
+                for c in currencies:
+                    if a.par.country == c.par.country:
+                        fund.var.aux_cash_dem[c]=fund.var.aux_cash_dem[c]-fund.var.asset_demand[a] * a.var.price
             for c in currencies:
                 if c.par.country != fund.par.country and fund.par.country == el[0]:
                     capital_DF = capital_DF + fund.var.currency_demand[c] * environment.var.fx_rates.loc[el[0], el[1]]
                 if c.par.country != fund.par.country and fund.par.country == el[1]:
                     capital_FD = capital_FD + fund.var.currency_demand[c]
+                fund.var.aux_cash_dem[c] = fund.var.aux_cash_dem[c] + fund.var.currency_demand[c]
 
-
+        #capital_df = 0
+        #capital_fd = 0
+        #for fund in funds:
+        #    for c in currencies:
+        #        if fund.par.country != c.par.country and fund.par.country == el[0]:
+        #            capital_df = capital_df + fund.var.aux_cash_dem[c]* environment.var.fx_rates.loc[el[0], el[1]]
+        #        if fund.par.country != c.par.country and fund.par.country == el[1]:
+        #            capital_fd = capital_fd + fund.var.aux_cash_dem[c]
 
         Delta_Capital = (capital_DF - capital_FD ) / sum(red_share_fx_corr.values())
+        #Delta_capital =(capital_df - capital_fd ) / sum(red_share_fx_corr.values())
 
 
         log_new_fx_rate = log(environment.var.fx_rates.loc[el[0]][el[1]]) + adjustment_intensity * Delta_Capital
@@ -117,18 +146,15 @@ def fx_adjustment(portfolios, currencies, environment, funds, adjustment_intensi
 
 
 
-def   I_intensity_parameter_adjustment(jump_counter, no_jump_counter, test_sign, Deltas, environment, convergence_bound, var):
+def   I_intensity_parameter_adjustment(jump_counter, no_jump_counter, test_sign, Deltas, environment, var):
     jc = 10 # jumps until intensity is adjusted
     nojc = 10 # consecutive non-jumps until intensity is adjusted
     test = {}
     jump = {x:0 for x in jump_counter}
     no_jump = {x:0 for x in jump_counter}
-    convergence = {}
     for i in jump_counter:
         test[i] = test_sign[i] / np.sign(Deltas[i])
         test_sign[i] = np.sign(Deltas[i])
-
-        convergence[i]=abs(Deltas[i]) < convergence_bound
 
         if test[i] == -1:
             jump[i] = 1
@@ -170,3 +196,15 @@ def   I_intensity_parameter_adjustment(jump_counter, no_jump_counter, test_sign,
 
 
 
+def check_convergence(Deltas, conv_bound, portfolios, tau):
+    convergence_bound = {}
+    convergence_bound.update({a: conv_bound for a in portfolios})
+    convergence_bound.update({"FX": conv_bound})
+
+    convergence_condition = {i: abs(Deltas[i]) < convergence_bound[i] for i in Deltas}
+    asset_market_convergence = sum([convergence_condition[a] for a in portfolios])
+    convergence = sum(convergence_condition[i] for i in convergence_condition) == len(Deltas) and tau > 20
+
+    if tau > 10001: convergence = True  # exit iteration after many iterations
+
+    return convergence, asset_market_convergence

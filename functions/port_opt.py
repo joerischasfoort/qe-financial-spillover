@@ -142,4 +142,4 @@ def portfolio_optimization(f):
             output[a] = weights[i]
 
 
-        return  output, original_weights , max(Utility), Utility.index(max(Utility))
+        return  output

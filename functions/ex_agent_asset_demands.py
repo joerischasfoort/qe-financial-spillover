@@ -10,5 +10,8 @@ def ex_agent_asset_demand(ex, exogeneous_agents, portfolios ):
             
         if ex == "central_bank_domestic":
             a_demand[a]=exogeneous_agents[ex].var.asset_target[a] - out * exogeneous_agents[ex].var_previous.assets[a]
+
+        if ex == "fx_interventionist" :
+            a_demand[a]=0
        
     return a_demand

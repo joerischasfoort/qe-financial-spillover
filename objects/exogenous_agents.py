@@ -52,3 +52,20 @@ class Central_Bank:
  
     def __repr__(self):
         return 'central_bank_' + str(self.par.country)
+
+
+class FX_Interventionist:
+    def __init__(self, variables):
+        self.var = variables
+
+    def __repr__(self):
+        return 'fx_interventionist'
+
+
+
+class FX_Interventionist_Variables:
+    """Holds the inital variables for the central bank"""
+    def __init__(self, asset_demand, currency, currency_demand):
+        self.asset_demand = asset_demand
+        self.currency = currency # The quantities of currencies held
+        self.currency_demand = currency_demand

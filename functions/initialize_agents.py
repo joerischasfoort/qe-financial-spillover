@@ -161,7 +161,22 @@ def init_exogenous_agents(portfolios, currencies, parameters):
     underwriter_previous = ExoAgentVariables(underwriter_assets.copy(), underwriter_currency.copy(), 0, 0)
     underwriter = Underwriter(underwriter_variables, underwriter_previous)
 
-    exogeneous_agents = {repr(central_bank): central_bank, repr(underwriter): underwriter}
+    fx_interventionist_asset_demand = {asset: 0 for asset in portfolios}
+    fx_interventionist_currency  = {currency: 0 for currency in currencies}
+    fx_interventionist_currency_demand  = {currency: 0 for currency in currencies}
+    fx_interventionist_variables = FX_Interventionist_Variables(fx_interventionist_asset_demand, fx_interventionist_currency,fx_interventionist_currency_demand)
+    fx_interventionist = FX_Interventionist(fx_interventionist_variables)
+
+
+
+
+
+
+    exogeneous_agents = {repr(central_bank): central_bank, repr(underwriter): underwriter, repr(fx_interventionist): fx_interventionist}
+
+
+
+
 
     return exogeneous_agents
 
