@@ -147,11 +147,13 @@ def fx_adjustment(portfolios, currencies, environment, funds, adjustment_intensi
 
 
 def   I_intensity_parameter_adjustment(jump_counter, no_jump_counter, test_sign, Deltas, environment, var):
+
     jc = 10 # jumps until intensity is adjusted
     nojc = 10 # consecutive non-jumps until intensity is adjusted
     test = {}
     jump = {x:0 for x in jump_counter}
     no_jump = {x:0 for x in jump_counter}
+
     for i in jump_counter:
         test[i] = test_sign[i] / np.sign(Deltas[i])
         test_sign[i] = np.sign(Deltas[i])

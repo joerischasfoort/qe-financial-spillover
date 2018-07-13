@@ -2,10 +2,6 @@
 import numpy as np
 
 
-
-
-
-
 def realised_profits_asset(default_rate, face_value, previous_price, price, quantity,
                            interest_rate, maturity, previous_exchange_rate, exchange_rate):
 
@@ -18,6 +14,7 @@ def realised_profits_asset(default_rate, face_value, previous_price, price, quan
     default_effect = default_rate * previous_exchange_rate * previous_price
     realised_profit = repayment_effect + price_effect + interest_effect - default_effect
     return realised_profit
+
 
 def realised_profits_currency(interest_rate, previous_exchange_rate, exchange_rate):
     realized_profit= exchange_rate * interest_rate + exchange_rate - previous_exchange_rate

@@ -13,8 +13,6 @@ def dr_expectations(fund, portfolios, delta_news, fundamental_default_rates, noi
     :param delta_news: float the difference in the news process about the default rate
     :return: dictionary of assets and corresponding floats of expected default rates
     """
-
-
     expected_dr = {} #TODO: rethink this! Idiosyncratic error terms don't show. Avoid expectations of zero default rate
 
     for a in portfolios:
@@ -76,6 +74,7 @@ def anchored_FX_expectations(fund, environment):
 
     return exp_exchange_rates
 
+
 def return_expectations(fund, portfolios, currencies, environment):
     """
     Calcuate expectated returns on a fund's asset portfolios and currencies
@@ -98,6 +97,7 @@ def return_expectations(fund, portfolios, currencies, environment):
                                      currency.par.country]) / environment.var.fx_rates.loc[fund.par.country][
                                     currency.par.country]
 
+
         currency_country = currency.par.country
 
         potential_consumption_of_investment = (1+currency.par.nominal_interest_rate)/environment.par.global_parameters[currency_country + "_price_index"]
@@ -107,6 +107,7 @@ def return_expectations(fund, portfolios, currencies, environment):
 
         exp_returns[currency] = loc_weight * exp_local_currency_returns[currency] + (1 - loc_weight) * \
                              exp_cons_returns[currency]
+
 
     for asset in portfolios:
         out = asset.par.maturity * (1 - fund.exp.default_rates[asset])
@@ -147,6 +148,7 @@ def return_expectations(fund, portfolios, currencies, environment):
         potential_consumption_of_investment = (asset.var.price + profit_per_asset_barFX)/environment.par.global_parameters[asset_country + "_price_index"]
         potential_consumption_local_currency = (asset.var.price * environment.var.fx_rates.loc[fund.par.country][asset.par.country])/environment.par.global_parameters[fund_country + "_price_index"]
 
+
         exp_cons_returns[asset] = potential_consumption_of_investment/potential_consumption_local_currency -1
 
 
@@ -155,6 +157,7 @@ def return_expectations(fund, portfolios, currencies, environment):
                               exp_cons_returns[asset]
 
     return exp_local_currency_returns, exp_cons_returns, exp_returns
+
 
 
 def covariance_estimate(fund, environment, prev_exp_ret, inflation_shock):

@@ -16,7 +16,6 @@ from functions.measurement import *
 
 
 def spillover_model(portfolios, currencies, environment, exogeneous_agents, funds,  seed, obj_label):
-
     """
     Koziol, Riedler & Schasfoort Agent-based simulation model of financial spillovers
     :param assets: list of Asset objects
@@ -27,7 +26,6 @@ def spillover_model(portfolios, currencies, environment, exogeneous_agents, fund
     """
     random.seed(seed)
     np.random.seed(seed)
-
 
     ######################################################################
     ############### INITIALIZING MEASUREMENTS#############################
@@ -43,20 +41,13 @@ def spillover_model(portfolios, currencies, environment, exogeneous_agents, fund
     hex_fhgfs = '/researchdata/fhgfs/aifmrm_shared/qe-financial-spillover/'
     local_dir = 'C:\Users\jrr\Documents\GitHub\qe-financial-spillover\data\Objects'
     # this will be used in lines near 224, 288, 292
-    ######################################################################
-    #######################################################################
-
-
-
-
-
 
     ##################################################################################
     ###################### COMPUTING STOCHASTIC PROCESSES ############################
     ##################################################################################
     # calculating stochastic components default
     days = environment.par.global_parameters["end_day"]
-    default_rates, fundamental_default_rate_expectation, shock_processes = stochastic_timeseries(environment.par.global_parameters, portfolios,days,seed)
+    default_rates, fundamental_default_rate_expectation, shock_processes = stochastic_timeseries(environment.par.global_parameters, portfolios, days, seed)
 
     # initial default expectations
     noise = {}
@@ -71,7 +62,6 @@ def spillover_model(portfolios, currencies, environment, exogeneous_agents, fund
     ####################################################################################
     ####################################################################################
 
-
     # creating individual intensity parameters
     for a in portfolios: #TODO: this should be taken care of in the initialization
         try:
@@ -79,18 +69,13 @@ def spillover_model(portfolios, currencies, environment, exogeneous_agents, fund
         except AttributeError:
             a.par.change_intensity = environment.par.global_parameters['p_change_intensity']
 
-
     ##############################################################################################################
     ############################################### DAY LOOP #####################################################
     ##############################################################################################################
-
-
-
-
     for day in range(environment.par.global_parameters['start_day'], environment.par.global_parameters['end_day']):
 
-        if day>=20:
-            environment.par.global_parameters[ "cov_memory"]=0.001
+        if day >= 20:
+            environment.par.global_parameters["cov_memory"]=0.001
 
         # these two variables are needed for the pricing algorithm
         var = copy.copy(portfolios)
@@ -99,7 +84,6 @@ def spillover_model(portfolios, currencies, environment, exogeneous_agents, fund
         for row in environment.var.fx_rates.index:
             for col in environment.var.fx_rates.columns:
                 environment.var.ewma_fx_rates.loc[row, col] = compute_ewma(environment.var.fx_rates.loc[row, col], environment.var.ewma_fx_rates.loc[row, col],1.00) # TODO: the last variable needs to be a parameter
-
 
         ######################################################################################
         ################ UPDATING THE STOCHASTIC SHOCK VARIABLES #############################
@@ -118,7 +102,6 @@ def spillover_model(portfolios, currencies, environment, exogeneous_agents, fund
         for f in funds:
             default_expectation_noise[f] = {a: idiosyncratic_default_rate_noise[f][a][day] for a in portfolios}
 
-
         todays_shocks = {i: shock_processes[i][day] for i in shock_processes}
         fx_shock = todays_shocks["fx_shock"]
         #fx_shock = 0
@@ -134,9 +117,6 @@ def spillover_model(portfolios, currencies, environment, exogeneous_agents, fund
         for fund in funds:
             fund.exp.default_rates = dr_expectations(fund, portfolios, delta_news, fundamental_default_rates, default_expectation_noise[fund])
             previous_return_exp[fund]=fund.exp.returns.copy() # TODO: This should be done when passing all other values to "var_previous
-        ###################################################################################################
-        ###################################################################################################
-
 
         ###########################################################
         ############# RESETTING INTRADAY PARAMETERS ###############
@@ -154,9 +134,6 @@ def spillover_model(portfolios, currencies, environment, exogeneous_agents, fund
         no_jump_counter.update({"FX": 0})
         test_sign={a:0 for a in portfolios}
         test_sign.update({"FX": 0})
-        ###########################################################
-        ###########################################################
-
 
         ###################################################################################################################
         ################################################ INTRADAY LOOP ####################################################
@@ -164,7 +141,6 @@ def spillover_model(portfolios, currencies, environment, exogeneous_agents, fund
         while intraday_over == False:
             tau += 1
             environment.var.tau = tau
-
             ############################################################################
             ################ SHOCKING FX RATES AT THE END OF A PERIOD ##################
             ############################################################################
@@ -192,10 +168,8 @@ def spillover_model(portfolios, currencies, environment, exogeneous_agents, fund
 
                 fund.exp.local_currency_returns, fund.exp.cons_returns, fund.exp.returns = return_expectations(fund, portfolios, currencies, environment)
 
-
                 # compute the weights of optimal balance sheet positions
                 fund.var.weights  = portfolio_optimization(fund)
-
 
                 # intermediate cash position resulting from interest payments, payouts, maturing and defaulting assets
                 fund.var.currency_inventory = cash_inventory(fund, portfolios, currencies)
@@ -205,6 +179,7 @@ def spillover_model(portfolios, currencies, environment, exogeneous_agents, fund
 
             for ex in exogeneous_agents:
                 exogeneous_agents[ex].var.asset_demand = ex_agent_asset_demand(ex, exogeneous_agents, portfolios )
+
 
             for cur in currencies:
                 if asset_market_convergence == len(portfolios):
@@ -243,7 +218,6 @@ def spillover_model(portfolios, currencies, environment, exogeneous_agents, fund
                 save_objects.close()
 
 
-
         ##########################################################################################################################
         ############################################## BALANCE SHEET ADJUSTMENT ##################################################
         ###########################################################################################################################
@@ -268,7 +242,6 @@ def spillover_model(portfolios, currencies, environment, exogeneous_agents, fund
             fund.var.currency_demand = cash_demand_correction(fund, currencies,environment)
 
         nuC, piC, excess_demandC = cash_excess_demand_and_correction_factors(funds, currencies,exogeneous_agents)
-
 
         for fund in funds:
             fund.var.currency = fund_cash_adjustments(nuC, piC, excess_demandC, currencies, fund)
