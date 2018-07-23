@@ -103,12 +103,13 @@ def init_funds(environment, portfolios, currencies, parameters, seed):
 
         #Initialising expectations
         r = ewma_returns.copy()
+        cons_returns = {a: 0 for a in portfolios + currencies}
         df_rates = {a: a.var.default_rate for a in portfolios}
         exp_prices = {a: a.var.price for a in portfolios}
         exp_fx = environment.var.fx_rates.copy()
         exp_fx_returns = {currency: currency.par.nominal_interest_rate for currency in currencies}
 
-        fund_expectations = AgentExpectations(r, df_rates, exp_fx, exp_prices, exp_fx_returns) #TODO: why is this called exp_fx_returns? In the object this variable is called cash return
+        fund_expectations = AgentExpectations(r,cons_returns, r, df_rates, exp_fx, exp_prices, exp_fx_returns) #TODO: why is this called exp_fx_returns? In the object this variable is called cash return
 
         funds.append(Fund(idx, fund_vars, copy_agent_variables(fund_vars), fund_params, fund_expectations))
 

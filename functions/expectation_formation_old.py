@@ -100,7 +100,7 @@ def return_expectations(fund, portfolios, currencies, environment):
 
         currency_country = currency.par.country
 
-        potential_consumption_of_investment = (1)/environment.par.global_parameters[currency_country + "_price_index"]
+        potential_consumption_of_investment = (1+currency.par.nominal_interest_rate)/environment.par.global_parameters[currency_country + "_price_index"]
         potential_consumption_local_currency = environment.var.fx_rates.loc[fund.par.country][currency.par.country]/environment.par.global_parameters[fund_country + "_price_index"]
 
         exp_cons_returns[currency] = potential_consumption_of_investment/potential_consumption_local_currency -1
@@ -149,11 +149,12 @@ def return_expectations(fund, portfolios, currencies, environment):
         potential_consumption_local_currency = (asset.var.price * environment.var.fx_rates.loc[fund.par.country][asset.par.country])/environment.par.global_parameters[fund_country + "_price_index"]
 
 
-        #exp_cons_returns[asset] = potential_consumption_of_investment/potential_consumption_local_currency -1
-        exp_cons_returns[asset] = exp_local_currency_returns[asset]
+        exp_cons_returns[asset] = potential_consumption_of_investment/potential_consumption_local_currency -1
 
 
-        exp_returns[asset] = exp_local_currency_returns[asset]
+
+        exp_returns[asset] = loc_weight * exp_local_currency_returns[asset] + (1 - loc_weight) * \
+                              exp_cons_returns[asset]
 
     return exp_local_currency_returns, exp_cons_returns, exp_returns
 
@@ -189,12 +190,11 @@ def covariance_estimate(fund, environment, prev_exp_ret,  inflation_shock):
                                               environment.par.global_parameters[asset_country + "_price_index"]
         possible_consumption_local_currency = (asset.var_previous.price * environment.var_previous.fx_rates.loc[fund.par.country, asset.par.country]) / environment.par.global_parameters[fund_country + "_price_index"]
 
-        #realized_cons_returns[asset] = possible_consumption_with_investment / possible_consumption_local_currency - 1
-        #realized_cons_returns[asset] = ((1 + realized_cons_returns[asset]) / (1 + inflation_shock[key])) - 1
-        realized_cons_returns[asset]= realized_local_currency_returns[asset]
+        realized_cons_returns[asset] = possible_consumption_with_investment / possible_consumption_local_currency - 1
+        realized_cons_returns[asset] = ((1 + realized_cons_returns[asset]) / (1 + inflation_shock[key])) - 1
 
-        realized_returns[asset] = realized_local_currency_returns[asset]
 
+        realized_returns[asset] = loc_weight*realized_local_currency_returns[asset] + (1-loc_weight)*realized_cons_returns[asset]
 
 
 
@@ -211,7 +211,7 @@ def covariance_estimate(fund, environment, prev_exp_ret,  inflation_shock):
 
         cash_country = cash.par.country
 
-        possible_consumption_with_investment = (1) / \
+        possible_consumption_with_investment = (1 + fund.var.cons_profits[cash]) / \
                                                environment.par.global_parameters[cash_country + "_price_index"]
         possible_consumption_local_currency = (environment.var_previous.fx_rates.loc[
             fund.par.country, cash.par.country]) / environment.par.global_parameters[fund_country + "_price_index"]

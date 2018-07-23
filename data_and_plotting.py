@@ -32,15 +32,20 @@ rc1 = []
 r2 = []
 r3 = []
 
+rh0=[]
+rh1=[]
+rhf0=[]
+rhf1=[]
+
 red0= []
 red1= []
 
 p0_pfx = []
 p1_pfx = []
 
-for day in range(4501,4600):
+for day in range(5001,5100):
     filename = "data/Objects/objects_day_" + str(day) + "_seed_1"  + "_x"+".pkl"
-    filename = "data/Objects/objects_day_" + str(day) + "_seed_1"  + "_QE_asset_target_1000"+".pkl"
+    filename = "Experiments/QE/Objects_QE/objects_day_" + str(day) + "_seed_1"  + "_QE_asset_target_0"+".pkl"
 
     #filename = "C:\Users\jrr\Documents\GitHub\qe-financial-spillover\Experiments\QE\Objects_QE1\objects_day_" + str(day) + "_seed_1"  + "_QE_asset_target_1000"+".pkl"
     data = open(filename,"rb")
@@ -68,8 +73,8 @@ for day in range(4501,4600):
     dc0.append(funds[0].var.weights[currencies[0]])
     dc1.append(funds[0].var.weights[currencies[1]])
 
-    cov_00.append(funds[0].var.covariance_matrix.loc[currencies[1], currencies[1]])
-    cov_11.append(funds[1].var.covariance_matrix.loc[currencies[1], currencies[1]])
+    cov_00.append(funds[0].var.covariance_matrix.loc[portfolios[0], portfolios[0]])
+    cov_11.append(funds[0].var.covariance_matrix.loc[portfolios[1], portfolios[1]])
     cov_01.append(funds[1].var.covariance_matrix.loc[portfolios[1], portfolios[1]])
 
 
@@ -85,6 +90,12 @@ for day in range(4501,4600):
     rc1.append(funds[1].exp.returns[currencies[1]])
     rc0.append(funds[1].exp.returns[currencies[0]])
 
+
+    rh1.append(funds[1].var.hypothetical_returns[portfolios[1]])
+    rh0.append(funds[1].var.hypothetical_returns[portfolios[0]])
+    rhf1.append(funds[1].var.hypothetical_returns[portfolios[1]])
+    rhf0.append(funds[1].var.hypothetical_returns[portfolios[0]])
+
     #p2.append(portfolios[2].var.price)
     #p3.append(portfolios[3].var.price)
     #r2.append(funds[0].exp.returns[portfolios[2]])
@@ -97,4 +108,5 @@ for day in range(4501,4600):
 
     p0_pfx.append(portfolios[0].var.price_pfx)
     p1_pfx.append(portfolios[1].var.price_pfx)
+
 
