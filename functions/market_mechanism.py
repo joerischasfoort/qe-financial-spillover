@@ -57,8 +57,8 @@ def price_adjustment(portfolios, environment, exogeneous_agents, funds, a, adjus
     # print a.var.price, total_demand[a]
 
     # Equation 1.17 : price adjustment
-    log_new_price = log(a.var.price) + adjustment_intensity * total_demand[a] / a.par.quantity
-
+    log_new_price = log(a.var.price) + adjustment_intensity * total_demand[a] / sum(i.par.quantity for i in portfolios)
+    #log_new_price = log(a.var.price) + adjustment_intensity * total_demand[a] / a.par.quantity
 
     price = exp(log_new_price)
 
@@ -146,9 +146,9 @@ def fx_adjustment(portfolios, currencies, environment, funds, adjustment_intensi
 
 
 
-def   I_intensity_parameter_adjustment(jump_counter, no_jump_counter, test_sign, Deltas, environment, var):
+def   I_intensity_parameter_adjustment(jump_counter, no_jump_counter, test_sign, Deltas, convergence, environment, var):
 
-    jc = 10 # jumps until intensity is adjusted
+    jc = 2 # jumps until intensity is adjusted
     nojc = 10 # consecutive non-jumps until intensity is adjusted
     test = {}
     jump = {x:0 for x in jump_counter}
@@ -170,26 +170,26 @@ def   I_intensity_parameter_adjustment(jump_counter, no_jump_counter, test_sign,
         if no_jump[i] == 1 and i in var:
             no_jump_counter[i] += 1
 
-        if jump_counter[i] > jc and i!="FX" and i in var:# and convergence[i] == False:
-            i.par.change_intensity = i.par.change_intensity  / 2
+        if jump_counter[i] > jc and i!="FX" and i in var and convergence[i] == False:
+            i.par.change_intensity = i.par.change_intensity  / 1.1
             jump_counter[i] = 0
             no_jump_counter[i]=0
 
 
-        if jump_counter[i] > jc and i == "FX" and i in var :#and convergence[i] == False:
-            environment.par.global_parameters['fx_change_intensity'] = environment.par.global_parameters['fx_change_intensity'] / 2
+        if jump_counter[i] > jc and i == "FX" and i in var and convergence[i] == False:
+            environment.par.global_parameters['fx_change_intensity'] = environment.par.global_parameters['fx_change_intensity'] / 1.1
             jump_counter[i] = 0
             no_jump_counter[i]=0
 
 
-        if no_jump_counter[i] > nojc and i!="FX" and i in var:# and convergence[i] == False:
-            i.par.change_intensity =  min(0.1, i.par.change_intensity * 1.1)
+        if no_jump_counter[i] > nojc and i!="FX" and i in var and convergence[i] == False:
+            i.par.change_intensity =  min(0.1, i.par.change_intensity * 1.07)
             no_jump_counter[i] = 0
             jump_counter[i] = 0
 
 
-        if no_jump_counter[i] > nojc and i=="FX" and i in var:# and convergence[i] == False:
-            environment.par.global_parameters['fx_change_intensity'] = min(0.1, environment.par.global_parameters['fx_change_intensity'] * 1.1)
+        if no_jump_counter[i] > nojc and i=="FX" and i in var and convergence[i] == False:
+            environment.par.global_parameters['fx_change_intensity'] = min(0.1, environment.par.global_parameters['fx_change_intensity'] * 1.07)
             no_jump_counter[i] = 0
             jump_counter[i] = 0
 
@@ -209,4 +209,4 @@ def check_convergence(Deltas, conv_bound, portfolios, tau):
 
     if tau > 10001: convergence = True  # exit iteration after many iterations
 
-    return convergence, asset_market_convergence
+    return convergence, asset_market_convergence, convergence_condition

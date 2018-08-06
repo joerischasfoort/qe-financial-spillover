@@ -2,17 +2,12 @@
 
 import copy
 import pickle
-import random
-from functions.port_opt import *
-from functions.asset_demands import *
-from functions.ex_agent_asset_demands import *
 from functions.balance_sheet_adjustments import *
-from functions.stochasticprocess import *
-from functions.expectation_formation import *
-from functions.market_mechanism import *
-from functions.profits_and_payouts import *
 from functions.supercopy import *
 from functions.measurement import *
+from num_opt_pricing import *
+import numpy as np
+from scipy.optimize import minimize
 
 
 
@@ -147,97 +142,15 @@ def spillover_model(portfolios, currencies, environment, exogeneous_agents, fund
         ###################################################################################################################
         ################################################ INTRADAY LOOP ####################################################
         ###################################################################################################################
-        while intraday_over == False:
-            tau += 1
-            environment.var.tau = tau
-            ############################################################################
-            ################ SHOCKING FX RATES AT THE END OF A PERIOD ##################
-            ############################################################################
-            if convergence == True:
-                intraday_over = True
-                #environment, Deltas = shock_FX(portfolios, environment, exogeneous_agents, funds, currencies, fx_shock)
-            #############################################################################
-            #############################################################################
 
-            for fund in funds:
-                # shareholder dividends and fund profits 
-                fund.var.profits, \
-                fund.var.cons_profits, \
-                fund.var.losses, \
-                fund.var.redeemable_shares, \
-                fund.var.payouts = profit_and_payout(fund, portfolios, currencies, environment)
-
-                # Expectation formation
-                fund.var.ewma_delta_prices, \
-                fund.var.ewma_delta_fx, \
-                fund.exp.prices, \
-                fund.exp.exchange_rates = price_fx_expectations(fund, portfolios, currencies, environment)
-
-                fund.exp.exchange_rates, fund.exp.exchange_rate_anchor = anchored_FX_expectations(fund, environment, fx_shock)
-
-                fund.exp.local_currency_returns, fund.exp.cons_returns, fund.exp.returns = return_expectations(fund, portfolios, currencies, environment)
-
-                # compute the weights of optimal balance sheet positions
-                #fund.var.weights  = portfolio_optimization(fund)
-                fund.var.weights = portfolio_optimization_KT(fund,day, tau)
-                #print fund.var.weights , '\n', x
-
-                # intermediate cash position resulting from interest payments, payouts, maturing and defaulting assets
-                fund.var.currency_inventory = cash_inventory(fund, portfolios, currencies)
-
-                # compute demand for balance sheet positions
-                fund.var.asset_demand, fund.var.currency_demand = asset_demand(fund, portfolios, currencies, environment)
-
-            for ex in exogeneous_agents:
-                exogeneous_agents[ex].var.asset_demand = ex_agent_asset_demand(ex, exogeneous_agents, portfolios )
+        x0=np.ones(len(portfolios)+1)
+        for a in portfolios:
+            id_a = int(filter(str.isdigit, str(a)))
+            x0[id_a] = a.var.price
+        x0[-1] =  environment.var.fx_rates.iloc[0][1]
 
 
-            for cur in currencies:
-                if asset_market_convergence == len(portfolios):
-                    exogeneous_agents["fx_interventionist"].var.currency_demand[cur]=0
-
-            # Update prices if convergence has not been achieved yet
-            if intraday_over == False:
-                portfolios, environment, Deltas = update_market_prices_and_fx(portfolios, currencies, environment, exogeneous_agents, funds, var)
-
-            # check for convergece of asset and fx market
-            conv_bound = environment.par.global_parameters['conv_bound']
-            convergence, asset_market_convergence, convergence_condition = check_convergence(Deltas, conv_bound, portfolios, tau)
-
-
-            # jumps only count when they are caused by a change in the price or fx
-            jump_counter, no_jump_counter, test_sign, environment = I_intensity_parameter_adjustment(
-                    jump_counter, no_jump_counter, test_sign, Deltas, convergence_condition, environment,var_t1)
-
-            var_t1 = var
-
-            if tau == 2000 and len(var)> len(portfolios): #after 2000 periods without convergence, stop simultaneous pricing
-                print('joined pricing failed on day ', day, 'in iteration ', tau)
-                var = copy.copy(portfolios)
-            if asset_market_convergence == len(portfolios) and len(var)<= len(portfolios):
-                var.append("FX")
-                for p in portfolios:
-                    p.var.price_pfx=p.var.price
-
-
-            #print ("day:",day,"tau:",tau, convergence, Deltas)
-
-            #calculating and printing degree(in percent) to which the convergence bound is reached. Values <= zero need to be achieved
-            list_DeltasA=[abs(Deltas[a]) for a in portfolios]
-            mean_DA = ((np.mean(np.array(list_DeltasA))/conv_bound)-1)*100
-            max_DA =  ((np.max(np.array(list_DeltasA))/conv_bound)-1)*100
-            FX_DA = ((abs(np.array(Deltas['FX']))/conv_bound)-1)*100
-            print ("day:", day, "tau:", tau, "mean_A:", mean_DA, 'max_A:', max_DA, 'FX:', FX_DA)
-
-            # saving objects when there is no convergence (for diagnostic purpose)
-            if tau > 10000:
-                print('convergence failed on day ', day)
-                file_name = saving_params["path"] + '/!objects_nonConv_day' + str(day) + '.pkl'
-                save_objects = open(file_name, 'wb')
-                list_of_objects = [portfolios, currencies, environment, exogeneous_agents, funds, seed]
-                pickle.dump(list_of_objects, save_objects)
-                save_objects.close()
-
+        res = minimize(NOP, x0, args=(funds,portfolios,currencies, environment,exogeneous_agents, day, fx_shock), method='nelder-mead',options = {'xtol': 1e-5, 'disp': True})
 
         ##########################################################################################################################
         ############################################## BALANCE SHEET ADJUSTMENT ##################################################

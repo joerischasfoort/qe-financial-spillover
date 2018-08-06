@@ -64,15 +64,29 @@ def price_fx_expectations(fund, portfolios, currencies, environment):
     return ewma_delta_prices, ewma_delta_fx, expected_prices, exp_exchange_rates
 
 
-def anchored_FX_expectations(fund, environment):
+def anchored_FX_expectations(fund, environment, shock):
+
+    exp_fx_anchor = fund.exp.exchange_rate_anchor.copy()
+    p_index = {}
+    p_index.update({"domestic":0})
+    p_index.update({"foreign":0})
+
+    #shocking the domestic price index, which has an impact on the fx anchor
+    p_index["domestic"] = environment.par.global_parameters["domestic_price_index"] * (1 + shock)
+    p_index["foreign"] = environment.par.global_parameters["foreign_price_index"]
+
+    # updating the expectation of the fx anchor
+    for row in fund.exp.exchange_rate_anchor.index:
+        for col in fund.exp.exchange_rate_anchor.columns:
+            exp_fx_anchor.loc[row, col] = p_index[col] / float(p_index[row])
+
     exp_exchange_rates = environment.var.fx_rates.copy()
     for c in environment.var.fx_rates:
         if fund.par.country != c:
-            anchor = environment.var.ewma_fx_rates.loc[fund.par.country,c]
             fx_reversion_speed = environment.par.global_parameters["fx_reversion_speed"]
-            exp_exchange_rates.loc[fund.par.country,c] = environment.var.fx_rates.loc[fund.par.country,c] + (fx_reversion_speed) * (anchor - environment.var.fx_rates.loc[fund.par.country,c])
+            exp_exchange_rates.loc[fund.par.country,c] = environment.var.fx_rates.loc[fund.par.country,c] + (fx_reversion_speed) * ( exp_fx_anchor.loc[fund.par.country,c] - environment.var.fx_rates.loc[fund.par.country,c])
 
-    return exp_exchange_rates
+    return exp_exchange_rates, exp_fx_anchor
 
 
 def return_expectations(fund, portfolios, currencies, environment):
@@ -199,7 +213,7 @@ def covariance_estimate(fund, environment, prev_exp_ret,  inflation_shock):
 
 
 
-        ewma_returns[asset] = compute_ewma(realized_returns[asset], fund.var_previous.ewma_returns[asset],
+        ewma_returns[asset] = compute_ewma(realized_local_currency_returns[asset], fund.var_previous.ewma_returns[asset],
                                            environment.par.global_parameters["cov_memory"])
 
     for cash in fund.var.currency:
@@ -224,7 +238,7 @@ def covariance_estimate(fund, environment, prev_exp_ret,  inflation_shock):
         realized_returns[cash] = loc_weight*realized_local_currency_returns[cash] + (1-loc_weight)*realized_cons_returns[cash]
 
 
-        ewma_returns[cash] = compute_ewma(realized_returns[cash], fund.var_previous.ewma_returns[cash],
+        ewma_returns[cash] = compute_ewma(realized_local_currency_returns[cash], fund.var_previous.ewma_returns[cash],
                                           environment.par.global_parameters["cov_memory"])
 
     new_covariance_matrix = fund.var.covariance_matrix.copy()
@@ -233,7 +247,9 @@ def covariance_estimate(fund, environment, prev_exp_ret,  inflation_shock):
     for idx_x, asset_x in enumerate(new_covariance_matrix.columns):
         for idx_y, asset_y in enumerate(new_covariance_matrix.columns):
            if idx_x <= idx_y:
-                covar = (realized_local_currency_returns[asset_x] - prev_exp_ret[asset_x]) * (realized_local_currency_returns[asset_y] - prev_exp_ret[asset_y])
+                #covar = (realized_local_currency_returns[asset_x] - prev_exp_ret[asset_x]) * (realized_local_currency_returns[asset_y] - prev_exp_ret[asset_y])
+                covar = (realized_local_currency_returns[asset_x] - ewma_returns[asset_x]) * (realized_local_currency_returns[asset_y] - ewma_returns[asset_y])
+
                 ewma_covar = compute_ewma(covar, fund.var_previous.covariance_matrix.loc[asset_x][asset_y], environment.par.global_parameters["cov_memory"])
                 new_covariance_matrix.loc[asset_x][asset_y] = ewma_covar
                 new_covariance_matrix.loc[asset_y][asset_x] = ewma_covar

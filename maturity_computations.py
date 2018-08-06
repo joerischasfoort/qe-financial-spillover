@@ -13,9 +13,24 @@ Fed_BS_data.update({"3651-5475": (619586+1679242)/2}) #assuming that 50% matures
 Fed_BS_data.update({"5476 - 14240": (619586+1679242)/2}) # 50% matures between 15 and 40 years (this is very adhoc)
 #Fed_BS_data.update({"7301-15000": 0})
 
+
+US_fund_data = {"0-365": 2}
+US_fund_data.update({"366-1095": 6})
+US_fund_data.update({"1096-1825": 7})
+US_fund_data.update({"1826-2555": 5})
+US_fund_data.update({"2556-3650": 8})
+US_fund_data.update({"3651-5475": 2}) #assuming that 50% matures between 10 and 15 years and
+US_fund_data.update({"5476-7300": 2}) # 50% matures between 15 and 40 years (this is very adhoc)
+US_fund_data.update({"7301-10950": 6})
+US_fund_data.update({"10951-14210": 1})
+#
+data=US_fund_data
+
 data = Fed_BS_data
 
 def plot_mat_structure(data):
+
+    days_in_year = 250
 
     maturing_assets = {}
     day = []
@@ -23,9 +38,13 @@ def plot_mat_structure(data):
     for bin in data:
         start_day = int(bin.split("-")[0])
         end_day = int(bin.split("-")[-1])
+
+        start_day = (start_day/float(365))*days_in_year
+        end_day = (end_day/float(365))*days_in_year
+
         t= start_day
         while t <= end_day:
-            maturing_assets.update({t:data[bin]/(1+end_day-start_day)})
+            maturing_assets.update({t:data[bin]/float((1+end_day-start_day))})
             t=t+1
 
     for i in sorted(maturing_assets.iterkeys()):
@@ -33,10 +52,10 @@ def plot_mat_structure(data):
         mat = np.append(mat, maturing_assets[i])
 
     y = np.array(mat)/sum(np.array(mat))
-    print(sum(np.multiply(np.array(day), y))/365)
+    print(sum(np.multiply(np.array(day), y))/days_in_year)
     y=np.cumsum(y)
     y = 1-y
-    plt.plot(day/365,y)
+    plt.plot(day/days_in_year,y)
 
 
 
@@ -47,7 +66,7 @@ def plot_mat_structure(data):
     minimizer_kwargs = { "args": (day,y), 'bounds':bnds, 'constraints': const}
     starting_values = [0 for i in range(2*num_assets-1)]
     starting_values.append(1)
-    minimum = basinhopping(opt_fun,starting_values,stepsize = 0.01, minimizer_kwargs=minimizer_kwargs, niter_success=100)
+    minimum = basinhopping(opt_fun,starting_values,stepsize = 0.01, minimizer_kwargs=minimizer_kwargs, niter_success=1000)
 
 
 
@@ -56,7 +75,7 @@ def plot_mat_structure(data):
         mat_aux.update({var: np.multiply(minimum.x[var] ** day, minimum.x[(len(minimum.x)/2)+var])})    
     mat =  sum(mat_aux[i] for i in mat_aux)
     
-    plt.plot(day/365,mat)
+    plt.plot(day/days_in_year,mat)
 
 
 def opt_fun(m, day,y):
@@ -73,8 +92,8 @@ def cons(m):
     return sum_weights
     
 
-def  compute_average_mat(m):
-    return ((m-1)*(np.log(m)-1)/(np.log(m)**2))/365    
+def  compute_average_mat(m,days_in_year):
+    return ((m-1)*(np.log(m)-1)/(np.log(m)**2))/days_in_year
 
 
 

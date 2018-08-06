@@ -19,6 +19,7 @@ cov_00 = []
 cov_11 = []
 cov_01 = []
 fx = []
+fx_anchor = []
 ewma_fx =[]
 tau = []
 p1 = []
@@ -43,9 +44,9 @@ red1= []
 p0_pfx = []
 p1_pfx = []
 
-for day in range(5001,5100):
-    filename = "data/Objects/objects_day_" + str(day) + "_seed_1"  + "_x"+".pkl"
-    filename = "Experiments/QE/Objects_QE/objects_day_" + str(day) + "_seed_1"  + "_QE_asset_target_0"+".pkl"
+for day in range(1,26):
+    filename = "data/Objects/objects_day_" + str(day) + "_seed_1"  + "_yc"+".pkl"
+    #filename = "Experiments/QE/Objects_QE/objects_day_" + str(day) + "_seed_1"  + "_QE_asset_target_0"+".pkl"
 
     #filename = "C:\Users\jrr\Documents\GitHub\qe-financial-spillover\Experiments\QE\Objects_QE1\objects_day_" + str(day) + "_seed_1"  + "_QE_asset_target_1000"+".pkl"
     data = open(filename,"rb")
@@ -68,17 +69,18 @@ for day in range(5001,5100):
 
     da0.append(funds[0].var.assets[portfolios[0]])
     da1.append(funds[1].var.assets[portfolios[0]])
-    da2.append(exogeneous_agents["underwriter"].var.assets[portfolios[0]])
-    da3.append(funds[1].var.weights[portfolios[1]])
+    da2.append(funds[0].var.weights[portfolios[0]])
+    da3.append(funds[0].var.weights[portfolios[1]])
     dc0.append(funds[0].var.weights[currencies[0]])
     dc1.append(funds[0].var.weights[currencies[1]])
 
-    cov_00.append(funds[0].var.covariance_matrix.loc[portfolios[0], portfolios[0]])
-    cov_11.append(funds[0].var.covariance_matrix.loc[portfolios[1], portfolios[1]])
-    cov_01.append(funds[1].var.covariance_matrix.loc[portfolios[1], portfolios[1]])
+    cov_00.append(funds[0].var.covariance_matrix.loc[currencies[0], currencies[0]])
+    cov_11.append(funds[0].var.covariance_matrix.loc[currencies[1], currencies[1]])
+    cov_01.append(funds[1].var.covariance_matrix.loc[currencies[1], currencies[1]])
 
 
     fx.append(environment.var.fx_rates.iloc[0,1])
+    fx_anchor.append(funds[0].exp.exchange_rate_anchor.iloc[0,1])
 
     ewma_fx.append(1/environment.var.ewma_fx_rates.iloc[0,1])
 
@@ -106,7 +108,7 @@ for day in range(5001,5100):
     red1.append(funds[1].var.redeemable_shares)
 
 
-    p0_pfx.append(portfolios[0].var.price_pfx)
-    p1_pfx.append(portfolios[1].var.price_pfx)
+   # p0_pfx.append(portfolios[0].var.price_pfx)
+    #p1_pfx.append(portfolios[1].var.price_pfx)
 
 

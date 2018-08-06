@@ -1,7 +1,9 @@
 """Simulation file used to run the model"""
 import time
+
+
 from init_objects import *
-from spillover_model import *
+from spillover_model_nOptPricing import *
 
 list_of_risk_correlation = {}
 list_of_risk_correlation.update({'domestic_inflation'+"_and_" +'foreign_inflation': 0.0})
@@ -13,7 +15,7 @@ list_of_risk_correlation.update({'domestic_inflation'+"_and_" +'fx_shock': -0.0}
 # 1 setup parameters
 parameters = { #Todo: cleaning and spell checking!!
     # global parameters
-    "n_domestic_assets": 11,
+    "n_domestic_assets": 1,
     "n_foreign_assets": 1,
     "n_domestic_funds": 1,
     "n_foreign_funds": 1,

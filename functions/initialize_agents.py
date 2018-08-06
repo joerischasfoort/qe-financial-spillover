@@ -15,9 +15,10 @@ def init_funds(environment, portfolios, currencies, parameters, seed):
 
 
     for idx in range(total_funds):
-
+        risk_aversion = {"domestic_assets": parameters[fund_countries[idx]+"_risk_aversion_D_asset"],
+                         "foreign_assets": parameters[fund_countries[idx] + "_risk_aversion_F_asset"]}
         fund_params = AgentParameters(fund_countries[idx], parameters["price_memory"],
-                                      parameters["fx_memory"], parameters["risk_aversion"],
+                                      parameters["fx_memory"], risk_aversion,
                                       parameters["adaptive_param"], parameters["news_evaluation_error"])
 
         # compute initial variable values associated with portfolio shares
@@ -107,9 +108,10 @@ def init_funds(environment, portfolios, currencies, parameters, seed):
         df_rates = {a: a.var.default_rate for a in portfolios}
         exp_prices = {a: a.var.price for a in portfolios}
         exp_fx = environment.var.fx_rates.copy()
+        exp_fx_anchor = environment.var.fx_rates.copy()
         exp_fx_returns = {currency: currency.par.nominal_interest_rate for currency in currencies}
 
-        fund_expectations = AgentExpectations(r,cons_returns, r, df_rates, exp_fx, exp_prices, exp_fx_returns) #TODO: why is this called exp_fx_returns? In the object this variable is called cash return
+        fund_expectations = AgentExpectations(r,cons_returns, r, df_rates, exp_fx, exp_fx_anchor, exp_prices, exp_fx_returns) #TODO: why is this called exp_fx_returns? In the object this variable is called cash return
 
         funds.append(Fund(idx, fund_vars, copy_agent_variables(fund_vars), fund_params, fund_expectations))
 
