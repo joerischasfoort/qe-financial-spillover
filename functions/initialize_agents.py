@@ -127,19 +127,120 @@ def init_funds(environment, portfolios, currencies, parameters, seed):
 
     return funds
 
+def init_funds_marketsize(environment, portfolios, currencies, parameters, seed, pos):
+
+    funds = []
+    total_funds = parameters["n_domestic_funds"] + parameters["n_foreign_funds"]
+    fund_countries = ordered_list_of_countries(parameters["n_domestic_funds"], parameters["n_foreign_funds"])
+
+
+    for idx in range(total_funds):
+        risk_aversion = {"domestic_assets": parameters[fund_countries[idx]+"_risk_aversion_D_asset"],
+                         "foreign_assets": parameters[fund_countries[idx] + "_risk_aversion_F_asset"]}
+        fund_params = AgentParameters(fund_countries[idx], parameters["price_memory"],
+                                      parameters["fx_memory"], risk_aversion,
+                                      parameters["adaptive_param"], parameters["news_evaluation_error"])
+
+        # compute initial variable values associated with portfolio shares
+        asset_portfolio = {}
+        asset_demand = {}
+        ewma_returns = {}
+        ewma_delta_prices = {}
+        realised_rets = {}
+
+        for a in portfolios:
+            # funds initially have a home bias of 100%
+            if fund_countries[idx]==a.par.country:
+                asset_portfolio.update({a: a.par.quantity / sum([i==a.par.country for i in fund_countries])})
+            else:
+                asset_portfolio.update({a: 0})
+
+
+            asset_demand.update({a: 0})  # demand is initialized at zero (this does not effect anything)
+            ewma_returns.update({a: a.par.nominal_interest_rate}) # the nominal interest rate is the initial return
+            ewma_delta_prices.update({a: parameters["init_agent_ewma_delta_prices"]}) #TODO: IS THIS STILL NEEDED? WHY IS THE INITIAL VALUE 1?
+            realised_rets.update({a: 0})
+
+        # compute initial variable values associated with currencies
+        currency_portfolio = {}
+        currency_inventory = {}
+        currency_demand = {}
+        ewma_delta_fx = {}
+        losses = {}
+
+        for currency in currencies:
+            # funds initially have a home bias of 100%
+            if fund_countries[idx]==currency.par.country:
+                currency_portfolio.update({currency: currency.par.quantity / sum([i==currency.par.country for i in fund_countries])})
+            else:
+                currency_portfolio.update({currency: 0})
+
+            currency_inventory.update({currency: 0}) #TODO: could this also be empty
+
+            currency_demand.update({currency: parameters["init_currency_demand"]}) #Todo: could this be empty
+
+            ewma_delta_fx.update({currency: parameters["init_ewma_delta_fx"]}) #TODO: Still needed?
+
+            ewma_returns.update({currency: currency.par.nominal_interest_rate}) # the nominal interest rate is the initial return
+
+
+            losses.update({currency: parameters["init_losses"]})
 
 
 
+        # initialized as having no value
+        init_c_profits = dict.fromkeys(currencies)
+        init_a_profits = dict.fromkeys(portfolios)
+        init_profits = init_c_profits.copy()  # start with x's keys and values
+        init_profits.update(init_a_profits)
+
+        assets = portfolios + currencies
+        covs = np.zeros((len(assets), len(assets)))
+        cov_matr = pd.DataFrame(covs, index=assets, columns=assets)
+
+
+        fund_redeemable_share_size = [asset_portfolio[a] * a.var.price * environment.var.fx_rates.loc[fund_countries[idx]][a.par.country] for a in portfolios] + [currency_portfolio[c] * environment.var.fx_rates.loc[fund_countries[idx]][c.par.country] for c in currencies]
+        fund_redeemable_share_size = sum(fund_redeemable_share_size)
+
+        fund_vars = AgentVariables(asset_portfolio,
+                                   currency_portfolio,
+                                   fund_redeemable_share_size,
+                                   asset_demand,
+                                   currency_demand,
+                                   ewma_returns,
+                                   ewma_delta_prices,
+                                   ewma_delta_fx,
+                                   cov_matr, parameters["init_payouts"], dict.fromkeys(assets),
+                                   realised_rets, init_profits, losses,
+                                   fund_redeemable_share_size,
+                                   currency_inventory)
 
 
 
+        #Initialising expectations
+        r = ewma_returns.copy()
+        cons_returns = {a: 0 for a in portfolios + currencies}
+        df_rates = {a: a.var.default_rate for a in portfolios}
+        exp_prices = {a: a.var.price for a in portfolios}
+        exp_fx = environment.var.fx_rates.copy()
+        exp_fx_anchor = environment.var.fx_rates.copy()
+        exp_fx_returns = {currency: currency.par.nominal_interest_rate for currency in currencies}
 
+        fund_expectations = AgentExpectations(r,cons_returns, r, df_rates, exp_fx, exp_fx_anchor, exp_prices, exp_fx_returns) #TODO: why is this called exp_fx_returns? In the object this variable is called cash return
 
+        funds.append(Fund(idx, fund_vars, copy_agent_variables(fund_vars), fund_params, fund_expectations))
 
+    #initialize the covariance matrix with simulated values
+    simulated_time_series = simulated_asset_return(funds, portfolios, currencies, 10000,
+                                                   parameters, seed)
+    for fund in funds:
+        for i in assets:
+            for j in assets:
+                fund.var.covariance_matrix.loc[i][j] = np.cov(simulated_time_series[fund][i], simulated_time_series[fund][j])[0][1]
 
+        fund.var_previous.covariance_matrix = fund.var.covariance_matrix.copy()
 
-
-
+    return funds
 
 
 def init_exogenous_agents(portfolios, currencies, parameters):

@@ -32,8 +32,6 @@ def init_portfolios(parameters):
 
 
 
-
-
 def init_currencies(parameters):
 
     currencies = []
@@ -45,7 +43,5 @@ def init_currencies(parameters):
         currency_param = CurrencyParameters(country, parameters["currency_rate"],
                                             np.divide(total_currency, len(set(asset_countries))))
         currencies.append(Currency(idx, currency_param))
-
-
 
     return currencies

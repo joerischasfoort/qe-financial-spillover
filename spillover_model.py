@@ -1,5 +1,5 @@
 """Main model"""
-
+from __future__ import division
 import copy
 import pickle
 import random
@@ -13,8 +13,6 @@ from functions.market_mechanism import *
 from functions.profits_and_payouts import *
 from functions.supercopy import *
 from functions.measurement import *
-
-
 
 
 def spillover_model(portfolios, currencies, environment, exogeneous_agents, funds,  seed, obj_label,saving_params):
@@ -36,13 +34,6 @@ def spillover_model(portfolios, currencies, environment, exogeneous_agents, fund
     deltas["Delta_FX"] = 0
     data = initdatadict(funds, portfolios, currencies, environment, deltas ) # create tau data dictionary
     data_t = copy.deepcopy(data) # create t data dictionary
-    ######################################################################
-    ##### Determine directoring for saving objects and measurement########
-    ######################################################################
-    hex_home = '/home/kzltin001/qe/'
-    hex_fhgfs = '/researchdata/fhgfs/aifmrm_shared/qe-financial-spillover/'
-    local_dir = 'C:\Users\jrr\Documents\GitHub\qe-financial-spillover\data\Objects'
-    # this will be used in lines near 224, 288, 292
 
     ##################################################################################
     ###################### COMPUTING STOCHASTIC PROCESSES ############################
@@ -63,7 +54,6 @@ def spillover_model(portfolios, currencies, environment, exogeneous_agents, fund
         idiosyncratic_default_rate_noise[fund]=noise
     ####################################################################################
     ####################################################################################
-
     # creating individual intensity parameters
     for a in portfolios: #TODO: this should be taken care of in the initialization
         try:
@@ -150,6 +140,7 @@ def spillover_model(portfolios, currencies, environment, exogeneous_agents, fund
         while intraday_over == False:
             tau += 1
             environment.var.tau = tau
+
             ############################################################################
             ################ SHOCKING FX RATES AT THE END OF A PERIOD ##################
             ############################################################################
@@ -238,7 +229,6 @@ def spillover_model(portfolios, currencies, environment, exogeneous_agents, fund
                 pickle.dump(list_of_objects, save_objects)
                 save_objects.close()
 
-
         ##########################################################################################################################
         ############################################## BALANCE SHEET ADJUSTMENT ##################################################
         ###########################################################################################################################
@@ -246,7 +236,6 @@ def spillover_model(portfolios, currencies, environment, exogeneous_agents, fund
         # updating the covariance matrices
         for fund in funds:
             fund.var.ewma_returns, fund.var.covariance_matrix, fund.var.hypothetical_returns = covariance_estimate(fund,  environment, previous_local_currency_returns[fund], inflation_shock)
-
         #computing new asset and cash positions
         excess_demand, pi, nu = asset_excess_demand_and_correction_factors(funds, portfolios, currencies, exogeneous_agents)
 
@@ -261,13 +250,11 @@ def spillover_model(portfolios, currencies, environment, exogeneous_agents, fund
 
         for fund in funds:
             fund.var.currency_demand = cash_demand_correction(fund, currencies,environment)
-
         nuC, piC, excess_demandC = cash_excess_demand_and_correction_factors(funds, currencies,exogeneous_agents)
 
         for fund in funds:
             fund.var.currency = fund_cash_adjustments(nuC, piC, excess_demandC, currencies, fund)
-
-        exogeneous_agents["fx_interventionist"].var.currency = fx_interventionist_cash_adjustment(exogeneous_agents["fx_interventionist"], nuC, piC, excess_demandC, currencies)
+            #exogeneous_agents["fx_interventionist"].var.currency = fx_interventionist_cash_adjustment(exogeneous_agents["fx_interventionist"], nuC, piC, excess_demandC, currencies)
 
         # update previous variables
         for fund in funds:
@@ -277,10 +264,8 @@ def spillover_model(portfolios, currencies, environment, exogeneous_agents, fund
             portfolio.var_previous = copy.copy(portfolio.var)
 
         environment.var_previous = copy_env_variables(environment.var)
-
         exogeneous_agents['central_bank_domestic'].var_previous = copy_cb_variables(exogeneous_agents['central_bank_domestic'].var)
         exogeneous_agents['underwriter'].var_previous = copy_underwriter_variables(exogeneous_agents['underwriter'].var)
-
 
 
         # saving objects

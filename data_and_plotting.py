@@ -44,11 +44,13 @@ red1= []
 p0_pfx = []
 p1_pfx = []
 
-for day in range(1,26):
+
+for day in range(1,2000):
     filename = "data/Objects/objects_day_" + str(day) + "_seed_1"  + "_yc"+".pkl"
     #filename = "Experiments/QE/Objects_QE/objects_day_" + str(day) + "_seed_1"  + "_QE_asset_target_0"+".pkl"
 
     #filename = "C:\Users\jrr\Documents\GitHub\qe-financial-spillover\Experiments\QE\Objects_QE1\objects_day_" + str(day) + "_seed_1"  + "_QE_asset_target_1000"+".pkl"
+
     data = open(filename,"rb")
     list_of_objects = pickle.load(data)
 
@@ -88,6 +90,13 @@ for day in range(1,26):
     p0.append(portfolios[0].var.price)
     r1.append(funds[0].exp.returns[portfolios[1]])
     r0.append(funds[0].exp.returns[portfolios[0]])
+    print day
+
+
+plt.plot(p1)
+plt.show()
+
+
 
     rc1.append(funds[1].exp.returns[currencies[1]])
     rc0.append(funds[1].exp.returns[currencies[0]])

@@ -2,6 +2,7 @@ import  pickle
 from spillover_model import *
 
 data = open('data/Objects/objects_day_20_seed_1_yc.pkl', 'rb')
+
 #data = open('data/Objects/objects_nonConv_day8890.pkl', 'rb')
 
 list_of_objects = pickle.load(data)
@@ -18,7 +19,6 @@ data.close()
 
 environment.par.global_parameters["start_day"]=21
 environment.par.global_parameters["end_day"]=25
-
 
 saving_params = {}
 saving_params.update({"path": 'C:\Users\jrr\Documents\GitHub\qe-financial-spillover\data\Objects'})
