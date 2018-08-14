@@ -13,7 +13,9 @@ local_dir = "/Users/Tina/git_repos/qe-financial-spillover/Experiments/Marketsize
 #local_dir = "Objects_marketsize/"
 
 variable = [0.5, 1, 2]
-
+obj_label1 = 'Marketsize0.5'
+obj_label2 = 'Marketsize1'
+obj_label3 = 'Marketsize2'
 
 fx_dict = {}
 p0_dict = {}
@@ -53,7 +55,6 @@ f_a1_dict = {}
 
 for i in variable:
     obj_label =  "Marketsize" + str(i)
-
 
     #variables to extract
 
@@ -103,9 +104,6 @@ for i in variable:
         exogeneous_agents = list_of_objects[3]
         funds = list_of_objects[4]
 
-
-
-
         fx.append(environment.var.fx_rates.iloc[0,1])
         p0.append(portfolios[0].var.price)
         p1.append(portfolios[1].var.price)
@@ -140,10 +138,6 @@ for i in variable:
         f_a0.append(funds[1].var.weights[portfolios[0]])
         f_a1.append(funds[1].var.weights[portfolios[1]])
         print day
-
-
-
-
 #################    #################    #################
 #################    #################    #################
 #################    #################    #################
@@ -184,10 +178,10 @@ for i in variable:
 
 
 
-obj_label1 = 'Marketsize0.5'
-obj_label2 = 'Marketsize1'
-obj_label3 = 'Marketsize2'
 
+##############################
+#Prices
+##############################
 x= p0_dict[obj_label1]
 x2= p1_dict[obj_label1]
 
@@ -196,10 +190,6 @@ x4 =  p1_dict[obj_label2]
 
 x5 = p0_dict[obj_label3]
 x6 =  p1_dict[obj_label3]
-
-##############################
-#Prices
-##############################
 fig, axes = plt.subplots(nrows=2, ncols=3, figsize=(12, 6))
 axes[0][0].plot(x, '--', lw=2, ms=4.5, color='B', label="")
 axes[0][0].set_ylabel('p0')
@@ -239,7 +229,7 @@ fx1 = fx_dict[obj_label1]
 fx2 = fx_dict[obj_label2]
 fx3 = fx_dict[obj_label3]
 
-fig, axes = plt.subplots(nrows=1, ncols=3, figsize=(12, 9))
+fig, axes = plt.subplots(nrows=1, ncols=3, figsize=(10, 5), sharex=False, sharey=True)
 axes[0].plot(fx1, '--', lw=2, ms=4.5, color='B', label="")
 axes[0].set_ylabel('fx')
 axes[0].set_xlabel(obj_label1)
@@ -256,6 +246,62 @@ axes[2].set_xlabel(obj_label3)
 
 fig.show()
 ##############################
+##### Fund weights############
+##############################
+#
+
+
+x1_d_c0 = d_c0_dict[obj_label1]
+x1_d_c1 = d_c1_dict[obj_label1]
+x1_d_a0 = d_a0_dict[obj_label1]
+x1_d_a1 = d_a1_dict[obj_label1]
+
+fig, axes = plt.subplots(nrows=1, ncols=3, figsize=(10, 5),  sharex=True, sharey=True)  # sharex=False, sharey=True
+axes[0].plot(x1_d_c0, 'bo'  , lw=2, ms=4.5, label="d_domestic_cash")
+axes[0].plot(  x1_d_c1 ,  '--', lw=2, ms=4.5, color='R', label="d_foreign_cash")
+axes[0].plot(  x1_d_a0 ,  '-', lw=2, ms=4.5, color='C', label="d_domestic")
+axes[0].plot(  x1_d_a1 ,  'v', lw=2, ms=4.5, color='purple', label="d_foreign")
+
+axes[0].set_ylabel('fund_weights domestic fund')
+axes[0].set_xlabel(obj_label1)
+axes[0].legend(loc='best')
+#
+x2_d_c0 = d_c0_dict[obj_label2]
+x2_d_c1 = d_c1_dict[obj_label2]
+x2_d_a0 = d_a0_dict[obj_label2]
+x2_d_a1 = d_a1_dict[obj_label2]
+axes[1].plot(x2_d_c0, 'bo'  , lw=2, ms=4.5, label="d_domestic_cash")
+axes[1].plot(  x2_d_c1 ,  '--', lw=2, ms=4.5, color='R', label="d_foreign_cash")
+axes[1].set_xlabel(obj_label2)
+axes[1].plot(  x2_d_a0 ,  '-', lw=2, ms=4.5, color='C', label="d_domestic")
+axes[1].plot(  x2_d_a1 ,  'v', lw=2, ms=4.5, color='purple', label="d_foreign")
+axes[1].legend(loc='best')
+
+#
+
+x3_d_c0 = d_c0_dict[obj_label3]
+x3_d_c1 = d_c1_dict[obj_label3]
+x3_d_a0 = d_a0_dict[obj_label3]
+x3_d_a1 = d_a1_dict[obj_label3]
+axes[2].plot(x3_d_c0, 'bo'  , lw=2, ms=4.5, label="d_domestic_cash")
+axes[2].plot(  x3_d_c1 ,  '--', lw=2, ms=4.5, color='R', label="d_foreign_cash")
+axes[2].plot(  x3_d_a0 ,  '-', lw=2, ms=4.5, color='C', label="d_domestic")
+axes[2].plot(  x3_d_a1 ,  'v', lw=2, ms=4.5, color='purple', label="d_foreign")
+axes[2].legend(loc='best')
+axes[2].set_xlabel(obj_label3)
+
+fig.show()
+
+
+
+
+
+
+
+##############################
+##############################
+
+
 delta_fx = {}
 delta_hb_d = {}
 delta_hb_f = {}
