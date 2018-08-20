@@ -9,5 +9,5 @@ source activate
 export PYTHONPATH=/home/kzltin001/ENV/lib/python2.7/site-packages:
 
 
-python /home/kzltin001/qe-financial-spillover/Experiments/Market_size/market_size_exp.py 
+python /home/kzltin001/qe-financial-spillover/Experiments/Marketsize/marketsize_exp.py
 

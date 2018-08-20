@@ -116,9 +116,6 @@ for i in variable:
         exogeneous_agents = list_of_objects[3]
         funds = list_of_objects[4]
 
-
-
-
         fx.append(1/environment.var.fx_rates.iloc[0,1])
         d_ra1.append(funds[0].exp.returns[portfolios[1]])
         d_ra0.append(funds[0].exp.returns[portfolios[0]])

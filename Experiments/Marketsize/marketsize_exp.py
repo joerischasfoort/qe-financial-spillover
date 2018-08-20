@@ -1,15 +1,19 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+
+
 import  pickle
 import time
 import os
 import sys
 
-sys.path.append('/qe-financial-spillover')
+sys.path.append('/home/kzltin001/qe-financial-spillover')
 from spillover_model import *
 from init_objects_marketsize import *
 
 seed = 1
 pos = int(os.getenv('PBS_ARRAYID'))
-variable = [0.5 , 1, 2]
+variable = [0.2, 0.5 , 1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
 
 list_of_risk_correlation = {}
 list_of_risk_correlation.update({'domestic_inflation'+"_and_" +'foreign_inflation': 0.0})
@@ -86,7 +90,7 @@ obj_label = "Marketsize" + str(variable[pos])
 
 seed = 1
 saving_params = {}
-saving_params.update({"path": '/home/kzltin001/qe-financial-spillover/Experiments/Market_size/Objects_marketsize/'})
+saving_params.update({"path": '/home/kzltin001/qe-financial-spillover/Experiments/Marketsize/Objects_marketsize'})
 #saving_params.update({"path": '/Users/Tina/git_repos/qe-financial-spillover/Experiments/Marketsize/Objects_marketsize/'})
 
 saving_params.update({"time": 0})

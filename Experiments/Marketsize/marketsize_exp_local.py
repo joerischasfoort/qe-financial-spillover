@@ -9,7 +9,7 @@ from init_objects_marketsize import *
 
 seed = 1
 #pos = int(os.getenv('PBS_ARRAYID'))
-variable = [0.5 , 1, 2]
+variable = [0.5, 0.1, 1]
 
 for pos in variable:
     list_of_risk_correlation = {}
@@ -33,7 +33,7 @@ for pos in variable:
         "domestic_inflation_std": 0.02/float(250),
         "foreign_inflation_std": 0.02/float(250),
         "start_day": 1,
-        "end_day": 5000,
+        "end_day": 5,
         "p_change_intensity": 0.0001,
         "fx_change_intensity": 0.0001,
         "cov_memory": 0.00,
@@ -85,12 +85,12 @@ for pos in variable:
         "adaptive_param": 0.0  # For expected default rate
     }
 
-    obj_label = "Marketsize" + str(pos)
+    obj_label = "Marketsize_" + str(pos)
 
     seed = 1
     saving_params = {}
     #saving_params.update({"path": '/home/kzltin001/qe-financial-spillover/Experiments/Market_size/Objects_market_size/'})
-    saving_params.update({"path": '/Users/Tina/git_repos/qe-financial-spillover/Experiments/Marketsize/Objects_marketsize/'})
+    saving_params.update({"path": '/Users/Tina/git_repos/qe-financial-spillover/Experiments/Marketsize/current_run/'})
     #saving_params.update({"path": '/Experiments/Marketsize/Objects_marketsize'})
 
     saving_params.update({"time": 0})
