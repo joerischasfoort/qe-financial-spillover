@@ -36,7 +36,7 @@ class AgentVariables:
         self.losses = losses
         self.size_target = size_target
         self.currency_inventory = currency_inventory
- 
+
 
 class AgentParameters:
     """

@@ -65,13 +65,19 @@ def price_fx_expectations(fund, portfolios, currencies, environment):
 
 
 def anchored_FX_expectations(fund, environment, shock):
-
+    """
+    Fundals anchor calculation of expected exchange rates
+    :param fund: Fund object for which the expectations are calculated
+    :param environment: Environment object
+    :param shock: float stochastic shock
+    :return: expected exchange rates
+    """
     exp_fx_anchor = fund.exp.exchange_rate_anchor.copy()
     p_index = {}
-    p_index.update({"domestic":0})
-    p_index.update({"foreign":0})
+    p_index.update({"domestic": 0})
+    p_index.update({"foreign": 0})
 
-    #shocking the domestic price index, which has an impact on the fx anchor
+    # shocking the domestic price index, which has an impact on the fx anchor
     p_index["domestic"] = environment.par.global_parameters["domestic_price_index"] * (1 + shock)
     p_index["foreign"] = environment.par.global_parameters["foreign_price_index"]
 
@@ -85,6 +91,85 @@ def anchored_FX_expectations(fund, environment, shock):
         if fund.par.country != c:
             fx_reversion_speed = environment.par.global_parameters["fx_reversion_speed"]
             exp_exchange_rates.loc[fund.par.country,c] = environment.var.fx_rates.loc[fund.par.country,c] + (fx_reversion_speed) * ( exp_fx_anchor.loc[fund.par.country,c] - environment.var.fx_rates.loc[fund.par.country,c])
+
+    return exp_exchange_rates, exp_fx_anchor
+
+
+def heterogeneous_fx_expectations(fund, environment, shock):
+    """
+    Fx expectations are formed using a trend following and fundamentalist expectations component.
+    The anchor or fundamentalist component is the PPP price of the exchange rate.
+    :param fund:
+    :param environment:
+    :param shock:
+    :return:
+    """
+    # 1 Form expectations about the fundamental value / anchor
+    exp_fx_anchor = fund.exp.exchange_rate_anchor.copy()
+    p_index = {}
+    p_index.update({"domestic": 0})
+    p_index.update({"foreign": 0})
+
+    # shocking the domestic price index, which has an impact on the fx anchor
+    p_index["domestic"] = environment.par.global_parameters["domestic_price_index"] * (1 + shock)
+    p_index["foreign"] = environment.par.global_parameters["foreign_price_index"]
+
+    # updating the expectation of the fx anchor
+    for row in fund.exp.exchange_rate_anchor.index:
+        for col in fund.exp.exchange_rate_anchor.columns:
+            exp_fx_anchor.loc[row, col] = p_index[col] / float(p_index[row])
+
+    # updating exchange rate expectations
+    exp_exchange_rates = environment.var.fx_rates.copy()
+
+    def sgn(x):
+        """Helper function to calculate whether a function would have invested"""
+        if x > 1:
+            return 1
+        elif x == 0:
+            return 0
+        else:
+            return -1
+
+    def fundamentalist_prediction(price, fundamental_price):
+        return environment.par.global_parameters["fx_reversion_speed"] * (fundamental_price - price)
+
+    def chartist_prediction(price, weighted_previous_price):
+        fx_extrapolation_speed = environment.par.global_parameters["fx_extrapolation_speed"]
+        return fx_extrapolation_speed * np.divide(price - weighted_previous_price, weighted_previous_price)
+
+    for c in environment.var.fx_rates:
+        if fund.par.country != c:
+            change_in_FX = environment.var.fx_rates.loc[fund.par.country,c] - environment.var_previous.fx_rates.loc[fund.par.country,c]
+
+            previous_domestic_indices = {'domestic': p_index["domestic"] / (1 + shock), 'foreign': p_index["foreign"]}
+            previous_fundamental_value = previous_domestic_indices[filter(lambda k: c not in k, previous_domestic_indices.keys)[0]] / float(previous_domestic_indices[c]) #TODO check if this works as intended
+
+            fundamentalist_predicted_change = fundamentalist_prediction(environment.var_previous.fx_rates.loc[fund.par.country,c], previous_fundamental_value)
+            chartist_predicted_change = chartist_prediction(environment.var_previous.fx_rates.loc[fund.par.country,c], 1) # TODO add previous ewma
+
+            fundamentalist_performance = change_in_FX * sgn(fundamentalist_predicted_change)
+            chartist_performance = change_in_FX * sgn(chartist_predicted_change)
+
+            # calculate strategy performance over time
+            weight = fund.par.current_strategy_performance_weight
+            av_fundamentalist_performance = weight * fundamentalist_performance + (1 - weight) * fund.var.ewma_fundamentalist_performance
+            av_chartist_performance = weight * chartist_performance + (1 - weight) * fund.var.ewma_chartist_performance
+
+            # calculate relative attractiveness of fundamentalist strategy over chartist strategy
+            strat_performance_w = environment.par.global_parameters["strategy_performance_weight"]
+            attractiveness_fundamentalists = strat_performance_w * (av_fundamentalist_performance - av_chartist_performance) + (1 - strat_performance_w)  * (XF_t_1 - fundamental_value)**2
+
+            # calculate weight of both strategies
+            intensity_of_choice = environment.par.global_parameters["intensity_of_choice"]
+            weight_fundamentalists = np.divide(1, 1 + np.exp(intensity_of_choice * attractiveness_fundamentalists))
+            weight_chartists = 1 - weight_fundamentalists
+
+            # calculate exchange rate expectation
+            fundamentalist_prediction = fundamentalist_prediction(environment.var.fx_rates.loc[fund.par.country, c], exp_fx_anchor.loc[fund.par.country,c])
+            chartist_prediction = chartist_prediction(environment.var.fx_rates.loc[fund.par.country, c], environment.var_previous.ewma_fx_rates.loc[fund.par.country, c])
+
+            exp_exchange_rates.loc[fund.par.country, c] = weight_fundamentalists * fundamentalist_prediction + weight_chartists * chartist_prediction
 
     return exp_exchange_rates, exp_fx_anchor
 
