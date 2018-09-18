@@ -143,7 +143,7 @@ def heterogeneous_fx_expectations(fund, environment, shock):
             change_in_FX = environment.var.fx_rates.loc[fund.par.country,c] - environment.var_previous.fx_rates.loc[fund.par.country,c]
 
             previous_domestic_indices = {'domestic': p_index["domestic"] / (1 + shock), 'foreign': p_index["foreign"]}
-            previous_fundamental_value = previous_domestic_indices[filter(lambda k: c not in k, previous_domestic_indices.keys)[0]] / float(previous_domestic_indices[c]) #TODO check if this works as intended
+            previous_fundamental_value = previous_domestic_indices[filter(lambda k: c not in k, previous_domestic_indices.keys())[0]] / float(previous_domestic_indices[c]) #TODO check if this works as intended
 
             fundamentalist_predicted_change = fundamentalist_prediction(environment.var_previous.fx_rates.loc[fund.par.country,c], previous_fundamental_value)
             chartist_predicted_change = chartist_prediction(environment.var_previous.fx_rates.loc[fund.par.country,c], 1) # TODO add previous ewma
@@ -158,7 +158,8 @@ def heterogeneous_fx_expectations(fund, environment, shock):
 
             # calculate relative attractiveness of fundamentalist strategy over chartist strategy
             strat_performance_w = environment.par.global_parameters["strategy_performance_weight"]
-            attractiveness_fundamentalists = strat_performance_w * (av_fundamentalist_performance - av_chartist_performance) + (1 - strat_performance_w)  * (XF_t_1 - fundamental_value)**2
+            attractiveness_fundamentalists = strat_performance_w * (av_fundamentalist_performance - av_chartist_performance
+                                                                    ) + (1 - strat_performance_w) * (environment.var.fx_rates.loc[fund.par.country,c] - exp_fx_anchor.loc[fund.par.country,c])**2 #TODO check if correct
 
             # calculate weight of both strategies
             intensity_of_choice = environment.par.global_parameters["intensity_of_choice"]

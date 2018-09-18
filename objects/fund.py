@@ -36,6 +36,8 @@ class AgentVariables:
         self.losses = losses
         self.size_target = size_target
         self.currency_inventory = currency_inventory
+        self.ewma_fundamentalist_performance = 0 #TODO initialize
+        self.ewma_chartist_performance = 0 # TODO initialize .. and update?
 
 
 class AgentParameters:
@@ -49,6 +51,7 @@ class AgentParameters:
         self.risk_aversion = risk_aversion
         self.adaptive_param = adaptive_param
         self.news_evaluation_error = news_evaluation_error
+        self.current_strategy_performance_weight = 0 #TODO fill
 
 
 class AgentExpectations:

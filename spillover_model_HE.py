@@ -164,7 +164,7 @@ def spillover_model_HE(portfolios, currencies, environment, exogeneous_agents, f
                 fund.exp.prices, \
                 fund.exp.exchange_rates = price_fx_expectations(fund, portfolios, currencies, environment)
 
-                fund.exp.exchange_rates, fund.exp.exchange_rate_anchor = anchored_FX_expectations(fund, environment, fx_shock)
+                fund.exp.exchange_rates, fund.exp.exchange_rate_anchor = heterogeneous_fx_expectations(fund, environment, fx_shock)
 
                 fund.exp.local_currency_returns, fund.exp.cons_returns, fund.exp.returns = return_expectations(fund, portfolios, currencies, environment)
 
