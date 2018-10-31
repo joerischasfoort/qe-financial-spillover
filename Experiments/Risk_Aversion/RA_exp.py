@@ -36,7 +36,7 @@ parameters = { #Todo: cleaning and spell checking!!
     "domestic_inflation_std": 0.02/float(250),
     "foreign_inflation_std": 0.02/float(250),
     "start_day": 1,
-    "end_day": 5000,
+    "end_day": 5001,
     "p_change_intensity": 0.1,
     "fx_change_intensity": 0.1,
     "cov_memory": 0.00,
@@ -84,6 +84,7 @@ parameters = { #Todo: cleaning and spell checking!!
     "foreign_default_rate_std": 0,
     "default_rate_mean_reversion": 1,
     "default_rate_delta_t": 0.003968253968253968,
+    "conv_bound": 0.001,
 
     "adaptive_param": 0.0,
 }

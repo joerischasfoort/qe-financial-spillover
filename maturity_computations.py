@@ -2,7 +2,9 @@ import numpy as np
 import matplotlib.pyplot as plt
 from scipy import optimize
 from scipy.optimize import basinhopping
-
+import pandas as pd
+import os
+print os.getcwd()
 
 Fed_BS_data = {"0-15": 1133 + 249412}
 Fed_BS_data.update({"16-90": 93310})
@@ -24,7 +26,11 @@ US_fund_data.update({"5476-7300": 2}) # 50% matures between 15 and 40 years (thi
 US_fund_data.update({"7301-10950": 6})
 US_fund_data.update({"10951-14210": 1})
 #
-data=US_fund_data
+
+
+df = pd.read_excel("funds/old_small_samples_before_automating_MSdownload/MS_360euro_baseCUR.xlsx")
+
+
 
 data = Fed_BS_data
 

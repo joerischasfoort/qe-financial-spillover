@@ -59,14 +59,22 @@ def exogenous_defaults(parameters, a, days,seed):
     time = days
     default_events_mean_reversion = parameters["default_events_mean_reversion"]
 
+    try:
+        default_events_mean = a.par.mean_default_events
+        default_events_std =  a.par.default_events_std
+        default_rate_mean =   a.par.default_rate_mean
+        default_rate_std =    a.par.default_rate_std
+        default_events_mean_reversion = a.par.default_events_mean_reversion
 
-    default_events_mean = parameters[a.par.country + "_default_events_mean"]
-    default_events_std =  parameters[a.par.country + "_default_events_std"]
-    default_rate_mean = parameters[a.par.country + "_default_rate_mean"]
-    default_rate_std = parameters[a.par.country + "_default_rate_std"]
+    except AttributeError:
+        default_events_mean = parameters[a.par.country + "_default_events_mean"]
+        default_events_std = parameters[a.par.country + "_default_events_std"]
+        default_rate_mean = parameters[a.par.country + "_default_rate_mean"]
+        default_rate_std = parameters[a.par.country + "_default_rate_std"]
+        default_events_mean_reversion = parameters["default_events_mean_reversion"]
 
     id_num = int(filter(str.isdigit, str(a)))  # give each asset a number in order to avoid correlated default events
-
+    id_num = sum(ord(a.par.country[i]) for i in range(len(a.par.country)))
 
 
     TS_default_events = ornstein_uhlenbeck_levels(time, default_events_mean,default_events_std,default_events_mean_reversion,seed + 1 + id_num)
@@ -99,6 +107,10 @@ def ornstein_uhlenbeck_levels(time, init_level, sigma, mean_reversion,seed): # T
         new_dr = (default_events[-1]*(1+error) + mean_reversion * (init_level - default_events[-1]))
         new_dr = max(1e-10,new_dr)
         new_dr = min(500, new_dr)
+
+        new_dr = exp(np.log((default_events[-1])+error + mean_reversion * (np.log(init_level) - np.log(default_events[-1]))))
+
+
         default_events.append(new_dr)
 
     return default_events

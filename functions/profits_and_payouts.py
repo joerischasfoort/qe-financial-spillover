@@ -56,6 +56,7 @@ def profit_and_payout(fund, portfolios, currencies, environment):
         total_payouts[c] = max(total_payouts[c]+fund.var_previous.losses[c],0)
 
 
+
         # the balance sheet effect takes into account the exchange rate effects
         total_payouts_fx_corr[c] = total_payouts[c] * environment.var.fx_rates.loc[fund.par.country, c.par.country]
 

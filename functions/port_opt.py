@@ -12,7 +12,7 @@ def portfolio_optimization(f):
         risk_aversion_mat = f.var.covariance_matrix.copy()
         for row in Cov_assets.index:
             for col in Cov_assets.columns:
-                risk_aversion_mat.loc[row,col]=np.sqrt(f.par.risk_aversion[row.par.country + "_assets"])*np.sqrt(f.par.risk_aversion[col.par.country +"_assets"])
+                risk_aversion_mat.loc[row,col]=np.sqrt(f.par.risk_aversion[row.par.country + "_asset"])*np.sqrt(f.par.risk_aversion[col.par.country +"_asset"])
         
 
         #multiply covariance with asset specific risk aversion
@@ -159,12 +159,17 @@ def portfolio_optimization_KT(f, day, tau):
     #
     E_ret_assets = np.zeros((len(Cov_assets)))
 
-    # compute the risk aversion matrix
-    risk_aversion_mat = f.var.covariance_matrix.copy()
-    for row in Cov_assets.index:
-        for col in Cov_assets.columns:
-            risk_aversion_mat.loc[row, col] = np.sqrt(f.par.risk_aversion[row.par.country + "_assets"]) * np.sqrt(
-                f.par.risk_aversion[col.par.country + "_assets"])
+
+
+    try:
+        risk_aversion_mat = f.par.RA_matrix # if the matrix does not exist, initialize it
+    except AttributeError:
+        # compute the risk aversion matrix
+        risk_aversion_mat = f.var.covariance_matrix.copy()
+        for row in Cov_assets.index:
+            for col in Cov_assets.columns:
+                risk_aversion_mat.loc[row, col] = np.sqrt(f.par.risk_aversion[row.par.country + "_asset"]) * np.sqrt(
+                    f.par.risk_aversion[col.par.country + "_asset"])
 
     # multiply covariance with asset specific risk aversion
     Cov_assets = np.multiply(Cov_assets, risk_aversion_mat)
@@ -197,6 +202,7 @@ def portfolio_optimization_KT(f, day, tau):
     while sum(test_KT) != len(test_KT):
         if KT_count > (len(aux_x)-1):
             print "day ", day, "iteration ", tau, ": Kuhn-Tucker Conditions not met repeatedly!"
+            break
 
         # compute matrix inverse
         try:
@@ -278,5 +284,10 @@ def portfolio_optimization_KT(f, day, tau):
 
     for i, a in enumerate(Cov_assets.columns.values):
         output[a] = weights[i]
+
+    U = {}
+    for i in range(len(E_ret_assets)):
+        U[i] = weights[i] * E_ret_assets[i] - 0.5 * sum(
+            [(weights[j] * weights[i]) * Cov_assets.iloc[i, j] for j in range(len(E_ret_assets))])
 
     return output

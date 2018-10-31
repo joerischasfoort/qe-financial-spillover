@@ -46,6 +46,11 @@ d_fc_dict = {}
 d_da_dict = {}
 d_fa_dict = {}
 
+d_cov_dc_dict = {}
+d_cov_fc_dict = {}
+d_cov_da_dict = {}
+d_cov_fa_dict = {}
+
 f_dc_dict = {}
 f_fc_dict = {}
 f_da_dict = {}
@@ -91,6 +96,11 @@ for i in variable:
     d_fc = []
     d_da = []
     d_fa = []
+
+    d_cov_dc = []
+    d_cov_fc = []
+    d_cov_da = []
+    d_cov_fa = []
 
     f_dc = []
     f_fc = []
@@ -150,6 +160,11 @@ for i in variable:
         f_da.append(funds[1].var.weights[portfolios[0]])
         f_fa.append(funds[1].var.weights[portfolios[1]])
 
+        d_cov_dc.append(funds[0].var.covariance_matrix.loc[currencies[0],currencies[0]])
+        d_cov_fc.append(funds[0].var.covariance_matrix.loc[currencies[1],currencies[1]])
+        d_cov_da.append(funds[0].var.covariance_matrix.loc[portfolios[0],portfolios[0]])
+        d_cov_fa.append(funds[0].var.covariance_matrix.loc[portfolios[1],portfolios[1]])
+
     fx_dict.update({obj_label: fx})
 
     d_ra0_dict.update({obj_label: d_ra0})
@@ -188,6 +203,11 @@ for i in variable:
     f_fc_dict.update({obj_label: f_fc})
     f_da_dict.update({obj_label: f_da})
     f_fa_dict.update({obj_label: f_fa})
+
+    d_cov_dc_dict.update({obj_label: d_cov_dc})
+    d_cov_fc_dict.update({obj_label: d_cov_fc})
+    d_cov_da_dict.update({obj_label: d_cov_da})
+    d_cov_fa_dict.update({obj_label: d_cov_fa})
 
 
 FX =np.empty((0,2), float)
@@ -384,7 +404,6 @@ for i in sorted(fx_dict.iterkeys()):
     F_FC_95 = np.append(F_FC_95, np.array([[float(i.split("_")[-1]),np.percentile(np.array(f_fc_dict[i]),95)]]), axis=0)
     F_DA_95 = np.append(F_DA_95, np.array([[float(i.split("_")[-1]),np.percentile(np.array(f_da_dict[i]),95)]]),axis=0)
     F_FA_95 = np.append(F_FA_95, np.array([[float(i.split("_")[-1]),np.percentile(np.array(f_fa_dict[i]),95)]]), axis=0)
-
 
 RA0=environment.par.global_parameters["domestic_risk_aversion_D_asset"]
 
@@ -604,5 +623,38 @@ plt.savefig('D_RA_a0_excess_returns.eps', format="eps")
 plt.close()
 
 
+
+fig, ax = plt.subplots()
+x= FX_mean[:, 0]
+y= FX_mean[:, 1]
+y=np.multiply(y,100)
+x=np.divide(x,RA0)*100
+lists = sorted(itertools.izip(*[x, y]))
+new_x, new_y = list(itertools.izip(*lists))
+ax.plot(new_x, new_y,"-b", label='a')
+ax.axvline(100,linestyle=':')
+ax.axhline(y[x.tolist().index(100)],linestyle=':')
+
+x= FX_5[:, 0]
+y= FX_5[:, 1]
+y=np.multiply(y,100)
+x=np.divide(x,RA0)*100
+lists = sorted(itertools.izip(*[x, y]))
+new_x, new_y = list(itertools.izip(*lists))
+ax.plot(new_x, new_y, linestyle='--',color='xkcd:grey')
+
+x= FX_95[:, 0]
+y= FX_95[:, 1]
+y=np.multiply(y,100)
+x=np.divide(x,RA0)*100
+lists = sorted(itertools.izip(*[x, y]))
+new_x, new_y = list(itertools.izip(*lists))
+ax.plot(new_x, new_y, linestyle='--',color='xkcd:grey', label='c')
+ax.xaxis.set_major_formatter(ScalarFormatter())
+plt.xlabel("x")
+plt.ylabel('y')
+ax.legend(loc = 'lower center', frameon=False, labelspacing = 1.5)
+#plt.savefig('D_RA_a0_excess_returns.eps', format="eps")
+plt.close()
 
 

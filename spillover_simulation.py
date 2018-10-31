@@ -13,27 +13,27 @@ list_of_risk_correlation.update({'domestic_inflation'+"_and_" +'fx_shock': -0.0}
 # 1 setup parameters
 parameters = { #Todo: cleaning and spell checking!!
     # global parameters
-    "n_domestic_assets": 11,
-    "n_foreign_assets": 1,
-    "n_domestic_funds": 1,
-    "n_foreign_funds": 1,
+    "n_domestic_assets": 2,
+    "n_foreign_assets": 2,
+    "n_domestic_funds": 2,
+    "n_foreign_funds": 2,
     "list_risk_corr": list_of_risk_correlation,
     "domestic_price_index": 1,
     "foreign_price_index": 1,
     "domestic_inflation_mean": 0.0,
     "foreign_inflation_mean": 0.0,
-    "domestic_inflation_std": 0.02/float(250),
-    "foreign_inflation_std": 0.02/float(250),
+    "domestic_inflation_std": 0.01/float(250),
+    "foreign_inflation_std": 0.015/float(250),
     "start_day": 1,
-    "end_day": 10,
+    "end_day": 5001,
     "p_change_intensity": 0.0001,
     "fx_change_intensity": 0.0001,
     "cov_memory": 0.00,
     # asset parameters
     "face_value": 5000,
     "nominal_interest_rate": 0.02/250,
-    "currency_rate": 0.0/250,
-    "maturity" : 0.9996,
+    "currency_rate": 0.01/250,
+    "maturity" : 0.99936,
     "quantity" : 5000,
     # agent parameters
     "price_memory": 0.0,
@@ -51,7 +51,7 @@ parameters = { #Todo: cleaning and spell checking!!
     # initial values
     "init_asset_price": 1.0,
     "init_exchange_rate": 1.0,
-    "total_money": 1000,
+    "total_money": 0,
     "init_agent_ewma_delta_prices": 1,
     "init_ewma_delta_fx": 1,
     "init_asset_demand": 0,
@@ -64,22 +64,22 @@ parameters = { #Todo: cleaning and spell checking!!
     "fx_shock_std": 0.0,
     "domestic_default_events_mean": 80 / float(250),
     "foreign_default_events_mean": 80 / float(250),
-    "domestic_default_events_std": 10 / float(250),
-    "foreign_default_events_std": 10 / float(250),
-    "default_events_mean_reversion": 1,# 0.001,
+    "domestic_default_events_std": 5 / float(250),
+    "foreign_default_events_std": 5 / float(250),
+    "default_events_mean_reversion": 0.00,# 0.001,
     "domestic_default_rate_mean": 0.02 / float(80),
     "foreign_default_rate_mean": 0.02 / float(80),
     "domestic_default_rate_std": 0,
     "foreign_default_rate_std": 0,
     "default_rate_mean_reversion": 1,
     "default_rate_delta_t": 0.003968253968253968,
-    'conv_bound': 0.05,
+    'conv_bound': 0.001,
     "adaptive_param": 0.0,
 }
 
 
 
-obj_label = "yc"
+obj_label = "xxx"
 seed = 1
 
 saving_params = {}
@@ -92,13 +92,12 @@ portfolios, currencies, funds, environment, exogenous_agents = init_objects(para
 
 
 
-variable = [0.952,0.984, 0.996, 0.9987,0.9992,0.9996,0.999733,0.9998,0.999867,0.9999,1]
+variable = [0.99936,1]
 #variable = [0.9996]
 
 i = 0
 for a in portfolios:
     if a.par.country =="domestic":
-        a.par.maturity = variable[i]
         i = i + 1
         if i == len(variable) :
             i = 0
@@ -109,7 +108,7 @@ for a in portfolios:
 start = time.time()
 portfolios, currencies, environment, exogenous_agents, funds, data_t = spillover_model(portfolios, currencies, environment, exogenous_agents, funds, seed, obj_label, saving_params)
 end = time.time()
-print(i, end - start)
+print(end - start)
 
 print("DONE!!!")
 print(pd.__version__)

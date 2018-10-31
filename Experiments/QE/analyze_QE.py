@@ -6,7 +6,7 @@ import itertools
 
 
 local_dir = "C:\Users\jrr\Documents\GitHub\qe-financial-spillover\Experiments\QE\Objects_QE/"
-local_dir = "Objects_QE_1pcfxs/"
+#local_dir = "Objects_QE_1pcfxs/"
 
 variable = [0, 20,40,60,80,100,120,140,160,180,200,250,300,350,400,450,500]
 

@@ -8,7 +8,7 @@ from matplotlib.ticker import ScalarFormatter
 
 local_dir = "Objects_ELA/"
 
-variable = [0.01, 0.04, 0.07, 0.10, 0.13, 0.15, 0.18,0.2, 0.25,0.3]
+variable = [0.001, 0.01, 0.04, 0.07, 0.10, 0.13, 0.15, 0.18,0.2, 0.25,0.3]
 
 
 fx_dict = {}
@@ -98,7 +98,7 @@ for i in variable:
     f_fa = []
 
 
-    for day in range(5001,6000):
+    for day in range(4000,5000):
         filename = local_dir + "objects_day_" + str(day) + "_seed_1_"  + obj_label+".pkl"
         data = open(filename,"rb")
         list_of_objects = pickle.load(data)
