@@ -82,8 +82,8 @@ test = []
 path = "data/Objects/"
 #path = "Experiments/Risk_Aversion/Objects_RA/"
 
-for day in range(3000 , 5000):
-    filename = path + "objects_day_" + str(day) + "_seed_1"  + "_master"+".pkl"
+for day in range(5001 , 5300):
+    filename = path + "objects_day_" + str(day) + "_seed_1"  + "_4aSim_CalPrices_5"+".pkl"
     #filename = "Experiments/QE/Objects_QE/objects_day_" + str(day) + "_seed_1"  + "_QE_asset_target_0"+".pkl"
 
     #filename = "C:\Users\jrr\Documents\GitHub\qe-financial-spillover\Experiments\QE\Objects_QE1\objects_day_" + str(day) + "_seed_1"  + "_QE_asset_target_1000"+".pkl"

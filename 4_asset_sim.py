@@ -94,6 +94,7 @@ cur_holdings = {"domestic_0": [0, 0],
                 "foreign_1": [0, 0]}
 
 maturities = [0.99936, 1] * 2
+
 face_values = [sum(port_holdings[i][0] for i in port_holdings), sum(port_holdings[i][1] for i in port_holdings),
                sum(port_holdings[i][2] for i in port_holdings), sum(port_holdings[i][3] for i in port_holdings)]
 quantities = face_values

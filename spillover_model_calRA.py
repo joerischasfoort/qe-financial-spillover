@@ -78,6 +78,11 @@ def spillover_model_calRA(portfolios, currencies, environment, exogeneous_agents
         except AttributeError:
             a.par.change_intensity = environment.par.global_parameters['p_change_intensity']
 
+
+
+    var_original = [v for v in var]
+    var_t1 = [v for v in var]
+
     ##############################################################################################################
     ############################################### DAY LOOP #####################################################
     ##############################################################################################################
@@ -139,13 +144,12 @@ def spillover_model_calRA(portfolios, currencies, environment, exogeneous_agents
         tau=0
         Deltas = {}
 
+
+
         # resetting intensity adjustment parameters
-        jump_counter = {a:0 for a in portfolios}
-        jump_counter.update({"FX": 0})
-        no_jump_counter = {a:0 for a in portfolios}
-        no_jump_counter.update({"FX": 0})
-        test_sign={a:0 for a in portfolios}
-        test_sign.update({"FX": 0})
+        jump_counter = {a:0 for a in var_original}
+        no_jump_counter = {a:0 for a in var_original}
+        test_sign= {a:0 for a in var_original}
 
         ###################################################################################################################
         ################################################ INTRADAY LOOP ####################################################
@@ -161,11 +165,7 @@ def spillover_model_calRA(portfolios, currencies, environment, exogeneous_agents
                 #environment, Deltas = shock_FX(portfolios, environment, exogeneous_agents, funds, currencies, fx_shock)
             #############################################################################
             #############################################################################
-            if "equity_dr" in var or "all_dr" in var:
-                default_rates, fundamental_default_rate_expectation, shock_processes = stochastic_timeseries(
-                    environment.par.global_parameters, portfolios, days, seed)
-                for a in portfolios:
-                    fundamental_default_rates[a]=fundamental_default_rate_expectation[a][day]
+
 
             for fund in funds:
                 # shareholder dividends and fund profits 
@@ -212,29 +212,43 @@ def spillover_model_calRA(portfolios, currencies, environment, exogeneous_agents
                 for a in portfolios:
                     pre_prices.update({a: a.var.price})
 
-                for f in funds:
-                    f.par.change_intensity={"domestic_asset":0.1,"foreign_asset":0.1}
-                funds, environment, portfolios, Deltas = update_RA_and_fx(portfolios, environment,currencies, funds,exogeneous_agents, var)
+
+                funds, environment, portfolios, Deltas_h = update_RA_and_fx(portfolios, environment,currencies, funds,exogeneous_agents, var, var_original)
+
+            try:
+                Deltas = {v: Deltas_h[v] for v in var_original}
+            except:
+                print(Deltas_h)
+
+            conv_bound = environment.par.global_parameters['conv_bound']
+            convergence,  convergence_condition = check_convergence_cal(Deltas, conv_bound,  tau)
+
+
+            jump_counter, no_jump_counter, test_sign, environment = I_intensity_parameter_adjustment_cal(
+                jump_counter, no_jump_counter, test_sign, Deltas, environment, portfolios, funds, var_t1)
+
+            update = 0
+            if var_t1 == []:
+                var_t1 = [v for v in var]
+                update = 1
+            if len(var) > 1:
+                var_t1 = [v for v in var]
+
+            h_var = []
+            for i in jump_counter:
+                if jump_counter[i] == 10:  # and convergence_condition[i]==False:
+                    h_var.append(i)
+            if len(h_var) > 0 and update == 0:
+                var = [np.random.permutation(h_var)[0]]
+                var_t1 = []
+            else:
+                var = [v for v in var_original]
+
 
             # check for convergece of asset and fx market
-            conv_bound = environment.par.global_parameters['conv_bound']
-
-
-            Deltas_relevant = {}
-            for v in var:
-                if v=="all_dr":
-                    Deltas_relevant.update({"e_domestic": Deltas["e_domestic"]})
-                    Deltas_relevant.update({"e_foreign": Deltas["e_foreign"]})
-                    #if "b_domestic" in Deltas:
-                    #    Deltas_relevant.update({"b_domestic": Deltas["b_domestic"]})
-                    #else:
-                    #    Deltas_relevant.update({"b_foreign": Deltas["b_foreign"]})
-                else:
-                    Deltas_relevant.update({v: Deltas[v]})
 
 
 
-            convergence,  convergence_condition = check_convergence_cal(Deltas_relevant, conv_bound, funds, tau)
 
 
 
@@ -243,14 +257,23 @@ def spillover_model_calRA(portfolios, currencies, environment, exogeneous_agents
             #print ("day:",day,"tau:",tau, convergence, Deltas)
 
             #calculating and printing degree(in percent) to which the convergence bound is reached. Values <= zero need to be achieved
-            list_DeltasA=[abs(Deltas[v]) for v in Deltas_relevant]
+            list_DeltasA=[abs(Deltas[v]) for v in var_original]
             mean_DA = np.mean(np.array(list_DeltasA))
             max_DA =  np.max(np.array(list_DeltasA))
             FX_DA = abs(np.array(Deltas['FX']))
             print ("day:", day, "tau:", tau, "mean_A:", mean_DA, 'max_A:', max_DA, 'FX:', FX_DA)
-            print(Deltas_relevant)
+            print("deltas",{d: Deltas[d] for d in Deltas})
+            print("asset_intensities",{a:a.par.cal_change_intensity for a in portfolios})
+            print("fund_intensities",{f: f.par.cal_change_intensity for f in funds})
             #print([a.par.nominal_interest_rate for a in portfolios])
 
+            if tau > 2000:
+                print('Calibration convergence failed on day ', day)
+                file_name = saving_params["path"] + '/!objects_nonConv_seed_' + str(seed) + '_day_' + str(day) + '.pkl'
+                save_objects = open(file_name, 'wb')
+                list_of_objects = [portfolios, currencies, environment, exogeneous_agents, funds, seed]
+                pickle.dump(list_of_objects, save_objects)
+                save_objects.close()
 
 
         ##########################################################################################################################

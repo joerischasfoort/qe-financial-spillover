@@ -145,20 +145,7 @@ def fx_adjustment(portfolios, currencies, environment, funds, adjustment_intensi
 
 
 
-def   I_intensity_parameter_adjustment(jump_counter, no_jump_counter, test_sign, Deltas, convergence, environment, jump_size, var):
-
-#    values = []
-#    keys = []
-#    for k, v in jump_size.iteritems():
-#        if v < 0:
-#            values.append(v)
-#            keys.append(k)
-#    if len(values) > 0:
-#        del keys[values.index(min(values))]
-#    for k in keys:
-#        if k in var:
-#            del var[var.index(k)]
-
+def   I_intensity_parameter_adjustment(jump_counter, no_jump_counter, test_sign, Deltas, convergence, environment,  var):
 
 
     jc = 10 # jumps until intensity is adjusted
@@ -183,6 +170,7 @@ def   I_intensity_parameter_adjustment(jump_counter, no_jump_counter, test_sign,
                 no_jump_counter[i] = 0
             if sum(jump[i] for i in jump) == 0 and i in var:
                 no_jump_counter[i] += 1
+                #jump_counter[i] = 0
 
         else:
             if jump[i] == 1 and i in var:# and convergence[i] == False:

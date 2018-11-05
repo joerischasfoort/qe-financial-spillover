@@ -188,7 +188,6 @@ def spillover_model(portfolios, currencies, environment, exogeneous_agents, fund
                 # compute the weights of optimal balance sheet positions
                 #fund.var.weights  = portfolio_optimization(fund)
                 fund.var.weights = portfolio_optimization_KT(fund,day, tau)
-                #print fund.var.weights , '\n', x
 
                 # intermediate cash position resulting from interest payments, payouts, maturing and defaulting assets
                 fund.var.currency_inventory = cash_inventory(fund, portfolios, currencies)
@@ -210,8 +209,6 @@ def spillover_model(portfolios, currencies, environment, exogeneous_agents, fund
                 for a in portfolios:
                     pre_prices.update({a: a.var.price})
 
-                Deltas_old = {i: Deltas[i] for i in Deltas}
-
                 portfolios, environment, Deltas = update_market_prices_and_fx(portfolios, currencies, environment, exogeneous_agents, funds, var)
 
             # check for convergece of asset and fx market
@@ -219,21 +216,10 @@ def spillover_model(portfolios, currencies, environment, exogeneous_agents, fund
             convergence, asset_market_convergence, convergence_condition = check_convergence(Deltas, conv_bound, portfolios, tau)
 
 
-            # jumps only count when they are caused by a change in the price or fx
-            pre_intensities = {}
-            for a in portfolios:
-               pre_intensities.update({a:a.par.change_intensity})
-
-            jump_size = {i: abs(Deltas[i] - Deltas_old[i]) * np.sign(Deltas[i] * Deltas_old[i]) for i in Deltas_old}
-
-            old_no_jump_counter = {i: no_jump_counter[i] for i in no_jump_counter}
-
             jump_counter, no_jump_counter, test_sign, environment = I_intensity_parameter_adjustment(
-                    jump_counter, no_jump_counter, test_sign, Deltas, convergence_condition, environment, jump_size, var_t1)
+                    jump_counter, no_jump_counter, test_sign, Deltas, convergence_condition, environment, var_t1)
 
 
-       #     if len(var_t1)==1 and no_jump_counter[var_t1[0]]> old_no_jump_counter[var_t1[0]]:
-       #         jump_counter[var_t1[0]] = 0
 
             update = 0
             if var_t1 == []:
@@ -254,20 +240,6 @@ def spillover_model(portfolios, currencies, environment, exogeneous_agents, fund
                 var = copy.copy(portfolios)
                 var.append("FX")
 
-
-
-      #      values = []
-      #      keys = []
-      #      for k, v in jump_size.iteritems():
-      #          if v < 0:
-      #              values.append(v)
-      #              keys.append(k)
-      #
-      #      if len(keys) > 1:
-      #          var = [np.random.permutation(portfolios)[0],"FX"]
-      #      else:
-      #          var = copy.copy(portfolios)
-      #          var.append("FX")
 
 
             #calculating and printing degree(in percent) to which the convergence bound is reached. Values <= zero need to be achieved
