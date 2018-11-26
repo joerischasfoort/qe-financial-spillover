@@ -10,6 +10,7 @@ from functions.balance_sheet_adjustments import *
 from functions.stochasticprocess import *
 from functions.expectation_formation import *
 from functions.calibration_mechanism import *
+from functions.calibration_functions import *
 from functions.profits_and_payouts import *
 from functions.supercopy import *
 from functions.measurement import *
@@ -22,7 +23,7 @@ from scipy.optimize import minimize
 
 
 
-def spillover_model_calRA(portfolios, currencies, environment, exogeneous_agents, funds,  seed, obj_label,saving_params,var):
+def spillover_model_calRA(portfolios, currencies, environment, exogeneous_agents, funds,  seed,seed1, obj_label,saving_params,var):
     """
     Koziol, Riedler & Schasfoort Agent-based simulation model of financial spillovers
     :param assets: list of Asset objects
@@ -39,10 +40,8 @@ def spillover_model_calRA(portfolios, currencies, environment, exogeneous_agents
     ######################################################################
     deltas = {"Delta_" + str(i): 0 for i in portfolios}
     deltas["Delta_FX"] = 0
-    data = []
-#
-    #    data = initdatadict(funds, portfolios, currencies, environment, deltas ) # create tau data dictionary
- #   data_t = copy.deepcopy(data) # create t data dictionary
+
+
     ######################################################################
     ##### Determine directoring for saving objects and measurement########
     ######################################################################
@@ -56,7 +55,8 @@ def spillover_model_calRA(portfolios, currencies, environment, exogeneous_agents
     ##################################################################################
     # calculating stochastic components default
     days = environment.par.global_parameters["end_day"]
-    default_rates, fundamental_default_rate_expectation, shock_processes = stochastic_timeseries(environment.par.global_parameters, portfolios, days, seed)
+
+    default_rates, fundamental_default_rate_expectation, shock_processes = stochastic_timeseries_2(environment.par.global_parameters, portfolios, environment.par.global_parameters['start_day'], environment.par.global_parameters['end_day'], seed, seed1)
 
     # initial default expectations
     noise = {}
@@ -82,6 +82,13 @@ def spillover_model_calRA(portfolios, currencies, environment, exogeneous_agents
 
     var_original = [v for v in var]
     var_t1 = [v for v in var]
+    max_DA_t1 = 1
+    progress_count = 0
+    no_progress_count = 0
+
+
+
+
 
     ##############################################################################################################
     ############################################### DAY LOOP #####################################################
@@ -168,12 +175,8 @@ def spillover_model_calRA(portfolios, currencies, environment, exogeneous_agents
 
 
             for fund in funds:
-                # shareholder dividends and fund profits 
-                fund.var.profits, \
-                fund.var.cons_profits, \
-                fund.var.losses, \
-                fund.var.redeemable_shares, \
-                fund.var.payouts = profit_and_payout(fund, portfolios, currencies, environment)
+
+                fund.var.redeemable_shares = recompute_liabilities(fund, portfolios, currencies, environment)
 
                 # Expectation formation
                 fund.exp.default_rates = fundamental_default_rates
@@ -193,13 +196,11 @@ def spillover_model_calRA(portfolios, currencies, environment, exogeneous_agents
                 fund.var.weights  = portfolio_optimization_KT(fund,day, tau)
 
 
-                # intermediate cash position resulting from interest payments, payouts, maturing and defaulting assets
-                fund.var.currency_inventory = cash_inventory(fund, portfolios, currencies)
 
                 # compute demand for balance sheet positions
                 fund.var.asset_demand, fund.var.currency_demand = asset_demand(fund, portfolios, currencies, environment)
 
-
+            print(sum(f.var.currency_demand[currencies[0]] for f in funds))
 
             for ex in exogeneous_agents:
                 exogeneous_agents[ex].var.asset_demand = ex_agent_asset_demand(ex, exogeneous_agents, portfolios )
@@ -212,8 +213,13 @@ def spillover_model_calRA(portfolios, currencies, environment, exogeneous_agents
                 for a in portfolios:
                     pre_prices.update({a: a.var.price})
 
+                # Computing the contribution of the variance to utility... might be positive for some assets, due to negative correlations
+                U = {str(f): {str(i): sum(
+                    [f.var.weights[j] * np.sqrt(f.par.RA_matrix.loc[j,j]) * f.var.covariance_matrix.loc[i, j] for j in
+                     f.var.weights]) for i in f.var.weights} for f in funds}
 
-                funds, environment, portfolios, Deltas_h = update_RA_and_fx(portfolios, environment,currencies, funds,exogeneous_agents, var, var_original)
+
+                funds, environment, portfolios, Deltas_h = update_RA_and_fx(portfolios, environment,currencies, funds,exogeneous_agents, var, var_original,U)
 
             try:
                 Deltas = {v: Deltas_h[v] for v in var_original}
@@ -225,51 +231,56 @@ def spillover_model_calRA(portfolios, currencies, environment, exogeneous_agents
 
 
             jump_counter, no_jump_counter, test_sign, environment = I_intensity_parameter_adjustment_cal(
-                jump_counter, no_jump_counter, test_sign, Deltas, environment, portfolios, funds, var_t1)
+                jump_counter, no_jump_counter, test_sign, Deltas, environment, portfolios,currencies, funds, var_t1)
 
-            update = 0
-            if var_t1 == []:
-                var_t1 = [v for v in var]
-                update = 1
-            if len(var) > 1:
-                var_t1 = [v for v in var]
+         #   update = 0
+         #   if var_t1 == []:
+         #       var_t1 = [v for v in var]
+         #       update = 1
+         #   if len(var) > 1:
+         #       var_t1 = [v for v in var]
+         #
+         #   h_var = []
+         #   for i in jump_counter:
+         #       if jump_counter[i] == 10:  # and convergence_condition[i]==False:
+         #           h_var.append(i)
+         #   if len(h_var) > 0 and update == 0:
+         #       var = [np.random.permutation(h_var)[0]]
+         #       var_t1 = []
+         #   else:
+         #       var = [v for v in var_original]
+            
 
-            h_var = []
-            for i in jump_counter:
-                if jump_counter[i] == 10:  # and convergence_condition[i]==False:
-                    h_var.append(i)
-            if len(h_var) > 0 and update == 0:
-                var = [np.random.permutation(h_var)[0]]
-                var_t1 = []
-            else:
-                var = [v for v in var_original]
-
-
-            # check for convergece of asset and fx market
-
-
-
-
-
-
-
-
-            #print ("day:",day,"tau:",tau, convergence, Deltas)
 
             #calculating and printing degree(in percent) to which the convergence bound is reached. Values <= zero need to be achieved
             list_DeltasA=[abs(Deltas[v]) for v in var_original]
             mean_DA = np.mean(np.array(list_DeltasA))
             max_DA =  np.max(np.array(list_DeltasA))
-            FX_DA = abs(np.array(Deltas['FX']))
-            print ("day:", day, "tau:", tau, "mean_A:", mean_DA, 'max_A:', max_DA, 'FX:', FX_DA)
+            #FX_DA = abs(np.array(Deltas['FX']))
+            print ("day:", day, "tau:", tau, "mean_A:", mean_DA, 'max_A:', max_DA)#, 'FX:', FX_DA)
             print("deltas",{d: Deltas[d] for d in Deltas})
             print("asset_intensities",{a:a.par.cal_change_intensity for a in portfolios})
             print("fund_intensities",{f: f.par.cal_change_intensity for f in funds})
-            #print([a.par.nominal_interest_rate for a in portfolios])
 
-            if tau > 2000:
+            delta_max_DA = (max_DA / max_DA_t1 - 1)
+            max_DA_t1 = max_DA
+            print(no_progress_count - progress_count, delta_max_DA)
+            if abs(delta_max_DA) < 0.01 and delta_max_DA != 0:
+                no_progress_count += 1
+                if delta_max_DA < 0:
+                    progress_count += 1
+            else:
+                no_progress_count = 0
+                progress_count = 0
+
+            if tau > 999 or (tau > 200 and no_progress_count - progress_count > 20 and max_DA < 0.1):
+                convergence = True
+                if tau > 999:
+                    reason = "time"
+                else:
+                    reason = "no_progress"
                 print('Calibration convergence failed on day ', day)
-                file_name = saving_params["path"] + '/!objects_nonConv_seed_' + str(seed) + '_day_' + str(day) + '.pkl'
+                file_name = saving_params["path"] + '/!nonConv_'+reason+'_seed_' + str(seed) + '_day_' + str(day) +"_tau_"+str(tau)+"_" + obj_label + '.pkl'
                 save_objects = open(file_name, 'wb')
                 list_of_objects = [portfolios, currencies, environment, exogeneous_agents, funds, seed]
                 pickle.dump(list_of_objects, save_objects)
@@ -280,40 +291,7 @@ def spillover_model_calRA(portfolios, currencies, environment, exogeneous_agents
         ############################################## BALANCE SHEET ADJUSTMENT ##################################################
         ###########################################################################################################################
 
-        # updating the covariance matrices
-        for fund in funds:
-            fund.var.ewma_returns, fund.var.covariance_matrix, fund.var.hypothetical_returns = covariance_estimate(fund,
-                                                                                                                   environment,
-                                                                                                                   previous_local_currency_returns[
-                                                                                                                       fund],
-                                                                                                                   inflation_shock)
-
-            # computing new asset and cash positions
-        excess_demand, pi, nu = asset_excess_demand_and_correction_factors(funds, portfolios, currencies,
-                                                                           exogeneous_agents)
-
-        # trading
-        for fund in funds:
-            fund.var.assets = fund_asset_adjustments(fund, portfolios, excess_demand, pi, nu)
-            fund.var.currency_inventory = fund_cash_inventory_adjustment(fund, portfolios, currencies)
-            temp, fund.var.currency_demand = asset_demand(fund, portfolios, currencies, environment)
-
-        for ex in exogeneous_agents:
-            exogeneous_agents[ex].var.assets = ex_asset_adjustments(ex, portfolios, excess_demand, pi, nu,
-                                                                    exogeneous_agents)
-
-        for fund in funds:
-            fund.var.currency_demand = cash_demand_correction(fund, currencies, environment)
-
-        nuC, piC, excess_demandC = cash_excess_demand_and_correction_factors(funds, currencies, exogeneous_agents)
-
-        for fund in funds:
-            fund.var.currency = fund_cash_adjustments(nuC, piC, excess_demandC, currencies, fund)
-
-        exogeneous_agents["fx_interventionist"].var.currency = fx_interventionist_cash_adjustment(
-            exogeneous_agents["fx_interventionist"], nuC, piC, excess_demandC, currencies)
-
-        # update previous variables
+            # update previous variables
         for fund in funds:
             fund.var_previous = copy_agent_variables(fund.var)
 
@@ -324,7 +302,8 @@ def spillover_model_calRA(portfolios, currencies, environment, exogeneous_agents
 
         exogeneous_agents['central_bank_domestic'].var_previous = copy_cb_variables(
             exogeneous_agents['central_bank_domestic'].var)
-        exogeneous_agents['underwriter'].var_previous = copy_underwriter_variables(exogeneous_agents['underwriter'].var)
+        exogeneous_agents['underwriter'].var_previous = copy_underwriter_variables(
+            exogeneous_agents['underwriter'].var)
 
         # saving objects
         if day>=saving_params["time"]:

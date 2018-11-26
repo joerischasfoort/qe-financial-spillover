@@ -2,31 +2,48 @@ from __future__ import division
 from math import log
 from math import exp
 import numpy as np
+from calibration_functions import *
 
-def update_RA_and_fx(portfolios, environment,currencies, funds,exogeneous_agents, var, var_original):
+def update_RA_and_fx(portfolios, environment,currencies, funds,exogeneous_agents, var, var_original,U):
     Delta_RA = {}
     Delta_Demand = {}
     Delta_Capital = {}
 
 
-    for a in np.random.permutation(portfolios):
+   # for a in np.random.permutation(portfolios):
+   #     if a in var:
+   #         a.par.nominal_interest_rate, delta_demand = interest_rate_adjustment(portfolios, exogeneous_agents, funds, a, a.par.cal_change_intensity)  # TODO: is the Delta_str really necessary?
+   #         Delta_Demand.update({a: delta_demand})
+   #     else:
+   #         a.par.nominal_interest_rate, delta_demand = interest_rate_adjustment(portfolios, exogeneous_agents, funds, a, 0)  # TODO: is the Delta_str really necessary?
+   #         Delta_Demand.update({a: delta_demand})
+   #
+
+    for a in portfolios:
         if a in var:
-            a.par.nominal_interest_rate, delta_demand = interest_rate_adjustment(portfolios, exogeneous_agents, funds, a, a.par.cal_change_intensity)  # TODO: is the Delta_str really necessary?
+            a.par.nominal_interest_rate, delta_demand = int_adjustment(funds, a, a.par.cal_change_intensity)  # TODO: is the Delta_str really necessary?
             Delta_Demand.update({a: delta_demand})
         else:
-            a.par.nominal_interest_rate, delta_demand = interest_rate_adjustment(portfolios, exogeneous_agents, funds, a, 0)  # TODO: is the Delta_str really necessary?
+            a.par.nominal_interest_rate, delta_demand = int_adjustment(funds, a, 0)  # TODO: is the Delta_str really necessary?
             Delta_Demand.update({a: delta_demand})
+        #print(delta_demand)
+#    for c in currencies:
+#        if c in var:
+#            c.par.RA, delta_ra =  RA_matrix_adjustment_cash(funds, c, c.par.cal_change_intensity)
+#            Delta_RA.update({c: delta_ra})
+#        elif c in var_original:
+#            c.par.RA, delta_ra =  RA_matrix_adjustment_cash(funds, c, 0)
+#            Delta_RA.update({c: delta_ra})
+#
 
-
-
-    for f in np.random.permutation(funds):
-        for a in np.random.permutation(portfolios):
+    for f in funds:
+        for a in portfolios+currencies:
             if str(f)+"_"+str(a) in var:
-                f.par.RA_matrix, delta_ra =  RA_matrix_adjustment(portfolios, currencies, a, f,  f.par.cal_change_intensity[a])
+                f.par.RA_matrix, delta_ra =  RA_matrix_adjustment(portfolios, currencies,funds, a, f,  f.par.cal_change_intensity[a],U[str(f)][str(a)])
                 Delta_RA.update({str(f)+"_"+str(a): delta_ra})
             elif str(f)+"_"+str(a) in var_original:
-                f.par.RA_matrix, delta_ra = RA_matrix_adjustment(portfolios, currencies, a, f, 0)
-                Delta_RA.update({str(f) + "_" + str(a): delta_ra})
+                f.par.RA_matrix, delta_ra = RA_matrix_adjustment(portfolios, currencies,funds, a, f, 0,1)#np.sign(U[str(f)][str(a)]))
+                Delta_RA.update({str(f) + "_" + str(a): delta_ra})                                                         
 
 
         environment.var.fx_rates, Delta_Capital = fx_adjustment(portfolios, currencies, environment, funds,
@@ -51,31 +68,70 @@ def update_RA_and_fx(portfolios, environment,currencies, funds,exogeneous_agents
 
 
 
-def RA_matrix_adjustment(portfolios, currencies, asset, fund,  adjustment_intensity):
+def RA_matrix_adjustment(portfolios, currencies, funds, asset, fund,  adjustment_intensity, sign):
     """
     Find the next  price of asset a.
     Sums over all demands of funds and exogenous agents
     and calculates the new price in tau via a log impact function
     """
     # Equation 1.18 : Get aggregate demand over all funds and exogenous agents
-    demand = fund.var.asset_demand[asset]
+    D = {}
+    for a in portfolios+currencies:
+         if str(a)[:2] == "cu":
+             if fund.var.currency[a]>0:#a.par.quantity > 0:
+                 D.update({a:(fund.var.weights[a]*fund.var.redeemable_shares-fund.var.currency[a]) / fund.var.currency[a]})
+                 #D.update({a: (a.par.cash_demand - a.par.quantity)/a.par.quantity})
+             else:
+                 D.update({a:(fund.var.weights[a]*fund.var.redeemable_shares-fund.var.currency[a]) / fund.var.redeemable_shares})
+                 #D.update({a: (a.par.cash_demand - a.par.quantity) / fund.var.redeemable_shares})
 
-    total_assets = fund.var.assets[asset]#sum(fund.var.assets[a] for a in portfolios)
+         else:
+             if fund.var.assets[a] > 0:
+                 D.update({a: (fund.var.asset_demand[a]) / fund.var.assets[a]})
+             else:
+                 D.update({a: (fund.var.asset_demand[a]) / fund.var.redeemable_shares})
+
+    positives = sum([D[a]*(D[a]>0) for a in portfolios+currencies])
+    negatives = sum([-D[a]*(D[a]<0) for a in portfolios+currencies])
+
+    if positives ==0 or negatives==0:
+        print("problem")
+
+    if (positives<1 or negatives<1) and positives < negatives:
+        correction = negatives/float(positives)
+        type = "positives"
+    elif (positives<1 or negatives<1) and positives > negatives:
+        type = "negatives"
+        correction = positives / float(negatives)
+    else:
+        type = "neutral"
+        correction = 1
 
 
+
+
+    #demand = demand
+    #total_assets = fund.var.redeemable_shares
+    DD = D[asset]
+    #DD = D*min(100,abs(1/D))
+
+    if type == 'positives' and DD>0:
+        DD=DD*correction
+    elif type == 'negatives' and DD < 0:
+        DD=DD*correction
     risk_aversion_mat = fund.par.RA_matrix.copy()
 
 
 
-    risk_aversion_mat.loc[asset][asset]=max(1,exp(log(fund.par.RA_matrix.loc[asset][asset]) + adjustment_intensity * demand / total_assets))
-    Delta = demand / total_assets
+    risk_aversion_mat.loc[asset][asset]=max(0.1,exp(log(fund.par.RA_matrix.loc[asset][asset]) + sign*adjustment_intensity * (min(1,max(-1,DD)))))
+    #Delta = demand / total_assets
 
-    for c in currencies:
-        if c.par.country=='domestic':
-            risk_aversion_mat.loc[c][c] =  risk_aversion_mat.loc[portfolios[0]][portfolios[0]]
-        if c.par.country == 'foreign':
-            risk_aversion_mat.loc[c][c] = risk_aversion_mat.loc[portfolios[2]][portfolios[2]]
-
+    #for c in currencies:
+    #    if c.par.country=='domestic':
+    #        risk_aversion_mat.loc[c][c] =  risk_aversion_mat.loc[portfolios[0]][portfolios[0]]
+    #    if c.par.country == 'foreign':
+    #        risk_aversion_mat.loc[c][c] = risk_aversion_mat.loc[portfolios[2]][portfolios[2]]
+   ##
 
     for row in risk_aversion_mat.index:
         for col in risk_aversion_mat.columns:
@@ -83,8 +139,18 @@ def RA_matrix_adjustment(portfolios, currencies, asset, fund,  adjustment_intens
                 risk_aversion_mat.loc[col, col])
 
 
-    return risk_aversion_mat, Delta
+    return risk_aversion_mat, DD
 
+
+
+
+def int_adjustment(funds, a, adjustment_intensity):
+    Delta = (funds[0].exp.returns[a]-funds[0].exp.target_returns[a])/abs(funds[0].exp.target_returns[a])
+    log_new_interest = log(a.par.nominal_interest_rate) - adjustment_intensity * Delta
+    interest_rate = exp(log_new_interest)
+
+
+    return interest_rate, Delta
 
 
 
@@ -199,9 +265,10 @@ def fx_adjustment(portfolios, currencies, environment, funds, adjustment_intensi
 
 
 
-def   I_intensity_parameter_adjustment_cal(jump_counter, no_jump_counter, test_sign, Deltas, environment, portfolios, funds, var):
+def   I_intensity_parameter_adjustment_cal(jump_counter, no_jump_counter, test_sign, Deltas, environment, portfolios,currencies, funds, var):
 
     portfolios_str = [str(a) for a in portfolios]
+    currencies_str = [str(a) for a in currencies]
     funds_str = [str(f) for f in funds]
 
     jc = 10 # jumps until intensity is adjusted
@@ -219,11 +286,16 @@ def   I_intensity_parameter_adjustment_cal(jump_counter, no_jump_counter, test_s
             a_str = i.split("_")[1]
 
             fund = funds[funds_str.index(f_str)]
-            asset = portfolios[portfolios_str.index(a_str)]
+            if a_str[:2]=="cu":
+                asset = currencies[currencies_str.index(a_str)]
+            else:
+                asset = portfolios[portfolios_str.index(a_str)]
             change_intensity = fund.par.cal_change_intensity[asset]
-
-        test[i] = test_sign[i] / np.sign(Deltas[i])
-        test_sign[i] = np.sign(Deltas[i])
+        if np.sign(Deltas[i])==0:
+            test[i] = test_sign[i]
+        else:
+            test[i] = test_sign[i] / np.sign(Deltas[i])
+            test_sign[i] = np.sign(Deltas[i])
 
         if test[i] == -1:
             jump[i] = 1
@@ -263,7 +335,7 @@ def   I_intensity_parameter_adjustment_cal(jump_counter, no_jump_counter, test_s
 
 
         if no_jump_counter[i] > nojc and i!="FX" and i in var:# and convergence[i] == False:
-            change_intensity =  min(0.1, change_intensity * 1.1)
+            change_intensity =  min(0.9, change_intensity * 1.1)
             no_jump_counter[i] = 0
             jump_counter[i] = 0
 

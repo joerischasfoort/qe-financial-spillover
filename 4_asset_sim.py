@@ -21,9 +21,9 @@ parameters = { #Todo: cleaning and spell checking!!
     "domestic_price_index": 1,
     "foreign_price_index": 1,
     "domestic_inflation_mean": 0.01/float(250),
-    "foreign_inflation_mean": 0.0285/float(250),
-    "domestic_inflation_std": 0.009/float(250),
-    "foreign_inflation_std": 0.013/float(250),
+    "foreign_inflation_mean": 0.021/float(250),
+    "domestic_inflation_std": 0.01/float(250), #
+    "foreign_inflation_std": 0.007/float(250),
     "start_day": 1,
     "end_day": 5001,
     "p_change_intensity": 0.0001,
@@ -101,7 +101,7 @@ quantities = face_values
 
 coupon_rates = [0.01 / 250, 0.02 / 250] * 2
 
-currency_rates = {"domestic": 0.002/250, "foreign": 0.0275 / 250}
+currency_rates = {"domestic": 0.002/250, "foreign": 0.0085 / 250}
 currency_amounts = {"domestic": sum(cur_holdings[i][0] for i in cur_holdings),
                     "foreign": sum(cur_holdings[i][1] for i in cur_holdings)}
 

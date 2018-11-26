@@ -5,10 +5,10 @@ import numpy as np
 import itertools
 
 
-local_dir = "C:\Users\jrr\Documents\GitHub\qe-financial-spillover\Experiments\QE\Objects_QE/"
+local_dir = "C:\Users\jrr\Dropbox\GitHub\qe-financial-spillover\data\Objects/"
 #local_dir = "Objects_QE_1pcfxs/"
 
-variable = [0, 20,40,60,80,100,120,140,160,180,200,250,300,350,400,450,500]
+variable = [0, 200]
 
 
 
@@ -51,7 +51,7 @@ f_a1_dict = {}
 
 
 for i in variable:
-    obj_label =  "QE_asset_target_" + str(i)
+    obj_label =  "QE_" + str(i)
 
 
     #variables to extract
@@ -91,7 +91,7 @@ for i in variable:
     f_a1 = []
 
 
-    for day in range(5001,7000):
+    for day in range(1,300):
         filename = local_dir + "objects_day_" + str(day) + "_seed_1_"  + obj_label+".pkl"
         data = open(filename,"rb")
         list_of_objects = pickle.load(data)
@@ -294,19 +294,19 @@ FX_95 =np.empty((0,2), float)
 
 
 for i in fx_dict:
-    f0 =np.array(fx_dict['QE_asset_target_0'])
+    f0 =np.array(fx_dict['QE_0'])
     f=  np.array(fx_dict[i])
     FX_mean=np.append(FX_mean, np.array([[float(i.split("_")[-1]),np.mean(f/f0-1)]]),axis=0)
     FX_5 = np.append(FX_5, np.array([[float(i.split("_")[-1]), np.percentile(f/f0-1, 5)]]), axis=0)
     FX_95 = np.append(FX_95, np.array([[float(i.split("_")[-1]), np.percentile(f/f0-1, 95)]]), axis=0)
 
-    P00 =np.array(p0_dict['QE_asset_target_0'])
+    P00 =np.array(p0_dict['QE_0'])
     P0=  np.array(p0_dict[i])
     P0_mean=np.append(P0_mean, np.array([[float(i.split("_")[-1]),np.mean(P0/P00-1)]]),axis=0)
     P0_5 = np.append(P0_5, np.array([[float(i.split("_")[-1]), np.percentile(P0/P00-1, 5)]]), axis=0)
     P0_95 = np.append(P0_95, np.array([[float(i.split("_")[-1]), np.percentile(P0/P00-1, 95)]]), axis=0)
 
-    P10 =np.array(p1_dict['QE_asset_target_0'])
+    P10 =np.array(p1_dict['QE_0'])
     P1=  np.array(p1_dict[i])
     P1_mean=np.append(P1_mean, np.array([[float(i.split("_")[-1]),np.mean(P1/P10-1)]]),axis=0)
     P1_5 = np.append(P1_5, np.array([[float(i.split("_")[-1]), np.percentile(P1/P10-1, 5)]]), axis=0)
@@ -315,16 +315,16 @@ for i in fx_dict:
 
 
 
-    d_ys_r0= np.divide(np.array(d_ra0_dict[i]) - np.array(d_rc0_dict[i]),np.array(d_ra0_dict['QE_asset_target_0']) - np.array(d_rc0_dict['QE_asset_target_0']))-1
-    d_ys_r1= np.divide(np.array(d_ra1_dict[i]) - np.array(d_rc1_dict[i]),np.array(d_ra1_dict['QE_asset_target_0']) - np.array(d_rc1_dict['QE_asset_target_0']))-1
-    f_ys_r0= np.divide(np.array(f_ra0_dict[i]) - np.array(f_rc0_dict[i]),np.array(f_ra0_dict['QE_asset_target_0']) - np.array(f_rc0_dict['QE_asset_target_0']))-1
-    f_ys_r1= np.divide(np.array(f_ra1_dict[i]) - np.array(f_rc1_dict[i]),np.array(f_ra1_dict['QE_asset_target_0']) - np.array(f_rc1_dict['QE_asset_target_0']))-1
+    d_ys_r0= np.divide(np.array(d_ra0_dict[i]) - np.array(d_rc0_dict[i]),np.array(d_ra0_dict['QE_0']) - np.array(d_rc0_dict['QE_0']))-1
+    d_ys_r1= np.divide(np.array(d_ra1_dict[i]) - np.array(d_rc1_dict[i]),np.array(d_ra1_dict['QE_0']) - np.array(d_rc1_dict['QE_0']))-1
+    f_ys_r0= np.divide(np.array(f_ra0_dict[i]) - np.array(f_rc0_dict[i]),np.array(f_ra0_dict['QE_0']) - np.array(f_rc0_dict['QE_0']))-1
+    f_ys_r1= np.divide(np.array(f_ra1_dict[i]) - np.array(f_rc1_dict[i]),np.array(f_ra1_dict['QE_0']) - np.array(f_rc1_dict['QE_0']))-1
 
 
-    d_ys_r0= (np.array(d_ra0_dict[i]) - np.array(d_rc0_dict[i]))-(np.array(d_ra0_dict['QE_asset_target_0']) - np.array(d_rc0_dict['QE_asset_target_0']))
-    d_ys_r1= (np.array(d_ra1_dict[i]) - np.array(d_rc1_dict[i]))-(np.array(d_ra1_dict['QE_asset_target_0']) - np.array(d_rc1_dict['QE_asset_target_0']))
-    f_ys_r0= (np.array(f_ra0_dict[i]) - np.array(f_rc0_dict[i]))-(np.array(f_ra0_dict['QE_asset_target_0']) - np.array(f_rc0_dict['QE_asset_target_0']))
-    f_ys_r1= (np.array(f_ra1_dict[i]) - np.array(f_rc1_dict[i]))-(np.array(f_ra1_dict['QE_asset_target_0']) - np.array(f_rc1_dict['QE_asset_target_0']))
+    d_ys_r0= (np.array(d_ra0_dict[i]) - np.array(d_rc0_dict[i]))-(np.array(d_ra0_dict['QE_0']) - np.array(d_rc0_dict['QE_0']))
+    d_ys_r1= (np.array(d_ra1_dict[i]) - np.array(d_rc1_dict[i]))-(np.array(d_ra1_dict['QE_0']) - np.array(d_rc1_dict['QE_0']))
+    f_ys_r0= (np.array(f_ra0_dict[i]) - np.array(f_rc0_dict[i]))-(np.array(f_ra0_dict['QE_0']) - np.array(f_rc0_dict['QE_0']))
+    f_ys_r1= (np.array(f_ra1_dict[i]) - np.array(f_rc1_dict[i]))-(np.array(f_ra1_dict['QE_0']) - np.array(f_rc1_dict['QE_0']))
 
 
 
@@ -344,24 +344,24 @@ for i in fx_dict:
     F_R1_95 = np.append(F_R1_95, np.array([[float(i.split("_")[-1]), np.percentile(f_ys_r1, 95)]]), axis=0)
 
 
-    delta_fx.update({i: np.multiply(((np.array(fx_dict[i])/np.array(fx_dict['QE_asset_target_0']))-1),100)})
-    delta_hb_d.update({i: np.multiply(((np.array(hb_d_dict[i])/np.array(hb_d_dict['QE_asset_target_0']))-1),100)})
-    delta_hb_f.update({i: np.multiply(((np.array(hb_f_dict[i])/np.array(hb_f_dict['QE_asset_target_0']))-1),100)})
+    delta_fx.update({i: np.multiply(((np.array(fx_dict[i])/np.array(fx_dict['QE_0']))-1),100)})
+    delta_hb_d.update({i: np.multiply(((np.array(hb_d_dict[i])/np.array(hb_d_dict['QE_0']))-1),100)})
+    delta_hb_f.update({i: np.multiply(((np.array(hb_f_dict[i])/np.array(hb_f_dict['QE_0']))-1),100)})
 
 
-    delta_d_c0.update({i: np.multiply(((np.array(d_c0_dict[i]) / np.array(d_c0_dict['QE_asset_target_0'])) - 1), 100)})
-    delta_d_a0.update({i: np.multiply(((np.array(d_a0_dict[i]) / np.array(d_a0_dict['QE_asset_target_0'])) - 1), 100)})
-    delta_d_c1.update({i: np.multiply(((np.array(d_c1_dict[i]) / np.array(d_c1_dict['QE_asset_target_0'])) - 1), 100)})
-    delta_d_a1.update({i: np.multiply(((np.array(d_a1_dict[i]) / np.array(d_a1_dict['QE_asset_target_0'])) - 1), 100)})
+    delta_d_c0.update({i: np.multiply(((np.array(d_c0_dict[i]) / np.array(d_c0_dict['QE_0'])) - 1), 100)})
+    delta_d_a0.update({i: np.multiply(((np.array(d_a0_dict[i]) / np.array(d_a0_dict['QE_0'])) - 1), 100)})
+    delta_d_c1.update({i: np.multiply(((np.array(d_c1_dict[i]) / np.array(d_c1_dict['QE_0'])) - 1), 100)})
+    delta_d_a1.update({i: np.multiply(((np.array(d_a1_dict[i]) / np.array(d_a1_dict['QE_0'])) - 1), 100)})
 
-    delta_f_c0.update({i: np.multiply(((np.array(f_c0_dict[i])/np.array(f_c0_dict['QE_asset_target_0']))-1),100)})
-    delta_f_a0.update({i: np.multiply(((np.array(f_a0_dict[i])/np.array(f_a0_dict['QE_asset_target_0']))-1),100)})
-    delta_f_c1.update({i: np.multiply(((np.array(f_c1_dict[i])/np.array(f_c1_dict['QE_asset_target_0']))-1),100)})
-    delta_f_a1.update({i: np.multiply(((np.array(f_a1_dict[i])/np.array(f_a1_dict['QE_asset_target_0']))-1),100)})
+    delta_f_c0.update({i: np.multiply(((np.array(f_c0_dict[i])/np.array(f_c0_dict['QE_0']))-1),100)})
+    delta_f_a0.update({i: np.multiply(((np.array(f_a0_dict[i])/np.array(f_a0_dict['QE_0']))-1),100)})
+    delta_f_c1.update({i: np.multiply(((np.array(f_c1_dict[i])/np.array(f_c1_dict['QE_0']))-1),100)})
+    delta_f_a1.update({i: np.multiply(((np.array(f_a1_dict[i])/np.array(f_a1_dict['QE_0']))-1),100)})
 
 
-    delta_d_ra0.update({i: np.multiply((((np.array(d_ra0_dict[i])-np.array(d_rc0_dict[i])) / (np.array(d_ra0_dict['QE_asset_target_0'])-np.array(d_rc0_dict['QE_asset_target_0'])))-1),100)})
-    delta_d_ra1.update({i: np.multiply((((np.array(d_ra1_dict[i])-np.array(d_rc1_dict[i])) / (np.array(d_ra1_dict['QE_asset_target_0'])-np.array(d_rc1_dict['QE_asset_target_0'])))-1),100)})
+    delta_d_ra0.update({i: np.multiply((((np.array(d_ra0_dict[i])-np.array(d_rc0_dict[i])) / (np.array(d_ra0_dict['QE_0'])-np.array(d_rc0_dict['QE_0'])))-1),100)})
+    delta_d_ra1.update({i: np.multiply((((np.array(d_ra1_dict[i])-np.array(d_rc1_dict[i])) / (np.array(d_ra1_dict['QE_0'])-np.array(d_rc1_dict['QE_0'])))-1),100)})
 
     delta_rfx.update({i: (np.array(d_rc1_dict[i])-np.array(f_rc1_dict[i]))})
 
@@ -416,10 +416,10 @@ for i in fx_dict:
 rc('text', usetex=True)
 
 fig, ax = plt.subplots()
-x = np.divide(range(0,len(fx_dict["QE_asset_target_0"])),20.8333)
-ax.plot(x, delta_fx["QE_asset_target_20"],"-b", label='a')
-ax.plot(x, delta_fx["QE_asset_target_100"],"--r", label='b')
-ax.plot(x, delta_fx["QE_asset_target_500"],"-.g", label='c')
+x = np.divide(range(0,len(fx_dict["QE_0"])),20.8333)
+ax.plot(x, delta_fx["QE_200"],"-b", label='a')
+#ax.plot(x, delta_fx["QE_100"],"--r", label='b')
+#ax.plot(x, delta_fx["QE_500"],"-.g", label='c')
 ax.set_xlabel("x")
 ax.set_ylabel('y')
 ax.legend(loc='upper left', frameon=False, labelspacing = 1.5)
@@ -427,10 +427,10 @@ plt.savefig('qe_fx_impact_ts.eps', format="eps")
 plt.close()
 
 fig, ax = plt.subplots()
-x = np.divide(range(0,len(fx_dict["QE_asset_target_0"])),20.8333)
-ax.plot(x, delta_rfx["QE_asset_target_20"],"-b", label='a')
-ax.plot(x, delta_rfx["QE_asset_target_100"],"--r", label='b')
-ax.plot(x, delta_rfx["QE_asset_target_500"],"-.g", label='c')
+x = np.divide(range(0,len(fx_dict["QE_0"])),20.8333)
+ax.plot(x, delta_rfx["QE_200"],"-b", label='a')
+#ax.plot(x, delta_rfx["QE_100"],"--r", label='b')
+#ax.plot(x, delta_rfx["QE_500"],"-.g", label='c')
 ax.set_xlabel("x")
 ax.set_ylabel('y')
 ax.legend(loc='upper left', frameon=False, labelspacing = 1.5)
@@ -441,10 +441,10 @@ ax.legend(loc='upper left', frameon=False, labelspacing = 1.5)
 
 
 fig, ax = plt.subplots()
-x = np.divide(range(0,len(d_ra0_dict["QE_asset_target_0"])),20.8333)
-ax.plot(x, delta_d_ra0["QE_asset_target_20"],"-b", label='a')
-ax.plot(x, delta_d_ra0["QE_asset_target_100"],"--r", label='b')
-ax.plot(x, delta_d_ra0["QE_asset_target_500"],"-.g", label='c')
+x = np.divide(range(0,len(d_ra0_dict["QE_0"])),20.8333)
+ax.plot(x, delta_d_ra0["QE_200"],"-b", label='a')
+#ax.plot(x, delta_d_ra0["QE_100"],"--r", label='b')
+#ax.plot(x, delta_d_ra0["QE_500"],"-.g", label='c')
 ax.set_xlabel("x")
 ax.set_ylabel('y')
 ax.legend(loc='upper left', frameon=False, labelspacing = 1.5)
@@ -452,10 +452,10 @@ plt.savefig('qe_excess_ret0_ts.eps', format="eps")
 plt.close()
 
 fig, ax = plt.subplots()
-x = np.divide(range(0,len(fx_dict["QE_asset_target_0"])),20.8333)
-ax.plot(x, delta_d_ra1["QE_asset_target_20"],"-b", label='a')
-ax.plot(x, delta_d_ra1["QE_asset_target_100"],"--r", label='b')
-ax.plot(x, delta_d_ra1["QE_asset_target_500"],"-.g", label='c')
+x = np.divide(range(0,len(fx_dict["QE_0"])),20.8333)
+ax.plot(x, delta_d_ra1["QE_20"],"-b", label='a')
+ax.plot(x, delta_d_ra1["QE_100"],"--r", label='b')
+ax.plot(x, delta_d_ra1["QE_500"],"-.g", label='c')
 ax.set_xlabel("x")
 ax.set_ylabel('y')
 ax.legend(loc='upper left', frameon=False, labelspacing = 1.5)

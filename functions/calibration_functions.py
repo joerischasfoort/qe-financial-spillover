@@ -1,5 +1,11 @@
 from init_objects_4a import *
 from spillover_model import *
+from spillover_model_calRA import *
+from spillover_model_calRA2 import *
+from spillover_model import *
+from calibration_functions import *
+import pandas as pd
+
 import pickle
 
 def initial_simulation(seed):
@@ -148,10 +154,7 @@ def initial_simulation(seed):
 
 
 
-
-
-
-def load_first_run():
+def load_first_run(seed):
     data = open(
         'C:\Users\jrr\Dropbox\GitHub\qe-financial-spillover\data\Objects\objects_day_5000_seed_'+str(seed)+'_master.pkl',
         'rb')
@@ -262,10 +265,13 @@ def init_port_holdings_4f(seed):
     port_holdings = {"domestic_0": [1961, 930, 1651, 1821], "domestic_1": [3204, 571, 656, 75],
                      "foreign_0": [263, 556, 7045, 8461], 'foreign_1': [568, 78, 10009, 1692]}
 
-    cur_holdings = {"domestic_0": [0, 0],
-                    "domestic_1": [0, 0],
-                    "foreign_0": [0, 0],
-                    "foreign_1": [0, 0]}
+
+    # excess reserves for the EZ is 80 billion at the end of 2014 - for the US we assume 1/3 went to banks and funds (mostly foreign), Japan we dicard (mostly domestic holders of debt), UK
+    # We assume the cash is distributed according to the respective home bias in bonds.
+    cur_holdings = {"domestic_0": [411, 218],
+                    "domestic_1": [80, 16],
+                    "foreign_0": [63, 1202],
+                    "foreign_1": [136, 2400]}
 
     maturities = [0.99936, 1] * 2
 
@@ -320,37 +326,32 @@ def recompute_liabilities(f,portfolios,currencies, environment):
 
 def approach_balance_sheets(funds_cal,portfolios_cal, currencies_cal, environment_cal, funds_init, portfolios_init, currencies_init, cur_dummy):
     for fi, fc in zip(funds_init, funds_cal):
-        fc.var.asset_diff = {ac: fi.var.assets[ai] - fc.var.assets[ac] for ai, ac in
+        fc.var.asset_diff = {ac: fi.var.assets[ai]/environment_cal.var.fx_rates.loc["domestic"][ac.par.country] - fc.var.assets[ac] for ai, ac in
                              zip(portfolios_init, portfolios_cal)}
-        fc.var.currency_diff = {cc: fi.var.currency[ci] - fc.var.currency[cc] for ci, cc in
-                                zip(currencies_init, currencies_cal)}
-
-    for f in funds_cal:
-        f.var.asset_change = {}
-        for a in portfolios_cal:
-            f.var.asset_change[a] = f.var.asset_diff[a] * float(1)
-        for c in currencies_cal:
-            f.var.asset_change[c] = f.var.currency_diff[c] * float(1)
-
-    for f in funds_cal:
-        f.var.new_assets = {}
-        f.var.new_currency = {}
-        for a in portfolios_cal:
-            f.var.new_assets.update({a: f.var.assets[a] + f.var.asset_change[a]})
-        for c in currencies_cal:
-            f.var.new_currency.update({c: f.var.currency[c] + f.var.asset_change[c]})
-        f.var.assets = f.var.new_assets
-        f.var_previous.assets = f.var.new_assets
         if cur_dummy == 1:
-            f.var.currency = f.var.new_currency
-            f.var_previous.currency = f.var.new_currency
+            fc.var.currency_diff = {cc: fi.var.currency[ci]/environment_cal.var.fx_rates.loc["domestic"][cc.par.country] - fc.var.currency[cc] for ci, cc in
+                                zip(currencies_init, currencies_cal)}
+        fc.var.assets = {ac: fi.var.assets[ai]/environment_cal.var.fx_rates.loc["domestic"][ac.par.country] for ai, ac in zip(portfolios_init, portfolios_cal) }
+        if cur_dummy == 1:
+            fc.var.currency = {cc: fi.var.currency[ci]/environment_cal.var.fx_rates.loc["domestic"][cc.par.country] for ci, cc in  zip(currencies_init, currencies_cal) }
+
+        for f in funds_cal:
+            f.var_previous.assets = f.var.assets.copy()
+            f.var_previous.currency = f.var.currency.copy()
+            f.var.currency_inventory = f.var.currency.copy()
+            f.var_previous.currency_inventory = f.var.currency.copy()
+
+
+    for a in portfolios_cal:
+        a.par.quantity = sum(f.var.assets[a] for f in funds_cal)
 
     for f in funds_cal:
         s = recompute_liabilities(f, portfolios_cal, currencies_cal, environment_cal)
         f.var_previous.redeemable_shares = s
+        f.var.redeemable_shares = s
 
 
-    return funds_cal
+    return funds_cal, portfolios_cal
 
 
 
@@ -377,3 +378,155 @@ def save_progress(funds_cal, portfolios_cal,convergence_h, convergence_r, conver
     writer.save()
 
     return convergence_h, convergence_r, convergence_c
+
+
+
+
+
+
+def compute_raw_weights(f, risk_aversion_mat):
+
+    Cov_assets = f.var.covariance_matrix.copy()
+    #
+    E_ret_assets = np.zeros((len(Cov_assets)))
+
+
+    # multiply covariance with asset specific risk aversion
+    Cov_assets = np.multiply(Cov_assets, risk_aversion_mat)
+    original_cov = np.array(Cov_assets)
+
+    # Create a 1D numpy array with one expected returns per asset
+    for i, a in enumerate(Cov_assets.columns.values):
+        E_ret_assets[i] = f.exp.returns[a]
+
+    # adding the budget constraint to the covariance matrix - to solve the model using linear algebra
+    # Adding a row with ones
+    aux_cov = np.concatenate((Cov_assets, np.ones((1, len(Cov_assets)))), axis=0)
+
+    # Adding a column with ones
+    aux_cov = np.concatenate((aux_cov, np.ones((len(aux_cov), 1))), axis=1)
+
+    aux_cov[len(aux_cov) - 1, len(aux_cov) - 1] = 0
+
+    # adding the budget constraint to the return vector - to solve the model using linear algebra
+    aux_x = np.append(E_ret_assets, 0)
+    aux_y = np.zeros(len(aux_x))
+    aux_y[len(aux_x) - 1] = 1
+
+    o_aux_x = aux_x.copy()
+    o_aux_y = aux_y.copy()
+    o_aux_cov = aux_cov.copy()
+
+
+
+    inv_aux_cov = np.linalg.inv(aux_cov)
+    aux_c = np.matmul(inv_aux_cov, aux_x)
+    aux_d = np.matmul(inv_aux_cov, aux_y)
+
+    # solving for optimal weights
+    weights = aux_c + aux_d
+
+    output = {}
+
+    for i, a in enumerate(Cov_assets.columns.values):
+        output[a] = weights[i]
+
+    return output
+
+def RA_gradient(f, portfolios, currencies):
+    gradient = {str(a): 0 for a in portfolios+currencies}
+    original_weights = compute_raw_weights(f, f.par.RA_matrix)
+    for a in portfolios + currencies:
+        risk_aversion_mat = f.par.RA_matrix.copy()
+        risk_aversion_mat.loc[a,a] = risk_aversion_mat.loc[a,a]*(1.0001)
+        for row in risk_aversion_mat.index:
+            for col in risk_aversion_mat.columns:
+                risk_aversion_mat.loc[row, col] = np.sqrt(risk_aversion_mat.loc[row, row]) * np.sqrt(
+                    risk_aversion_mat.loc[col, col])
+        new_weights =  compute_raw_weights(f, risk_aversion_mat)
+        gradient[str(a)] = np.sign(new_weights[a] - original_weights[a])
+    return gradient
+
+
+
+def RA_utility(f, portfolios, currencies,weight_change,relevant_asset):
+
+    Cov_assets = np.multiply(f.var.covariance_matrix, f.par.RA_matrix)
+    U_old = {}
+    U_new_p = {}
+    U_new_n = {}
+
+    for asset in relevant_asset:
+        risk_aversion_mat_p = f.par.RA_matrix.copy()
+        risk_aversion_mat_n = f.par.RA_matrix.copy()
+        risk_aversion_mat_p.loc[asset, asset] = risk_aversion_mat_p.loc[asset,asset] * (1+0.01)
+        risk_aversion_mat_n.loc[asset, asset] = risk_aversion_mat_n.loc[asset,asset] * (1-0.01)
+
+        for row in risk_aversion_mat_p.index:
+            for col in risk_aversion_mat_p.columns:
+                risk_aversion_mat_p.loc[row, col] = np.sqrt(risk_aversion_mat_p.loc[row, row]) * np.sqrt(
+                    risk_aversion_mat_p.loc[col, col])
+                risk_aversion_mat_n.loc[row, col] = np.sqrt(risk_aversion_mat_n.loc[row, row]) * np.sqrt(
+                    risk_aversion_mat_n.loc[col, col])
+        new_Cov_assets_p = np.multiply(f.var.covariance_matrix, risk_aversion_mat_p)
+        new_Cov_assets_n = np.multiply(f.var.covariance_matrix, risk_aversion_mat_n)
+
+        test_weights = f.var.weights.copy()
+        test_weights[asset] = test_weights[asset]+weight_change
+        new_weights = {ii:test_weights[ii]/sum(test_weights.values()) for ii in test_weights}
+        U_old.update({str(asset)+"_old": -sum([(new_weights[j] * new_weights[asset]) * Cov_assets.loc[asset, j] for j in new_weights])})
+        U_new_p.update({str(asset)+"_p": -sum([(new_weights[j] * new_weights[asset]) * new_Cov_assets_p.loc[asset, j] for j in new_weights])})
+        U_new_n.update({str(asset)+"_n": -sum([(new_weights[j] * new_weights[asset]) * new_Cov_assets_n.loc[asset, j] for j in new_weights])})
+
+        #U_old.update({asset:-sum([sum([(new_weights[j] * new_weights[ii]) * Cov_assets.loc[ii, j] for j in new_weights]) for ii in new_weights])})
+        #U_new_p.update({asset:-sum([sum([(new_weights[j] * new_weights[ii]) * new_Cov_assets_p.loc[ii, j] for j in new_weights]) for ii in new_weights])})
+        #U_new_n.update({asset:-sum([sum([(new_weights[j] * new_weights[ii]) * new_Cov_assets_n.loc[ii, j] for j in new_weights]) for ii in new_weights])})
+    options = ["increase", "decrease"]
+    DeltaU = {}
+    D2 = {}
+    for asset in relevant_asset:
+        data_points = [U_new_p[str(asset)+"_p"], U_new_n[str(asset)+"_n"]]
+        strategy = data_points.index(max(data_points))
+        DeltaU.update({str(asset): options[strategy]})
+        D2.update({str(asset):np.sign(data_points[strategy]-U_old[str(asset)+"_old"])})
+
+    return DeltaU, D2
+
+
+def RiskExposure(f, portfolios, currencies,weight_change,asset):
+    RA_p = f.par.RA_matrix.copy()
+    RA_p.loc[asset, asset] = RA_p.loc[asset, asset] * (1.01)
+    RA_n = f.par.RA_matrix.copy()
+    RA_n.loc[asset, asset] = RA_n.loc[asset, asset] * (0.99)
+    cov = f.var.covariance_matrix.copy()
+    new_weights = {i:f.var.weights[i] + (f.var.weights[i]==0)*0.01 for i in f.var.weights}
+    weights = {ii:new_weights[ii]/sum(new_weights.values()) for ii in new_weights}
+    V_p = sum([sum([weights[i]*weights[j]*np.sqrt(RA_p.loc[i,i]*RA_p.loc[j,j])*cov.loc[i,j] for j in portfolios+currencies]) for i in portfolios+currencies])
+    V_n = sum([sum([weights[i]*weights[j]*np.sqrt(RA_n.loc[i,i]*RA_n.loc[j,j])*cov.loc[i,j] for j in portfolios+currencies]) for i in portfolios+currencies])
+
+    return np.sign(V_p - V_n)
+
+def Utility2(f, portfolios, currencies,weight_change,asset):
+    RA_p = f.par.RA_matrix.copy()
+    RA_p.loc[asset,asset] = RA_p.loc[asset,asset]*(1.01)
+    RA_n = f.par.RA_matrix.copy()
+    RA_n.loc[asset, asset] = RA_n.loc[asset, asset] * (0.99)
+    cov = f.var.covariance_matrix.copy()
+    new_weights = f.var.weights.copy()
+    new_weights[asset] = new_weights[asset]+weight_change
+    weights = {ii:new_weights[ii]/sum(new_weights.values()) for ii in new_weights}
+    gen = [j for j in portfolios+currencies if j not in [asset]]
+    U_ra_p = -0.5*(weights[asset]*(1/(np.sqrt(RA_p.loc[asset,asset])))*(sum([weights[j]*np.sqrt(RA_p.loc[j,j])*cov.loc[asset,j] for j in gen]))+cov.loc[asset,asset]*weights[asset]**2)
+    U_ra_n = -0.5*(weights[asset]*(1/(np.sqrt(RA_n.loc[asset,asset])))*(sum([weights[j]*np.sqrt(RA_n.loc[j,j])*cov.loc[asset,j] for j in gen]))+cov.loc[asset,asset]*weights[asset]**2)
+    UP = []
+    UN = []
+    for a in portfolios + currencies:
+        gen = [j for j in portfolios + currencies if j not in [a]]
+        UP.append(-0.5*(weights[a]*(1/(np.sqrt(RA_p.loc[a,a])))*(sum([weights[j]*np.sqrt(RA_p.loc[j,j])*cov.loc[a,j] for j in gen]))+cov.loc[a,a]*weights[a]**2))
+        UN.append(-0.5*(weights[a]*(1/(np.sqrt(RA_n.loc[a,a])))*(sum([weights[j]*np.sqrt(RA_n.loc[j,j])*cov.loc[a,j] for j in gen]))+cov.loc[a,a]*weights[a]**2))
+
+    RelUp = U_ra_p/sum(UP)
+    RelUn = U_ra_n/sum(UN)
+
+    test = np.sign(RelUp - RelUn)
+    return test, RelUp, RelUn

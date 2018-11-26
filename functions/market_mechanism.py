@@ -57,7 +57,7 @@ def price_adjustment(portfolios, environment, exogeneous_agents, funds, a, adjus
 
     # Equation 1.17 : price adjustment
     log_new_price = log(a.var.price) + adjustment_intensity * total_demand[a] / sum(i.par.quantity for i in portfolios)
-    log_new_price = log(a.var.price) + adjustment_intensity * total_demand[a] / a.par.quantity
+    log_new_price = log(a.var.price) + adjustment_intensity * min(1,max(-1,total_demand[a] / a.par.quantity))
 
     price = exp(log_new_price)
 
@@ -131,7 +131,7 @@ def fx_adjustment(portfolios, currencies, environment, funds, adjustment_intensi
         #Delta_capital =(capital_df - capital_fd ) / sum(red_share_fx_corr.values())
 
 
-        log_new_fx_rate = log(environment.var.fx_rates.loc[el[0]][el[1]]) + adjustment_intensity * Delta_Capital
+        log_new_fx_rate = log(environment.var.fx_rates.loc[el[0]][el[1]]) + adjustment_intensity * min(1,max(-1,Delta_Capital))
 
         fx_rate = exp(log_new_fx_rate)
 

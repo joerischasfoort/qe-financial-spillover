@@ -218,7 +218,7 @@ def portfolio_optimization_KT(f, day, tau):
         weights = aux_c + aux_d
 
         # Start of algorithm that takes out shorted assets
-        test = weights[:-1] < 0
+        test = weights[:-1] < -1e-10
 
 
         while sum(test) > 0:
@@ -239,7 +239,7 @@ def portfolio_optimization_KT(f, day, tau):
             aux_d = np.matmul(inv_aux_cov, aux_y)
 
             weights = aux_c + aux_d
-            test = weights[:-1] < 0
+            test = weights[:-1] < -1e-10
 
         aux_e = np.zeros(len(aux_c) - 1)
         aux_f = np.zeros(len(aux_c) - 1)

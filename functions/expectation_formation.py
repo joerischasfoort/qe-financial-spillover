@@ -203,6 +203,10 @@ def covariance_estimate(fund, environment, prev_exp_ret,  inflation_shock):
                 old_correlation_matrix.loc[asset_x][asset_y] = (fund.var_previous.covariance_matrix.loc[asset_y][asset_x] / (np.sqrt(fund.var_previous.covariance_matrix.loc[asset_y][asset_y]) * np.sqrt(fund.var_previous.covariance_matrix.loc[asset_x][asset_x])))*100
                 old_correlation_matrix.loc[asset_y][asset_x] = old_correlation_matrix.loc[asset_x][asset_y]
 
+    for x in new_covariance_matrix.index:
+        for y in new_covariance_matrix.columns:
+            new_covariance_matrix.loc[x,y] = max(0,new_covariance_matrix.loc[x,y])
+
     return ewma_returns, new_covariance_matrix, realized_returns
 
 
