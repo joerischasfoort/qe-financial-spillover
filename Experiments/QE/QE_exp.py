@@ -17,15 +17,17 @@ assets_target = [0, 50,100,150,200,250,300,350,400,450,500, 550, 600]
 
 
 #when parallel
-at=[0]
-pos = int(os.getenv('PBS_ARRAYID'))
-at[0]=variable[pos]
+#at=[0]
+#pos = int(os.getenv('PBS_ARRAYID'))
+#at[0]=variable[pos]
 
-
+at = [0]
 
 for i in at:
 
-    data = open('/home/jriedler/qe-financial-spillover/Experiments/QE/Objects/CALIBRATED_MASTER_MED.pkl', 'rb')
+    #data = open('/home/jriedler/qe-financial-spillover/Experiments/QE/Objects/CALIBRATED_MASTER_MED.pkl', 'rb')
+    data = open('C:\Users\jrr\Dropbox\GitHub\qe-financial-spillover\data\Objects\CALIBRATED_MASTER_MED.pkl', 'rb')
+
 
     list_of_objects = pickle.load(data)
 
@@ -41,11 +43,12 @@ for i in at:
 
     saving_params = {}
     saving_params.update({"path": '/home/jriedler/qe-financial-spillover/Experiments/QE/Objects'})
+    saving_params.update({"path": 'C:\Users\jrr\Dropbox\GitHub\qe-financial-spillover\data\Objects'})
     saving_params.update({"time": 1})
 
 
     environment.par.global_parameters["start_day"]=2
-    environment.par.global_parameters["end_day"]=1001
+    environment.par.global_parameters["end_day"]=20001
 
 
 
@@ -54,6 +57,7 @@ for i in at:
     environment.par.global_parameters['cov_memory'] = 0
     environment.par.global_parameters['conv_bound'] = 0.01
 
+    portfolios[0].par.maturity = 0.999867
 
     var = copy.copy(portfolios)
     var.append("FX")

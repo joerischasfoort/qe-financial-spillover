@@ -6,9 +6,9 @@ import itertools
 
 
 
-local_dir = "Objects_CB1/"
+local_dir = "Objects_CB/"
 
-bounds = [0.1,0.09,0.07,0.05,0.03,0.009,0.007,0.005,0.003,0.01,0.001,0.0001,0.00001,0.000001,0.0000001,0.00000001]
+bounds = [0.1,0.09,0.07,0.05,0.03,0.009,0.007,0.005,0.003]#,0.01,0.001,0.0001,0.00001,0.000001,0.0000001,0.00000001]
 
 tau_dict = {}
 fx_dict = {}
@@ -28,7 +28,7 @@ for i in bounds:
     p0 = []
 
 
-    for day in range(5000,5248):
+    for day in range(100,201):
         filename = local_dir + "objects_day_" + str(day) + "_seed_1_"  + obj_label+".pkl"
         data = open(filename,"rb")
         list_of_objects = pickle.load(data)
@@ -59,7 +59,7 @@ P0=np.empty((0,2), float)
 P1 =np.empty((0,2), float)
 
 for i in tau_dict:
-    Tau=np.append(Tau, np.array([[float(i),sum(tau_dict[i])/float(249)]]),axis=0)
+    Tau=np.append(Tau, np.array([[float(i),sum(tau_dict[i])/float(101)]]),axis=0)
     FX=np.append(FX, np.array([[float(i),np.std((np.divide(np.array(fx_dict["1e-08"])-np.array(fx_dict[i]),np.array(fx_dict["1e-08"]))))]]),axis=0)
     P0=np.append(P0, np.array([[float(i),np.std((np.divide(np.array(p0_dict["1e-08"])-np.array(p0_dict[i]),np.array(p0_dict["1e-08"]))))]]),axis=0)
     P1=np.append(P1, np.array([[float(i),np.std((np.divide(np.array(p1_dict["1e-08"])-np.array(p1_dict[i]),np.array(p1_dict["1e-08"]))))]]),axis=0)

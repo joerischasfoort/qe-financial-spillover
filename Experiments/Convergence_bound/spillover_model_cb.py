@@ -22,7 +22,7 @@ from scipy.optimize import minimize
 
 
 
-def spillover_model(portfolios, currencies, environment, exogeneous_agents, funds,  seed,seed1, obj_label,saving_params,var):
+def spillover_model_cb(portfolios, currencies, environment, exogeneous_agents, funds,  seed,seed1, obj_label,saving_params,var):
     """
     Koziol, Riedler & Schasfoort Agent-based simulation model of financial spillovers
     :param assets: list of Asset objects
@@ -87,8 +87,8 @@ def spillover_model(portfolios, currencies, environment, exogeneous_agents, fund
     # var_t1 = []
     var_original = [v for v in var]
     var_t1 = [v for v in var]
-    if "FX" in var:
-        del var[var.index("FX")]
+    #if "FX" in var:
+    #    del var[var.index("FX")]
 
 
     ##############################################################################################################
@@ -225,6 +225,8 @@ def spillover_model(portfolios, currencies, environment, exogeneous_agents, fund
             conv_bound = environment.par.global_parameters['conv_bound']
             convergence, asset_market_convergence, convergence_condition = check_convergence(Deltas, conv_bound, portfolios, tau)
 
+            if sum([convergence_condition[k] for k in convergence_condition]) == len(convergence_condition):
+                convergence = True
 
             jump_counter, no_jump_counter, test_sign, environment = I_intensity_parameter_adjustment(
                     jump_counter, no_jump_counter, test_sign, Deltas, convergence_condition, environment, var_t1)
@@ -248,8 +250,8 @@ def spillover_model(portfolios, currencies, environment, exogeneous_agents, fund
             else:
                 var = [v for v in var_original]
 
-            if "FX" in var and asset_market_convergence < len(portfolios) and tau<50:
-                del var[var.index("FX")]
+            #if "FX" in var and asset_market_convergence < len(portfolios) and tau<50:
+            #    del var[var.index("FX")]
 
             #calculating and printing degree(in percent) to which the convergence bound is reached. Values <= zero need to be achieved
             list_DeltasA=[abs(Deltas[a]) for a in portfolios]
