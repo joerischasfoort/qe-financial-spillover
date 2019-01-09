@@ -25,6 +25,3 @@ def init_objects(parameters, seed):
     exogenous_agents = init_exogenous_agents(portfolios, currencies, parameters)
 
     return portfolios, currencies, funds, environment, exogenous_agents
-
-
-

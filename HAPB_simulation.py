@@ -1,7 +1,7 @@
 """Simulation file used to run the model"""
 import time
 from init_objects import *
-from spillover_model_HE import *
+from HABP_model import *
 
 list_of_risk_correlation = {}
 list_of_risk_correlation.update({'domestic_inflation'+"_and_" +'foreign_inflation': 0.0})
