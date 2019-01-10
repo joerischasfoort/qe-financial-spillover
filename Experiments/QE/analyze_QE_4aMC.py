@@ -39,8 +39,8 @@ for seed in seeds:
     raw_data = list_of_objects[1]
     relative_data = list_of_objects[2]
 
-    dm, d_p5, d_p95  = compute_averages(relative_data, benchmark, ordered_var_list, range(0,999))
-    dm_raw, d_p5_raw, d_p95_raw  = compute_averages(raw_data, benchmark, ordered_var_list, range(0,999))
+    dm, d_p5, d_p95  = compute_averages(relative_data, benchmark, ordered_var_list, range(0,1))
+    dm_raw, d_p5_raw, d_p95_raw  = compute_averages(raw_data, benchmark, ordered_var_list, range(0,1))
 
     data_mean.update({seedx: dm})
     data_p5.update({seedx: d_p5})
@@ -56,15 +56,21 @@ MC_mean, MC_p5, MC_p95 =  compute_MCaverages(data_mean, seeds)
 MC_mean_raw, MC_p5_raw, MC_p95_raw =  compute_MCaverages(data_mean_raw, seeds)
 
 
-var = 'funds[2].exp.returns[portfolios[2]]'
-var = "portfolios[1].var.price"
-x_factor = 1
-#y_factor = 250*100
-y_factor = 100/MC_mean_raw[var][0]
-location = 'lower left'
-name = 'domestic_bond_return'
-saving = 0
-plot_conf(var,MC_mean, MC_p5, MC_p95, variable,x_factor,y_factor, location, name, saving)
+#var = 'funds[3].var.assets[portfolios[0]]'
+#var = 'funds[2].var.weights[currencies[0]]'
+#var = 'funds[3].var.currency[currencies[0]]'
+#var = 'funds[2].var.weights[portfolios[0]]'
+#
+#x_factor = 1
+#y_factor = 1
+#y_factor = 100/MC_mean_raw[var][0]
+#
+#location = 'lower left'
+#name = 'domestic_bond_return'
+#saving = 0
+#plot_conf(var,MC_mean_raw, MC_p5_raw, MC_p95_raw, variable,x_factor,y_factor, location, name, saving)
 
 
-
+#x=MC_mean["funds[0].var.currency[currencies[0]]"]
+#i=np.array(x)/np.array([1,1,2,3,4,5,6])
+#res =  np.mean(i[1:])

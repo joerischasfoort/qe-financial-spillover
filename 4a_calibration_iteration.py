@@ -16,7 +16,7 @@ seed = 1
 saving_params = {}
 saving_params.update({"path": 'C:\Users\jrr\Dropbox\GitHub\qe-financial-spillover\data\Objects_final'})
 
-#portfolios_cal, currencies_cal, environment_cal, exogenous_agents_cal, funds_cal= initial_simulation(seed)
+portfolios_cal, currencies_cal, environment_cal, exogenous_agents_cal, funds_cal= initial_simulation(seed)
 
 #
 portfolios_cal, currencies_cal, environment_cal, exogenous_agents_cal, funds_cal = load_first_run(seed)

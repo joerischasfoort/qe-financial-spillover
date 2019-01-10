@@ -18,6 +18,8 @@ def creating_lists(var, funds, portfolios,currencies, environment,exogeneous_age
     if "assets" in var:
         output.update({"funds["+str(f)+"].var.assets[portfolios[" + str(a)+"]]": [] for f in range(len(funds)) for a in range(len(portfolios))})
         output.update({"funds["+str(f)+"].var.currency[currencies[" + str(a)+"]]": [] for f in range(len(funds)) for a in range(len(currencies))})
+    if "default_prob" in var:
+        output.update({"funds[0].exp.default_rates[portfolios[" + str(a)+"]]": [] for a in range(len(portfolios))})
     if "covariance" in var:
         output.update({"funds[0].var.covariance_matrix.iloc["+str(a)+","+str(b)+"]": [] for a in range(6) for b in range(6)})
     return output
@@ -111,3 +113,11 @@ def compute_difference(data1, data2):
                     result[var1.split("_")[-1]].update({d: np.array(data1[var1][d])-np.array(data2[var2][d])})
 
     return result
+
+
+def format_data_for_regression(new_data):
+    data_frame = pd.DataFrame({'QE':[], 'seed':[]})
+    for qe in new_data:
+        for var in new_data[qe]:
+            for seed in new_data[qe][var]:
+                data_frame.update

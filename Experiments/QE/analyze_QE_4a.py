@@ -11,13 +11,13 @@ end_day = 1000
 
 variable =  [0, 100,200,300,400,500, 600]
 seeds = [1,2,3,4,5,6,8,9,10,11,12,13,14,15,16,17,18,19,20]
-seeds = [13,14,15,16,17,18,19,20]
+seeds = [17,18,19,20]
 
-analyze = ["fx", "returns","assets","prices","weights","covariance"]
+analyze = ["fx", "returns","assets","prices","weights","covariance",'default_prob']
 benchmark = "QE_med_0"
 
 
-local_dir = "Z:\Objects_QE_med0/"
+local_dir = "Z:\Objects_QE_med/"
 #local_dir = "Objects_QE_1pcfxs/"
 
 filename = local_dir + "objects_day_2_seed_1_QE_med_0.pkl"
@@ -37,12 +37,13 @@ for seed in seeds:
     raw_data = {}
     ordered_var_list = []
     for i in variable:
-        print(i,seed)
         obj_label =  "QE_med_" + str(i)
         ordered_var_list.append(obj_label)
         raw_data.update({obj_label: creating_lists(analyze, funds, portfolios,currencies, environment,exogeneous_agents)})
 
         for day in range(start_day,end_day+1):
+            print(i, seed, day)
+
             filename = local_dir + "objects_day_" + str(day) + "_seed_"+str(seed)+"_"  + obj_label+".pkl"
             data = open(filename,"rb")
             list_of_objects = pickle.load(data)

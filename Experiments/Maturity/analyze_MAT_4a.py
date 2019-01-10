@@ -11,7 +11,7 @@ end_day = 1000
 
 variable =  [0.08,0.5,1,2,4,6.25,8,10,12,14,16,18,20,30,40]
 seeds = [1,2,3,4,5,6,8,9,10,11,12,13,14,15,16,17,18,19,20,21]
-analyze = ["returns","prices"]
+analyze = ["returns"]
 
 
 #local_dir = "Objects_QE_1pcfxs/"
@@ -26,18 +26,19 @@ environment = list_of_objects[2]
 exogeneous_agents = list_of_objects[3]
 funds = list_of_objects[4]
 
-experiments = ["MAT_med_", "MATwQE_med_"]
+experiments = ['MATwQE_med_' "MAT_med_"]
 
 
 for seed in seeds:
     for e in experiments:
-        local_dir = "Z:\Objects_"+e[:-1]+"/"
+        local_dir = "Z:\Objects_"+e[:-1]+'_MC'+"/"
+        local_dir = "C:\Users\jrr\Desktop\Objects_"+e[:-1]+'_MC'+"/"
 
         raw_data = {}
         ordered_var_list = []
         for i in variable:
             print(i,seed)
-            obj_label =  e + str(i)
+            obj_label =  e +str(i)
             ordered_var_list.append(obj_label)
             raw_data.update({obj_label: creating_lists(analyze, funds, portfolios,currencies, environment,exogeneous_agents)})
 
