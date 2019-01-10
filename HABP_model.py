@@ -17,7 +17,7 @@ from functions.measurement import *
 
 def HAPB_model(portfolios, currencies, environment, exogeneous_agents, funds, seed, obj_label, saving_params):
     """
-    Koziol, Riedler & Schasfoort Agent-based simulation model of financial spillovers
+    Koziol, Riedler & Schasfoort agent-based simulation model of financial spillovers
     :param portfolios: list of Asset objects
     :param currencies: list of Currency objects
     :param environment: object which contains parameters
@@ -115,23 +115,6 @@ def HAPB_model(portfolios, currencies, environment, exogeneous_agents, funds, se
             previous_cons_returns[fund] = fund.exp.cons_returns.copy()
             previous_local_currency_returns[fund] = fund.exp.local_currency_returns
 
-        ###########################################################
-        ############# RESETTING INTRADAY PARAMETERS ###############
-        ###########################################################
-        convergence=False
-        asset_market_convergence = 0
-        intraday_over=False
-        tau=0
-        Deltas = {}
-
-        # resetting intensity adjustment parameters
-        jump_counter = {a:0 for a in portfolios}
-        jump_counter.update({"FX": 0})
-        no_jump_counter = {a:0 for a in portfolios}
-        no_jump_counter.update({"FX": 0})
-        test_sign={a:0 for a in portfolios}
-        test_sign.update({"FX": 0})
-
         ###################################################################################################################
         ################################################ INTRADAY LOOP ####################################################
         ###################################################################################################################
@@ -140,10 +123,15 @@ def HAPB_model(portfolios, currencies, environment, exogeneous_agents, funds, se
             # init exchange rates from function
             fx_rate = asset_and_fx_prices[0]
             combinations = []
+            # TODO fill the variable with excess demand for, currency1, currency2, all assets
+            total_demand = {}
+            for a in portfolios:
+                total_demand[a] = 0
+            for c in currencies:
+                total_demand[c] = 0
 
-            for column in range(len(environment.var.fx_rates.index)):
+            for column in range(len(environment.var.fx_rates.index)): #TODO, this basically creates a tuple with foreign & domestic, could be simplified.
                 row = 0
-
                 while row < column:
                     combination_tuple = (environment.var.fx_rates.index[row], environment.var.fx_rates.columns[column])
                     row = row + 1
@@ -155,7 +143,7 @@ def HAPB_model(portfolios, currencies, environment, exogeneous_agents, funds, se
 
             # initialise prices
             for idx, a in enumerate(portfolios):
-                a.var.price = fx_rate[idx + 1] # set prices of all portfolio assets
+                a.var.price = asset_and_fx_prices[idx + 1] # set prices of all portfolio assets
 
             # calculate fund expectations TODO pick up here
             for fund in funds:
@@ -177,7 +165,7 @@ def HAPB_model(portfolios, currencies, environment, exogeneous_agents, funds, se
                 fund.exp.local_currency_returns, fund.exp.cons_returns, fund.exp.returns = return_expectations(fund, portfolios, currencies, environment)
 
                 # compute the weights of optimal balance sheet positions
-                fund.var.weights = portfolio_optimization_KT(fund, day, tau)
+                fund.var.weights = portfolio_optimization_KT(fund, day, tau=0)
 
                 # intermediate cash position resulting from interest payments, payouts, maturing and defaulting assets
                 fund.var.currency_inventory = cash_inventory(fund, portfolios, currencies)
@@ -185,68 +173,31 @@ def HAPB_model(portfolios, currencies, environment, exogeneous_agents, funds, se
                 # compute demand for balance sheet positions
                 fund.var.asset_demand, fund.var.currency_demand = asset_demand(fund, portfolios, currencies, environment)
 
+                # add demand to total demand
+                for a in fund.var.asset_demand:
+                    total_demand[a] += fund.var.asset_demand[a]
+                # add currency demand to total demand
+                for c in fund.var.currency_demand:
+                    total_demand[c] += fund.var.currency_demand[c]
+
             for ex in exogeneous_agents:
-                exogeneous_agents[ex].var.asset_demand = ex_agent_asset_demand(ex, exogeneous_agents, portfolios )
+                exogeneous_agents[ex].var.asset_demand = ex_agent_asset_demand(ex, exogeneous_agents, portfolios)
+                for a in exogeneous_agents[ex].var.asset_demand:
+                    total_demand[a] += fund.var.asset_demand[a]
 
-            for cur in currencies:
-                #TODO what is this?
-                if asset_market_convergence == len(portfolios):
-                    exogeneous_agents["fx_interventionist"].var.currency_demand[cur] = 0
+            # for cur in currencies:
+            #     #TODO what is this?
+            #     if asset_market_convergence == len(portfolios):
+            #         exogeneous_agents["fx_interventionist"].var.currency_demand[cur] = 0
 
-            # fill in excess demand
-            total_excess_demand = []
+            total_demand_list = [total_demand[c] for c in currencies] + [total_demand[a] for a in portfolios]
 
-            return total_excess_demand
+            return total_demand_list
 
-
-
-
-        while intraday_over == False:
-            tau += 1
-            environment.var.tau = tau
-
-            ############################################################################
-            ################ SHOCKING FX RATES AT THE END OF A PERIOD ##################
-            ############################################################################
-            if convergence == True:
-                intraday_over = True
-                #environment, Deltas = shock_FX(portfolios, environment, exogeneous_agents, funds, currencies, fx_shock)
-            #############################################################################
-            #############################################################################
-
-
-
-            # Update prices if convergence has not been achieved yet
-            if not intraday_over:
-                portfolios, environment, Deltas = update_market_prices_and_fx(portfolios, currencies, environment, exogeneous_agents, funds, var)
-
-            # check for convergece of asset and fx market
-            conv_bound = environment.par.global_parameters['conv_bound']
-            convergence, asset_market_convergence, convergence_condition = check_convergence(Deltas, conv_bound, portfolios, tau)
-
-            # jumps only count when they are caused by a change in the price or fx
-            jump_counter, no_jump_counter, test_sign, environment = I_intensity_parameter_adjustment(
-                    jump_counter, no_jump_counter, test_sign, Deltas, convergence_condition, environment,var_t1)
-
-            var_t1 = var
-
-            if tau == 2000 and len(var)> len(portfolios): #after 2000 periods without convergence, stop simultaneous pricing
-                print('joined pricing failed on day ', day, 'in iteration ', tau)
-                var = copy.copy(portfolios)
-            if asset_market_convergence == len(portfolios) and len(var) <= len(portfolios):
-                var.append("FX")
-                for p in portfolios:
-                    p.var.price_pfx = p.var.price
-
-            # print ("day:",day,"tau:",tau, convergence, Deltas)
-
-            # calculating and printing degree(in percent) to which the convergence bound is reached. Values <= zero need to be achieved
-            list_DeltasA=[abs(Deltas[a]) for a in portfolios]
-            mean_DA = ((np.mean(np.array(list_DeltasA))/conv_bound)-1)*100
-            max_DA =  ((np.max(np.array(list_DeltasA))/conv_bound)-1)*100
-            FX_DA = ((abs(np.array(Deltas['FX']))/conv_bound)-1)*100
-            print ("day:", day, "tau:", tau, "mean_A:", mean_DA, 'max_A:', max_DA, 'FX:', FX_DA)
-
+        fx_plus_asset_prices = [environment.var.ewma_fx_rates.loc['foreign', 'domestic']] + [a.var.price for a in portfolios] #TODO is this correct?
+        intraday_loop(fx_plus_asset_prices) # TODO change to
+        # Update prices if convergence has not been achieved yet
+        portfolios, environment, Deltas = update_market_prices_and_fx(portfolios, currencies, environment, exogeneous_agents, funds, var)
 
         ##########################################################################################################################
         ############################################## BALANCE SHEET ADJUSTMENT ##################################################
