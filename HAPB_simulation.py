@@ -7,7 +7,6 @@ list_of_risk_correlation = {}
 list_of_risk_correlation.update({'domestic_inflation'+"_and_" +'foreign_inflation': 0.0})
 list_of_risk_correlation.update({'foreign_inflation'+"_and_" +'domestic_inflation': list_of_risk_correlation['domestic_inflation'+"_and_" +'foreign_inflation']})
 list_of_risk_correlation.update({'domestic_inflation'+"_and_" +'fx_shock': -0.0})
-#list_of_risk_correlation.update({'foreign_inflation'+"_and_" +'domestic_fx_shock': -0.17})
 
 
 # 1 setup parameters
@@ -25,7 +24,7 @@ parameters = { #Todo: cleaning and spell checking!!
     "domestic_inflation_std": 0.02/float(250),
     "foreign_inflation_std": 0.02/float(250),
     "start_day": 1,
-    "end_day": 5000,
+    "end_day": 15,
     "p_change_intensity": 0.0001,
     "fx_change_intensity": 0.0001,
     "cov_memory": 0.00,
@@ -81,8 +80,6 @@ parameters = { #Todo: cleaning and spell checking!!
     "intensity_of_choice": 0.5
 }
 
-
-
 obj_label = "sym_4_assets"
 seed = 1
 
@@ -91,10 +88,8 @@ saving_params = {}
 saving_params.update({"path": 'data/Objects'})
 saving_params.update({"time": 0})
 
-
 # 2 initalise model objects
 portfolios, currencies, funds, environment, exogenous_agents = init_objects(parameters, seed)
-
 
 variable = [0.99988093, 0.9994602]
 i = 0
@@ -121,7 +116,8 @@ for a in portfolios:
 
 # 3 simulate model
 start = time.time()
-portfolios, currencies, environment, exogenous_agents, funds, data_t = spillover_model_HE(portfolios, currencies, environment, exogenous_agents, funds, seed, obj_label, saving_params)
+portfolios, currencies, environment, exogenous_agents, funds, data_t = HAPB_model(portfolios, currencies, environment, exogenous_agents, funds, seed, obj_label, saving_params)
 end = time.time()
-#print(i, end - start)
+
+print(i, end - start)
 

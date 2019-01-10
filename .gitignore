@@ -100,3 +100,16 @@ Temporary Items
 # Misc
 .ipynb_checkpoints/
 
+venv/pyvenv.cfg
+venv/Scripts/activate
+venv/Scripts/Activate.ps1
+*.bat
+venv/Scripts/easy_install-3.7.exe
+venv/Scripts/easy_install-3.7-script.py
+*.exe
+venv/Scripts/f2py.py
+venv/Scripts/pip3-script.py
+venv/Scripts/easy_install-script.py
+venv/Scripts/ua-script.py
+venv/Scripts/pip-script.py
+venv/Scripts/pip3.7-script.py

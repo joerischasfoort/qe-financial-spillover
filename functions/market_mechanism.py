@@ -4,6 +4,7 @@ from math import log
 from math import exp
 import numpy as np
 
+
 def update_market_prices_and_fx(portfolios, currencies, environment, exogeneous_agents, funds, var):
     Delta_Demand = {}
     Delta_Capital = {}
@@ -32,6 +33,7 @@ def update_market_prices_and_fx(portfolios, currencies, environment, exogeneous_
     Deltas.update({"FX": Delta_Capital})
 
     return portfolios, environment, Deltas
+
 
 def price_adjustment(portfolios, environment, exogeneous_agents, funds, a, adjustment_intensity):
     """
@@ -92,15 +94,12 @@ def fx_adjustment(portfolios, currencies, environment, funds, adjustment_intensi
 
     for el in combinations:
 
-
         red_share_fx_corr={}
 
         capital_DF = 0
         capital_FD = 0
         for fund in funds:
             fund.var.aux_cash_dem = {c:0 for c in currencies}
-
-
 
         for fund in funds:
             red_share_fx_corr[fund] = fund.var.redeemable_shares * environment.var.fx_rates.loc[el[0], fund.par.country]
@@ -145,8 +144,7 @@ def fx_adjustment(portfolios, currencies, environment, funds, adjustment_intensi
     return environment.var.fx_rates, Delta_Capital
 
 
-
-def   I_intensity_parameter_adjustment(jump_counter, no_jump_counter, test_sign, Deltas, convergence, environment, var):
+def I_intensity_parameter_adjustment(jump_counter, no_jump_counter, test_sign, Deltas, convergence, environment, var):
 
     jc = 2 # jumps until intensity is adjusted
     nojc = 10 # consecutive non-jumps until intensity is adjusted
@@ -175,27 +173,22 @@ def   I_intensity_parameter_adjustment(jump_counter, no_jump_counter, test_sign,
             jump_counter[i] = 0
             no_jump_counter[i]=0
 
-
         if jump_counter[i] > jc and i == "FX" and i in var and convergence[i] == False:
             environment.par.global_parameters['fx_change_intensity'] = environment.par.global_parameters['fx_change_intensity'] / 1.1
             jump_counter[i] = 0
             no_jump_counter[i]=0
-
 
         if no_jump_counter[i] > nojc and i!="FX" and i in var and convergence[i] == False:
             i.par.change_intensity =  min(0.1, i.par.change_intensity * 1.07)
             no_jump_counter[i] = 0
             jump_counter[i] = 0
 
-
         if no_jump_counter[i] > nojc and i=="FX" and i in var and convergence[i] == False:
             environment.par.global_parameters['fx_change_intensity'] = min(0.1, environment.par.global_parameters['fx_change_intensity'] * 1.07)
             no_jump_counter[i] = 0
             jump_counter[i] = 0
 
-
     return  jump_counter, no_jump_counter, test_sign, environment
-
 
 
 def check_convergence(Deltas, conv_bound, portfolios, tau):

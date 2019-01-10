@@ -196,13 +196,13 @@ def portfolio_optimization_KT(f, day, tau):
     test_KT = np.zeros(len(aux_x)-1)
     while sum(test_KT) != len(test_KT):
         if KT_count > (len(aux_x)-1):
-            print "day ", day, "iteration ", tau, ": Kuhn-Tucker Conditions not met repeatedly!"
+            print ("day ", day, "iteration ", tau, ": Kuhn-Tucker Conditions not met repeatedly!")
 
         # compute matrix inverse
         try:
             inv_aux_cov = np.linalg.inv(aux_cov)
         except:
-            print 'error'
+            print ('error')
 
         inv_aux_cov = np.linalg.inv(aux_cov)
         aux_c = np.matmul(inv_aux_cov, aux_x)

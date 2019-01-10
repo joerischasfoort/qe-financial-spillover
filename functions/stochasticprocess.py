@@ -65,8 +65,8 @@ def exogenous_defaults(parameters, a, days,seed):
     default_rate_mean = parameters[a.par.country + "_default_rate_mean"]
     default_rate_std = parameters[a.par.country + "_default_rate_std"]
 
-    id_num = int(filter(str.isdigit, str(a)))  # give each asset a number in order to avoid correlated default events
-
+    id_num_list = [item for item in str(a) if item.isdigit()] # give each asset a number in order to avoid correlated default events
+    id_num = int(''.join(id_num_list)) # this is now python 2 and python 3 compatible
 
 
     TS_default_events = ornstein_uhlenbeck_levels(time, default_events_mean,default_events_std,default_events_mean_reversion,seed + 1 + id_num)

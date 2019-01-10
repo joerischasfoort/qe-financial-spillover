@@ -142,8 +142,13 @@ def heterogeneous_fx_expectations(fund, environment, shock):
         if fund.par.country != c:
             change_in_FX = environment.var.fx_rates.loc[fund.par.country,c] - environment.var_previous.fx_rates.loc[fund.par.country,c]
 
-            previous_domestic_indices = {'domestic': p_index["domestic"] / (1 + shock), 'foreign': p_index["foreign"]}
-            previous_fundamental_value = previous_domestic_indices[filter(lambda k: c not in k, previous_domestic_indices.keys())[0]] / float(previous_domestic_indices[c]) #TODO check if this works as intended
+            previous_domestic_indices = {'domestic': p_index["domestic"] / (1 + shock), 'foreign': float(p_index["foreign"])}
+            previous_fundamental_value = previous_domestic_indices[
+                                             [key for key in previous_domestic_indices.keys() if c not in key][
+                                                 0]] / float(previous_domestic_indices[c]) #TODO check if this works as intended
+            #previous_fundamental_value = previous_domestic_indices[filter(lambda k: c not in k, previous_domestic_indices.keys())[0]] / float(previous_domestic_indices[c]) # Commented this out because it is not compatible with python 3
+
+
 
             fundamentalist_predicted_change = fundamentalist_prediction(environment.var_previous.fx_rates.loc[fund.par.country,c], previous_fundamental_value)
             chartist_predicted_change = chartist_prediction(environment.var_previous.fx_rates.loc[fund.par.country,c], 1) # TODO add previous ewma
