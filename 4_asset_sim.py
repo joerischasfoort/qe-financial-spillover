@@ -25,7 +25,7 @@ parameters = { #Todo: cleaning and spell checking!!
     "domestic_inflation_std": 0.01/float(250), #
     "foreign_inflation_std": 0.007/float(250),
     "start_day": 1,
-    "end_day": 5001,
+    "end_day": 3,
     "p_change_intensity": 0.0001,
     "fx_change_intensity": 0.0001,
     "cov_memory": 0.00,
