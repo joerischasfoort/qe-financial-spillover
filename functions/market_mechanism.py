@@ -1,14 +1,12 @@
 from __future__ import division
-
 from math import log
 from math import exp
 import numpy as np
 
-
 def update_market_prices_and_fx(portfolios, currencies, environment, exogeneous_agents, funds, var):
     Delta_Demand = {}
     Delta_Capital = {}
-    for a in portfolios:
+    for a in np.random.permutation(portfolios):
         if a in var:
             a.var.price, Delta_str, delta_demand = price_adjustment(portfolios, environment,
                                                                     exogeneous_agents, funds, a,
@@ -33,7 +31,6 @@ def update_market_prices_and_fx(portfolios, currencies, environment, exogeneous_
     Deltas.update({"FX": Delta_Capital})
 
     return portfolios, environment, Deltas
-
 
 def price_adjustment(portfolios, environment, exogeneous_agents, funds, a, adjustment_intensity):
     """
@@ -60,7 +57,7 @@ def price_adjustment(portfolios, environment, exogeneous_agents, funds, a, adjus
 
     # Equation 1.17 : price adjustment
     log_new_price = log(a.var.price) + adjustment_intensity * total_demand[a] / sum(i.par.quantity for i in portfolios)
-    #log_new_price = log(a.var.price) + adjustment_intensity * total_demand[a] / a.par.quantity
+    log_new_price = log(a.var.price) + adjustment_intensity * min(1,max(-1,total_demand[a] / a.par.quantity))
 
     price = exp(log_new_price)
 
@@ -94,12 +91,15 @@ def fx_adjustment(portfolios, currencies, environment, funds, adjustment_intensi
 
     for el in combinations:
 
+
         red_share_fx_corr={}
 
         capital_DF = 0
         capital_FD = 0
         for fund in funds:
             fund.var.aux_cash_dem = {c:0 for c in currencies}
+
+
 
         for fund in funds:
             red_share_fx_corr[fund] = fund.var.redeemable_shares * environment.var.fx_rates.loc[el[0], fund.par.country]
@@ -131,7 +131,7 @@ def fx_adjustment(portfolios, currencies, environment, funds, adjustment_intensi
         #Delta_capital =(capital_df - capital_fd ) / sum(red_share_fx_corr.values())
 
 
-        log_new_fx_rate = log(environment.var.fx_rates.loc[el[0]][el[1]]) + adjustment_intensity * Delta_Capital
+        log_new_fx_rate = log(environment.var.fx_rates.loc[el[0]][el[1]]) + adjustment_intensity * min(1,max(-1,Delta_Capital))
 
         fx_rate = exp(log_new_fx_rate)
 
@@ -144,9 +144,11 @@ def fx_adjustment(portfolios, currencies, environment, funds, adjustment_intensi
     return environment.var.fx_rates, Delta_Capital
 
 
-def I_intensity_parameter_adjustment(jump_counter, no_jump_counter, test_sign, Deltas, convergence, environment, var):
 
-    jc = 2 # jumps until intensity is adjusted
+def   I_intensity_parameter_adjustment(jump_counter, no_jump_counter, test_sign, Deltas, convergence, environment,  var):
+
+
+    jc = 10 # jumps until intensity is adjusted
     nojc = 10 # consecutive non-jumps until intensity is adjusted
     test = {}
     jump = {x:0 for x in jump_counter}
@@ -161,34 +163,52 @@ def I_intensity_parameter_adjustment(jump_counter, no_jump_counter, test_sign, D
         if test[i] == 1:
             no_jump[i] = 1
 
-        if jump[i] == 1 and i in var:
-            jump_counter[i] += 1
-            no_jump_counter[i] = 0
 
-        if no_jump[i] == 1 and i in var:
-            no_jump_counter[i] += 1
+        if len(var)==1:
+            if sum(jump[i] for i in jump)>0 and i in var:
+                jump_counter[i] += 1
+                no_jump_counter[i] = 0
+            if sum(jump[i] for i in jump) == 0 and i in var:
+                no_jump_counter[i] += 1
+                #jump_counter[i] = 0
 
-        if jump_counter[i] > jc and i!="FX" and i in var and convergence[i] == False:
-            i.par.change_intensity = i.par.change_intensity  / 1.1
+        else:
+            if jump[i] == 1 and i in var:# and convergence[i] == False:
+                jump_counter[i] += 1
+                no_jump_counter[i] = 0
+
+            if no_jump[i] == 1 and i in var:# and convergence[i] == False:
+                no_jump_counter[i] += 1
+
+
+
+
+        if jump_counter[i] > jc and i!="FX" and i in var:# and convergence[i] == False:
+            i.par.change_intensity = i.par.change_intensity  / 3
             jump_counter[i] = 0
             no_jump_counter[i]=0
 
-        if jump_counter[i] > jc and i == "FX" and i in var and convergence[i] == False:
-            environment.par.global_parameters['fx_change_intensity'] = environment.par.global_parameters['fx_change_intensity'] / 1.1
+
+        if jump_counter[i] > jc and i == "FX" and i in var:# and convergence[i] == False:
+            environment.par.global_parameters['fx_change_intensity'] = environment.par.global_parameters['fx_change_intensity'] / 3
             jump_counter[i] = 0
             no_jump_counter[i]=0
 
-        if no_jump_counter[i] > nojc and i!="FX" and i in var and convergence[i] == False:
-            i.par.change_intensity =  min(0.1, i.par.change_intensity * 1.07)
+
+        if no_jump_counter[i] > nojc and i!="FX" and i in var:# and convergence[i] == False:
+            i.par.change_intensity =  min(0.1, i.par.change_intensity * 1.2)
             no_jump_counter[i] = 0
             jump_counter[i] = 0
 
-        if no_jump_counter[i] > nojc and i=="FX" and i in var and convergence[i] == False:
-            environment.par.global_parameters['fx_change_intensity'] = min(0.1, environment.par.global_parameters['fx_change_intensity'] * 1.07)
+
+        if no_jump_counter[i] > nojc and i=="FX" and i in var:# and convergence[i] == False:
+            environment.par.global_parameters['fx_change_intensity'] = min(0.1, environment.par.global_parameters['fx_change_intensity'] * 1.2)
             no_jump_counter[i] = 0
             jump_counter[i] = 0
+
 
     return  jump_counter, no_jump_counter, test_sign, environment
+
 
 
 def check_convergence(Deltas, conv_bound, portfolios, tau):
@@ -200,6 +220,6 @@ def check_convergence(Deltas, conv_bound, portfolios, tau):
     asset_market_convergence = sum([convergence_condition[a] for a in portfolios])
     convergence = sum(convergence_condition[i] for i in convergence_condition) == len(Deltas) and tau > 20
 
-    if tau > 10001: convergence = True  # exit iteration after many iterations
+    if tau > 5001: convergence = True  # exit iteration after many iterations
 
     return convergence, asset_market_convergence, convergence_condition

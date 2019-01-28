@@ -1,5 +1,5 @@
 """Main model"""
-from __future__ import division
+
 import copy
 import pickle
 import random
@@ -15,7 +15,14 @@ from functions.supercopy import *
 from functions.measurement import *
 
 
-def spillover_model(portfolios, currencies, environment, exogeneous_agents, funds,  seed, obj_label,saving_params):
+from num_opt_pricing import *
+import numpy as np
+from scipy.optimize import minimize
+
+
+
+
+def spillover_model(portfolios, currencies, environment, exogeneous_agents, funds,  seed,seed1, obj_label,saving_params,var):
     """
     Koziol, Riedler & Schasfoort Agent-based simulation model of financial spillovers
     :param assets: list of Asset objects
@@ -32,15 +39,28 @@ def spillover_model(portfolios, currencies, environment, exogeneous_agents, fund
     ######################################################################
     deltas = {"Delta_" + str(i): 0 for i in portfolios}
     deltas["Delta_FX"] = 0
-    data = initdatadict(funds, portfolios, currencies, environment, deltas ) # create tau data dictionary
-    data_t = copy.deepcopy(data) # create t data dictionary
+    #data = initdatadict(funds, portfolios, currencies, environment, deltas ) # create tau data dictionary
+    #data_t = copy.deepcopy(data) # create t data dictionary
+    data = 0
+    data_t =0
+
+    ######################################################################
+    ##### Determine directoring for saving objects and measurement########
+    ######################################################################
+    hex_home = '/home/kzltin001/qe/'
+    hex_fhgfs = '/researchdata/fhgfs/aifmrm_shared/qe-financial-spillover/'
+    local_dir = 'C:\Users\jrr\Documents\GitHub\qe-financial-spillover\data\Objects'
+    # this will be used in lines near 224, 288, 292
 
     ##################################################################################
     ###################### COMPUTING STOCHASTIC PROCESSES ############################
     ##################################################################################
     # calculating stochastic components default
     days = environment.par.global_parameters["end_day"]
-    default_rates, fundamental_default_rate_expectation, shock_processes = stochastic_timeseries(environment.par.global_parameters, portfolios, days, seed)
+    if environment.par.global_parameters["start_day"] ==1:
+        default_rates, fundamental_default_rate_expectation, shock_processes = stochastic_timeseries(environment.par.global_parameters, portfolios, days, seed)
+    else:
+        default_rates, fundamental_default_rate_expectation, shock_processes = stochastic_timeseries_2(environment.par.global_parameters, portfolios, environment.par.global_parameters['start_day'], environment.par.global_parameters['end_day'], seed, seed1)
 
     # initial default expectations
     noise = {}
@@ -54,6 +74,7 @@ def spillover_model(portfolios, currencies, environment, exogeneous_agents, fund
         idiosyncratic_default_rate_noise[fund]=noise
     ####################################################################################
     ####################################################################################
+
     # creating individual intensity parameters
     for a in portfolios: #TODO: this should be taken care of in the initialization
         try:
@@ -61,18 +82,25 @@ def spillover_model(portfolios, currencies, environment, exogeneous_agents, fund
         except AttributeError:
             a.par.change_intensity = environment.par.global_parameters['p_change_intensity']
 
+    # these two variables are needed for the pricing algorithm
+
+    # var_t1 = []
+    var_original = [v for v in var]
+    var_t1 = [v for v in var]
+    if "FX" in var:
+        del var[var.index("FX")]
+
+
     ##############################################################################################################
     ############################################### DAY LOOP #####################################################
     ##############################################################################################################
     for day in range(environment.par.global_parameters['start_day'], environment.par.global_parameters['end_day']):
 
-        if day >= 20:
+        if day >= environment.par.global_parameters["start_day"]+5:
             environment.par.global_parameters["cov_memory"]=0.001
 
-        # these two variables are needed for the pricing algorithm
-        var = copy.copy(portfolios)
-        #var.append("FX")
-        var_t1 = []
+
+
 
         for row in environment.var.fx_rates.index:
             for col in environment.var.fx_rates.columns:
@@ -140,7 +168,6 @@ def spillover_model(portfolios, currencies, environment, exogeneous_agents, fund
         while intraday_over == False:
             tau += 1
             environment.var.tau = tau
-
             ############################################################################
             ################ SHOCKING FX RATES AT THE END OF A PERIOD ##################
             ############################################################################
@@ -166,12 +193,11 @@ def spillover_model(portfolios, currencies, environment, exogeneous_agents, fund
 
                 fund.exp.exchange_rates, fund.exp.exchange_rate_anchor = anchored_FX_expectations(fund, environment, fx_shock)
 
-                fund.exp.local_currency_returns, fund.exp.cons_returns, fund.exp.returns = return_expectations(fund, portfolios, currencies, environment)
+                fund.exp.returns = return_expectations(fund, portfolios, currencies, environment)
 
                 # compute the weights of optimal balance sheet positions
                 #fund.var.weights  = portfolio_optimization(fund)
                 fund.var.weights = portfolio_optimization_KT(fund,day, tau)
-                #print fund.var.weights , '\n', x
 
                 # intermediate cash position resulting from interest payments, payouts, maturing and defaulting assets
                 fund.var.currency_inventory = cash_inventory(fund, portfolios, currencies)
@@ -189,6 +215,10 @@ def spillover_model(portfolios, currencies, environment, exogeneous_agents, fund
 
             # Update prices if convergence has not been achieved yet
             if intraday_over == False:
+                pre_prices = {}
+                for a in portfolios:
+                    pre_prices.update({a: a.var.price})
+
                 portfolios, environment, Deltas = update_market_prices_and_fx(portfolios, currencies, environment, exogeneous_agents, funds, var)
 
             # check for convergece of asset and fx market
@@ -196,32 +226,44 @@ def spillover_model(portfolios, currencies, environment, exogeneous_agents, fund
             convergence, asset_market_convergence, convergence_condition = check_convergence(Deltas, conv_bound, portfolios, tau)
 
 
-            # jumps only count when they are caused by a change in the price or fx
             jump_counter, no_jump_counter, test_sign, environment = I_intensity_parameter_adjustment(
-                    jump_counter, no_jump_counter, test_sign, Deltas, convergence_condition, environment,var_t1)
-
-            var_t1 = var
-
-            if tau == 2000 and len(var)> len(portfolios): #after 2000 periods without convergence, stop simultaneous pricing
-                print('joined pricing failed on day ', day, 'in iteration ', tau)
-                var = copy.copy(portfolios)
-            if asset_market_convergence == len(portfolios) and len(var)<= len(portfolios):
-                var.append("FX")
-                for p in portfolios:
-                    p.var.price_pfx=p.var.price
+                    jump_counter, no_jump_counter, test_sign, Deltas, convergence_condition, environment, var_t1)
 
 
-            #print ("day:",day,"tau:",tau, convergence, Deltas)
+
+            update = 0
+            if var_t1 == []:
+                var_t1 = [v for v in var]
+                update = 1
+            if len(var) > 1:
+                var_t1 = [v for v in var]
+
+            h_var = []
+            for i in jump_counter:
+                if jump_counter[i] == 10:  # and convergence_condition[i]==False:
+                    h_var.append(i)
+            if len(h_var) > 0 and update == 0:
+                var = [np.random.permutation(h_var)[0]]
+                var_t1 = []
+            else:
+                var = [v for v in var_original]
+
+            if "FX" in var and asset_market_convergence < len(portfolios) and tau<50:
+                del var[var.index("FX")]
 
             #calculating and printing degree(in percent) to which the convergence bound is reached. Values <= zero need to be achieved
             list_DeltasA=[abs(Deltas[a]) for a in portfolios]
-            mean_DA = ((np.mean(np.array(list_DeltasA))/conv_bound)-1)*100
-            max_DA =  ((np.max(np.array(list_DeltasA))/conv_bound)-1)*100
-            FX_DA = ((abs(np.array(Deltas['FX']))/conv_bound)-1)*100
+            mean_DA = np.mean(np.array(list_DeltasA))
+            max_DA =  np.max(np.array(list_DeltasA))
+            FX_DA = (np.array(Deltas['FX']))
             print ("day:", day, "tau:", tau, "mean_A:", mean_DA, 'max_A:', max_DA, 'FX:', FX_DA)
+            print([portfolios[0].par.change_intensity,portfolios[1].par.change_intensity,portfolios[2].par.change_intensity,portfolios[3].par.change_intensity, environment.par.global_parameters["fx_change_intensity"]])
+            print([(Deltas[a]) for a in portfolios])
+            print([a.var.price for a in portfolios])
+
 
             # saving objects when there is no convergence (for diagnostic purpose)
-            if tau > 10000:
+            if tau > 5000:
                 print('convergence failed on day ', day)
                 file_name = saving_params["path"] + '/!objects_nonConv_day' + str(day) + '.pkl'
                 save_objects = open(file_name, 'wb')
@@ -229,13 +271,40 @@ def spillover_model(portfolios, currencies, environment, exogeneous_agents, fund
                 pickle.dump(list_of_objects, save_objects)
                 save_objects.close()
 
+
+            NO=0
+            # try numerical optimization
+            if NO==1:
+                #storing prices and fx before numerical optimization
+                pre_prices = {}
+                for a in portfolios:
+                    pre_prices.update({a: a.var.price})
+                pre_fx =  environment.var.fx_rates.copy()
+
+                x0 = np.ones(len(portfolios) + 1)
+                for a in portfolios:
+                    id_a = int(filter(str.isdigit, str(a)))
+                    x0[id_a] = a.var.price
+                x0[-1] = environment.var.fx_rates.iloc[0][1]
+
+                res = minimize(NOP, x0, args=(funds, portfolios, currencies, environment, exogeneous_agents, day, fx_shock),
+                               method='nelder-mead', options={'xtol': conv_bound/1000, 'disp': True})
+
+                update_prices = 1
+                if update_prices == 0:
+                    for a in portfolios:
+                        a.var.price = pre_prices[a]
+                    environment.var.fx_rates = pre_fx
+
         ##########################################################################################################################
         ############################################## BALANCE SHEET ADJUSTMENT ##################################################
         ###########################################################################################################################
 
         # updating the covariance matrices
-        for fund in funds:
-            fund.var.ewma_returns, fund.var.covariance_matrix, fund.var.hypothetical_returns = covariance_estimate(fund,  environment, previous_local_currency_returns[fund], inflation_shock)
+        if abs(portfolios[0].var.price/portfolios[0].var_previous.price-1) < 0.01:
+            for fund in funds:
+                fund.var.ewma_returns, fund.var.covariance_matrix, fund.var.hypothetical_returns = covariance_estimate(fund,  environment, previous_local_currency_returns[fund], inflation_shock)
+
         #computing new asset and cash positions
         excess_demand, pi, nu = asset_excess_demand_and_correction_factors(funds, portfolios, currencies, exogeneous_agents)
 
@@ -250,11 +319,13 @@ def spillover_model(portfolios, currencies, environment, exogeneous_agents, fund
 
         for fund in funds:
             fund.var.currency_demand = cash_demand_correction(fund, currencies,environment)
+
         nuC, piC, excess_demandC = cash_excess_demand_and_correction_factors(funds, currencies,exogeneous_agents)
 
         for fund in funds:
             fund.var.currency = fund_cash_adjustments(nuC, piC, excess_demandC, currencies, fund)
-            #exogeneous_agents["fx_interventionist"].var.currency = fx_interventionist_cash_adjustment(exogeneous_agents["fx_interventionist"], nuC, piC, excess_demandC, currencies)
+
+        exogeneous_agents["fx_interventionist"].var.currency = fx_interventionist_cash_adjustment(exogeneous_agents["fx_interventionist"], nuC, piC, excess_demandC, currencies)
 
         # update previous variables
         for fund in funds:
@@ -264,8 +335,10 @@ def spillover_model(portfolios, currencies, environment, exogeneous_agents, fund
             portfolio.var_previous = copy.copy(portfolio.var)
 
         environment.var_previous = copy_env_variables(environment.var)
+
         exogeneous_agents['central_bank_domestic'].var_previous = copy_cb_variables(exogeneous_agents['central_bank_domestic'].var)
         exogeneous_agents['underwriter'].var_previous = copy_underwriter_variables(exogeneous_agents['underwriter'].var)
+
 
 
         # saving objects

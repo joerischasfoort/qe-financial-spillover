@@ -110,8 +110,8 @@ def init_funds(environment, portfolios, currencies, parameters, seed):
         exp_fx = environment.var.fx_rates.copy()
         exp_fx_anchor = environment.var.fx_rates.copy()
         exp_fx_returns = {currency: currency.par.nominal_interest_rate for currency in currencies}
-
-        fund_expectations = AgentExpectations(r,cons_returns, r, df_rates, exp_fx, exp_fx_anchor, exp_prices, exp_fx_returns) #TODO: why is this called exp_fx_returns? In the object this variable is called cash return
+        exp_inflation = {"domestic":parameters["domestic_inflation_mean"],"foreign":parameters["foreign_inflation_mean"]}
+        fund_expectations = AgentExpectations(r,cons_returns, r, df_rates, exp_fx, exp_fx_anchor, exp_prices, exp_fx_returns, exp_inflation) #TODO: why is this called exp_fx_returns? In the object this variable is called cash return
 
         funds.append(Fund(idx, fund_vars, copy_agent_variables(fund_vars), fund_params, fund_expectations))
 
@@ -127,20 +127,19 @@ def init_funds(environment, portfolios, currencies, parameters, seed):
 
     return funds
 
-def init_funds_marketsize(environment, portfolios, currencies, parameters, seed, pos):
+
+
+
+
+def init_funds_4a(environment, portfolios, p_holdings_4a, currencies, c_holdings_4a, parameters, risk_aversions_4a, seed):
 
     funds = []
     total_funds = parameters["n_domestic_funds"] + parameters["n_foreign_funds"]
     fund_countries = ordered_list_of_countries(parameters["n_domestic_funds"], parameters["n_foreign_funds"])
 
-
+    dom_funds=0
+    for_funds=0
     for idx in range(total_funds):
-        risk_aversion = {"domestic_assets": parameters[fund_countries[idx]+"_risk_aversion_D_asset"],
-                         "foreign_assets": parameters[fund_countries[idx] + "_risk_aversion_F_asset"]}
-        fund_params = AgentParameters(fund_countries[idx], parameters["price_memory"],
-                                      parameters["fx_memory"], risk_aversion,
-                                      parameters["adaptive_param"], parameters["news_evaluation_error"])
-
         # compute initial variable values associated with portfolio shares
         asset_portfolio = {}
         asset_demand = {}
@@ -148,18 +147,24 @@ def init_funds_marketsize(environment, portfolios, currencies, parameters, seed,
         ewma_delta_prices = {}
         realised_rets = {}
 
-        for a in portfolios:
+        for ii, a in enumerate(portfolios):
             # funds initially have a home bias of 100%
-            if fund_countries[idx]==a.par.country:
-                asset_portfolio.update({a: a.par.quantity / sum([i==a.par.country for i in fund_countries])})
+            if fund_countries[idx]=="domestic":
+                asset_portfolio.update({a: p_holdings_4a["domestic_"+str(dom_funds)][ii]})
+
             else:
-                asset_portfolio.update({a: 0})
+                asset_portfolio.update({a: p_holdings_4a["foreign_" + str(for_funds)][ii]})
+
 
 
             asset_demand.update({a: 0})  # demand is initialized at zero (this does not effect anything)
             ewma_returns.update({a: a.par.nominal_interest_rate}) # the nominal interest rate is the initial return
             ewma_delta_prices.update({a: parameters["init_agent_ewma_delta_prices"]}) #TODO: IS THIS STILL NEEDED? WHY IS THE INITIAL VALUE 1?
             realised_rets.update({a: 0})
+
+
+
+
 
         # compute initial variable values associated with currencies
         currency_portfolio = {}
@@ -168,12 +173,12 @@ def init_funds_marketsize(environment, portfolios, currencies, parameters, seed,
         ewma_delta_fx = {}
         losses = {}
 
-        for currency in currencies:
+        for ii, currency in enumerate(currencies):
             # funds initially have a home bias of 100%
-            if fund_countries[idx]==currency.par.country:
-                currency_portfolio.update({currency: currency.par.quantity / sum([i==currency.par.country for i in fund_countries])})
+            if fund_countries[idx]=="domestic":
+                currency_portfolio.update({currency: c_holdings_4a["domestic_"+str(dom_funds)][ii]})
             else:
-                currency_portfolio.update({currency: 0})
+                currency_portfolio.update({currency: c_holdings_4a["foreign_" + str(for_funds)][ii]})
 
             currency_inventory.update({currency: 0}) #TODO: could this also be empty
 
@@ -183,9 +188,18 @@ def init_funds_marketsize(environment, portfolios, currencies, parameters, seed,
 
             ewma_returns.update({currency: currency.par.nominal_interest_rate}) # the nominal interest rate is the initial return
 
-
             losses.update({currency: parameters["init_losses"]})
 
+        if fund_countries[idx] == "domestic":
+            risk_aversion = {ra.split("aversion_")[-1]: risk_aversions_4a[ra][dom_funds] for ra in ['domestic_risk_aversion_domestic_asset', 'domestic_risk_aversion_foreign_asset']}
+            dom_funds += 1
+        if fund_countries[idx] == "foreign":
+            risk_aversion = {ra.split("aversion_")[-1]: risk_aversions_4a[ra][for_funds] for ra in ['foreign_risk_aversion_domestic_asset', 'foreign_risk_aversion_foreign_asset']}
+            for_funds += 1
+
+        fund_params = AgentParameters(fund_countries[idx], parameters["price_memory"],
+                                      parameters["fx_memory"], risk_aversion,
+                                      parameters["adaptive_param"], parameters["news_evaluation_error"])
 
 
         # initialized as having no value
@@ -225,8 +239,8 @@ def init_funds_marketsize(environment, portfolios, currencies, parameters, seed,
         exp_fx = environment.var.fx_rates.copy()
         exp_fx_anchor = environment.var.fx_rates.copy()
         exp_fx_returns = {currency: currency.par.nominal_interest_rate for currency in currencies}
-
-        fund_expectations = AgentExpectations(r,cons_returns, r, df_rates, exp_fx, exp_fx_anchor, exp_prices, exp_fx_returns) #TODO: why is this called exp_fx_returns? In the object this variable is called cash return
+        exp_inflation = {"domestic":parameters["domestic_inflation_mean"],"foreign":parameters["foreign_inflation_mean"]}
+        fund_expectations = AgentExpectations(r,cons_returns, r, df_rates, exp_fx, exp_fx_anchor, exp_prices, exp_fx_returns, exp_inflation) #TODO: why is this called exp_fx_returns? In the object this variable is called cash return
 
         funds.append(Fund(idx, fund_vars, copy_agent_variables(fund_vars), fund_params, fund_expectations))
 
@@ -241,6 +255,18 @@ def init_funds_marketsize(environment, portfolios, currencies, parameters, seed,
         fund.var_previous.covariance_matrix = fund.var.covariance_matrix.copy()
 
     return funds
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 def init_exogenous_agents(portfolios, currencies, parameters):
@@ -320,8 +346,11 @@ def simulated_asset_return(funds,portfolios, currencies, days, parameters,seed):
                                                     price=1, quantity=asset.par.quantity,
                                                     interest_rate=asset.par.nominal_interest_rate,
                                                     maturity=asset.par.maturity, previous_exchange_rate=1, exchange_rate=new_fx[idx]) for idx, df in enumerate(TS_default_rates[asset])])
+            if asset.par.maturity < 1:
+                simulated_real_returns[asset] = ((1+simulated_nominal_returns[asset]) / (1+exogenous_shocks[asset.par.country + "_inflation"]))-1
+            else:
+                simulated_real_returns[asset] = simulated_nominal_returns[asset]
 
-            simulated_real_returns[asset] = ((1+simulated_nominal_returns[asset]) / (1+exogenous_shocks[asset.par.country + "_inflation"]))-1
 
         for cur in currencies:
             if fund.par.country == cur.par.country:

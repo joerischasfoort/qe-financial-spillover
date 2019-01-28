@@ -36,9 +36,7 @@ class AgentVariables:
         self.losses = losses
         self.size_target = size_target
         self.currency_inventory = currency_inventory
-        self.ewma_fundamentalist_performance = 0 #TODO initialize
-        self.ewma_chartist_performance = 0 # TODO initialize .. and update?
-
+ 
 
 class AgentParameters:
     """
@@ -51,14 +49,13 @@ class AgentParameters:
         self.risk_aversion = risk_aversion
         self.adaptive_param = adaptive_param
         self.news_evaluation_error = news_evaluation_error
-        self.current_strategy_performance_weight = 0 #TODO fill
 
 
 class AgentExpectations:
     """
     Holds the agent expectations for several variables
     """
-    def __init__(self, returns, cons_returns, local_currency_returns, default_rates, exchange_rates, exchange_rate_anchor, exp_prices, cash_returns):
+    def __init__(self, returns, cons_returns, local_currency_returns, default_rates, exchange_rates, exchange_rate_anchor, exp_prices, cash_returns, inflation):
         self.returns = returns
         self.cons_returns = cons_returns
         self.local_currency_returns = local_currency_returns
@@ -67,3 +64,4 @@ class AgentExpectations:
         self.exchange_rates = exchange_rates
         self.prices = exp_prices
         self.cash_returns = cash_returns
+        self.inflation = inflation

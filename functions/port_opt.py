@@ -9,11 +9,16 @@ def portfolio_optimization(f):
         E_ret_assets = np.zeros((len(Cov_assets)))  
 
         #compute the risk aversion matrix
-        risk_aversion_mat = f.var.covariance_matrix.copy()
-        for row in Cov_assets.index:
-            for col in Cov_assets.columns:
-                risk_aversion_mat.loc[row,col]=np.sqrt(f.par.risk_aversion[row.par.country + "_assets"])*np.sqrt(f.par.risk_aversion[col.par.country +"_assets"])
-        
+        try:
+            risk_aversion_mat = f.par.RA_matrix  # if the matrix does not exist, initialize it
+        except AttributeError:
+            # compute the risk aversion matrix
+            risk_aversion_mat = f.var.covariance_matrix.copy()
+            for row in Cov_assets.index:
+                for col in Cov_assets.columns:
+                    risk_aversion_mat.loc[row, col] = np.sqrt(
+                        f.par.risk_aversion[row.par.country + "_asset"]) * np.sqrt(
+                        f.par.risk_aversion[col.par.country + "_asset"])
 
         #multiply covariance with asset specific risk aversion
         Cov_assets = np.multiply(Cov_assets, risk_aversion_mat)
@@ -150,7 +155,7 @@ def portfolio_optimization(f):
             output[a] = weights[i]
 
 
-        return  output
+        return  weights
 
 
 def portfolio_optimization_KT(f, day, tau):
@@ -159,12 +164,17 @@ def portfolio_optimization_KT(f, day, tau):
     #
     E_ret_assets = np.zeros((len(Cov_assets)))
 
-    # compute the risk aversion matrix
-    risk_aversion_mat = f.var.covariance_matrix.copy()
-    for row in Cov_assets.index:
-        for col in Cov_assets.columns:
-            risk_aversion_mat.loc[row, col] = np.sqrt(f.par.risk_aversion[row.par.country + "_assets"]) * np.sqrt(
-                f.par.risk_aversion[col.par.country + "_assets"])
+
+
+    try:
+        risk_aversion_mat = f.par.RA_matrix # if the matrix does not exist, initialize it
+    except AttributeError:
+        # compute the risk aversion matrix
+        risk_aversion_mat = f.var.covariance_matrix.copy()
+        for row in Cov_assets.index:
+            for col in Cov_assets.columns:
+                risk_aversion_mat.loc[row, col] = np.sqrt(f.par.risk_aversion[row.par.country + "_asset"]) * np.sqrt(
+                    f.par.risk_aversion[col.par.country + "_asset"])
 
     # multiply covariance with asset specific risk aversion
     Cov_assets = np.multiply(Cov_assets, risk_aversion_mat)
@@ -193,16 +203,26 @@ def portfolio_optimization_KT(f, day, tau):
     o_aux_cov = aux_cov.copy()
 
     KT_count =0
+    UU = []
     test_KT = np.zeros(len(aux_x)-1)
     while sum(test_KT) != len(test_KT):
         if KT_count > (len(aux_x)-1):
-            print ("day ", day, "iteration ", tau, ": Kuhn-Tucker Conditions not met repeatedly!")
+            print "day ", day, "iteration ", tau, ": Kuhn-Tucker Conditions not met repeatedly!"
+            #U = {}
+            #for i in range(len(E_ret_assets)):
+            #    U[i] = weights[i] * E_ret_assets[i] - 0.5 * sum(
+            #        [(weights[j] * weights[i]) * Cov_assets.iloc[i, j] for j in range(len(E_ret_assets))])
+            #UU.append(sum([U[j] for j in U]))
+            #if UU.count(max(UU))>=3 and UU[-1]==max(UU):
+            #    print(UU)
+            weights = portfolio_optimization(f)
+            break
 
         # compute matrix inverse
         try:
             inv_aux_cov = np.linalg.inv(aux_cov)
         except:
-            print ('error')
+            print 'error'
 
         inv_aux_cov = np.linalg.inv(aux_cov)
         aux_c = np.matmul(inv_aux_cov, aux_x)
@@ -212,7 +232,7 @@ def portfolio_optimization_KT(f, day, tau):
         weights = aux_c + aux_d
 
         # Start of algorithm that takes out shorted assets
-        test = weights[:-1] < 0
+        test = weights[:-1] < -1e-10
 
 
         while sum(test) > 0:
@@ -233,7 +253,7 @@ def portfolio_optimization_KT(f, day, tau):
             aux_d = np.matmul(inv_aux_cov, aux_y)
 
             weights = aux_c + aux_d
-            test = weights[:-1] < 0
+            test = weights[:-1] < -1e-10
 
         aux_e = np.zeros(len(aux_c) - 1)
         aux_f = np.zeros(len(aux_c) - 1)
@@ -263,13 +283,6 @@ def portfolio_optimization_KT(f, day, tau):
                 for j in range(len(aux_cov)):
                     aux_cov[i, j] = o_aux_cov[i, j]
 
-            # if Kuhn-Tucker conditions are not fulfilled, put assets back in
-            #for i in range(len(test_KT)):
-            #    if test_KT[i] == 0:
-            #        aux_x[i] = o_aux_x[i]
-            #        aux_y[i] = o_aux_y[i]
-            #        for j in range(len(aux_cov)):
-            #            aux_cov[i,j] = o_aux_cov[i,j]
 
 
 
@@ -278,5 +291,7 @@ def portfolio_optimization_KT(f, day, tau):
 
     for i, a in enumerate(Cov_assets.columns.values):
         output[a] = weights[i]
+
+
 
     return output

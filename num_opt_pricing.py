@@ -33,7 +33,7 @@ def NOP(X, funds,portfolios,currencies, environment, exogeneous_agents, day, fx_
 
         fund.exp.exchange_rates, fund.exp.exchange_rate_anchor = anchored_FX_expectations(fund, environment, fx_shock)
 
-        fund.exp.local_currency_returns, fund.exp.cons_returns, fund.exp.returns = return_expectations(fund, portfolios,
+        fund.exp.returns = return_expectations(fund, portfolios,
                                                                                                        currencies,
                                                                                                      environment)
 
