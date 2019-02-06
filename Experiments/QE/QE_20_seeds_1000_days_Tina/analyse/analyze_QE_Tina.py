@@ -3,11 +3,11 @@ import matplotlib.pyplot as plt
 from matplotlib import rc
 import numpy as np
 import itertools
-from analysis_functions import *
+from functions.analysis_functions import *
 
 
 start_day = 2
-end_day = 1000
+end_day = 1002
 
 
 variable = [0, 200, 400, 600, 800, 1000, 1200, 1400, 1600, 1800, 2000, 2200, 2400, 2600]
@@ -19,7 +19,7 @@ analyze = ["fx", "returns","assets","prices","weights","covariance",'default_pro
 benchmark = "QE_med_0"
 
 
-local_dir = "/Users/Tina/Dropbox/Data_Transfer_Temp/Objects2"
+local_dir = "/Users/Tina/git_repos/QE-server/Objects_Tina_Med/"
 
 
 
@@ -35,6 +35,16 @@ exogeneous_agents = list_of_objects[3]
 funds = list_of_objects[4]
 
 
+def relative_development(raw_data, benchmark):
+
+
+    relative_data = {}
+    for data in raw_data:
+        relative_data.update({data:{}})
+        for var in raw_data[data]:
+            relative_data[data].update({var: (np.array(raw_data[data][var]) - np.array(raw_data[benchmark][var]))})
+    return relative_data
+
 
 for seed in seeds:
 
@@ -47,7 +57,7 @@ for seed in seeds:
 
         for day in range(start_day,end_day+1):
             print(i, seed, day)
-            objects_day_2_seed_2_QE_Tina_seed2_QE0.pkl
+
             filename = local_dir + "objects_day_" + str(day) + "_seed_"+str(seed)+"_"  + obj_label+".pkl"
             data = open(filename,"rb")
             list_of_objects = pickle.load(data)
@@ -60,7 +70,7 @@ for seed in seeds:
 
             raw_data[obj_label] = add_observations( raw_data[obj_label], funds, portfolios,currencies, environment,exogeneous_agents)
 
-
+    print '####'
     relative_data =  relative_development(raw_data, benchmark)
 
     data_mean, data_p5, data_p95  = compute_averages(relative_data,benchmark, ordered_var_list, range(900,999))
