@@ -8,6 +8,7 @@ import os
 
 path = "/Users/Tina/git_repos/QE-server/Objects_Tina_Med/relative/"
 
+
 var_list_all = ['funds[3].exp.returns[currencies[0]]', # domestic currency
             'funds[0].exp.returns[currencies[1]]',  # foreign currency
             'funds[0].exp.returns[portfolios[0]]',   # domestic bond
