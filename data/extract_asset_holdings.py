@@ -56,6 +56,7 @@ for seed in seeds:
     print seed
         # Add a variable for percentage changes in asset holdings
 
+    rows = []
 
     for key, value in raw_data.items():
          for k2, v2 in value.items():
@@ -73,34 +74,37 @@ for seed in seeds:
 
 
     for qe, assets in relative_data.items():
-        all = {}
+        # all = {}
         #
         for key_asset, var in assets.items():
+
+
             if key_asset in var_list_asset:
+                print var, key_asset
+            #     print key_asset
 
-                for time, val in enumerate(var):
-                    all = {}
-                    all['seed'] = seed
+                all = {}
+                all['seed'] = seed
 
-                    list_temp = []
-                    list_temp.append(qe)
+                list_temp = []
+                list_temp.append(qe)
 
                     #print list_temp[0][qe.find('_', 10):] This drags out the QE
 
-                    all['QE'] = list_temp[0][qe.find('_', 10) + 3:]
-                    all['asset'] = key_asset
-                    all['val'] = val
-                    all['time'] = time
-                    print time
-                    rows.append(all)
+                all['QE'] = list_temp[0][qe.find('_', 10) + 3:]
+                all['asset'] = key_asset
+                all['val'] = var
+                all['time'] = 1
 
-    temp = pd.DataFrame(data=relative_data)
+                rows.append(all)
+
+    temp = pd.DataFrame(data=rows)
 
     df_list.append(temp)
 
 df1_assets = pd.concat(df_list, keys=[1, 2, 3, 4, 5, 6, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20])  # use seeds!
 
-df1_assets.to_csv('test_assets_holdings.csv')
+#df1_assets.to_csv('test_assets_holdings.csv')
 
 
 
