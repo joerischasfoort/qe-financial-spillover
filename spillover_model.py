@@ -44,14 +44,6 @@ def spillover_model(portfolios, currencies, environment, exogeneous_agents, fund
     data = 0
     data_t =0
 
-    ######################################################################
-    ##### Determine directoring for saving objects and measurement########
-    ######################################################################
-    hex_home = '/home/kzltin001/qe/'
-    hex_fhgfs = '/researchdata/fhgfs/aifmrm_shared/qe-financial-spillover/'
-    local_dir = 'C:\Users\jrr\Documents\GitHub\qe-financial-spillover\data\Objects'
-    # this will be used in lines near 224, 288, 292
-
     ##################################################################################
     ###################### COMPUTING STOCHASTIC PROCESSES ############################
     ##################################################################################
@@ -256,10 +248,12 @@ def spillover_model(portfolios, currencies, environment, exogeneous_agents, fund
             mean_DA = np.mean(np.array(list_DeltasA))
             max_DA =  np.max(np.array(list_DeltasA))
             FX_DA = (np.array(Deltas['FX']))
-            print ("day:", day, "tau:", tau, "mean_A:", mean_DA, 'max_A:', max_DA, 'FX:', FX_DA)
-            print([portfolios[0].par.change_intensity,portfolios[1].par.change_intensity,portfolios[2].par.change_intensity,portfolios[3].par.change_intensity, environment.par.global_parameters["fx_change_intensity"]])
-            print([(Deltas[a]) for a in portfolios])
-            print([a.var.price for a in portfolios])
+
+            ####### PRINT STATEMENTS GOOD FOR IMMEDIATE TROUBLE SHOOTING 
+            # print ("day:", day, "tau:", tau, "mean_A:", mean_DA, 'max_A:', max_DA, 'FX:', FX_DA)
+            # print([portfolios[0].par.change_intensity,portfolios[1].par.change_intensity,portfolios[2].par.change_intensity,portfolios[3].par.change_intensity, environment.par.global_parameters["fx_change_intensity"]])
+            # print([(Deltas[a]) for a in portfolios])
+            # print([a.var.price for a in portfolios])
 
 
             # saving objects when there is no convergence (for diagnostic purpose)
