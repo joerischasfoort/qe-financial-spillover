@@ -12,11 +12,20 @@ class Asset():
 
 class AssetVariables:
     """
-    Holds the initial variables for the assets, for now empty
+    Holds the initial variables for the assets
     """
     def __init__(self, price, default_rate):
         self.price = price
         self.default_rate = default_rate
+
+
+class AssetVariablesTime:
+    """
+    Holds the initial variables for the assets as well as their historical values
+    """
+    def __init__(self, init_price, init_default_rate):
+        self.price = [init_price]
+        self.default_rate = [init_default_rate]
 
 
 class AssetParameters:

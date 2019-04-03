@@ -4,17 +4,14 @@ import random
 from functions.market_mechanism import *
 
 
-
-
-
-def stochastic_timeseries(parameters,portfolios,days,seed):
-    shock_processes = correlated_shocks(parameters,days,seed)
+def stochastic_timeseries(parameters, portfolios, days, seed):
+    shock_processes = correlated_shocks(parameters, days, seed)
 
     default_rates = {}
     fundamental_default_rate_expectation = {}
 
     for a in portfolios:
-        default_rates[a], fundamental_default_rate_expectation[a] =exogenous_defaults(parameters, a, days, seed)
+        default_rates[a], fundamental_default_rate_expectation[a] = exogenous_defaults(parameters, a, days, seed)
 
     return default_rates, fundamental_default_rate_expectation, shock_processes
 
@@ -26,11 +23,9 @@ def stochastic_timeseries_2(parameters,portfolios,start_day, end_day,seed0,seed1
     fundamental_default_rate_expectation = {}
 
     for a in portfolios:
-        default_rates[a], fundamental_default_rate_expectation[a] =exogenous_defaults_2(parameters, a, start_day, end_day,seed0,seed1)
+        default_rates[a], fundamental_default_rate_expectation[a] = exogenous_defaults_2(parameters, a, start_day, end_day, seed0, seed1)
 
     return default_rates, fundamental_default_rate_expectation, shock_processes
-
-
 
 
 def correlated_shocks(parameters, days,seed):
@@ -59,8 +54,6 @@ def correlated_shocks(parameters, days,seed):
     shock_processes = {rc: m[i] for i, rc in enumerate(risk_components)}
 
     return shock_processes
-
-
 
 
 def correlated_shocks_2(parameters, start_day, end_day,seed0,seed1):
@@ -97,8 +90,6 @@ def correlated_shocks_2(parameters, start_day, end_day,seed0,seed1):
     shock_processes = {rc: m[i] for i, rc in enumerate(risk_components)}
 
     return shock_processes
-
-
 
 
 def exogenous_defaults_2(parameters, a, start_day, end_day,seed0,seed1):
@@ -148,6 +139,7 @@ def exogenous_defaults_2(parameters, a, start_day, end_day,seed0,seed1):
     TS_true_default_rate_expectation = [TS_default_events[idx] * default_rate_mean for idx in range(len(TS_default_events))]
 
     return TS_default_rates, TS_true_default_rate_expectation
+
 
 def exogenous_defaults(parameters, a, days, seed):
 
@@ -243,6 +235,5 @@ def shock_FX(portfolios, environment, exogeneous_agents, funds, currencies, shoc
     Deltas = {}
     Deltas.update(Delta_Demand)
     Deltas.update({"FX": Delta_Capital})
-
 
     return environment, Deltas

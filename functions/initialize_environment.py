@@ -2,6 +2,7 @@ from objects.environment import *
 import numpy as np
 import pandas as pd
 
+
 def init_environment(currencies, parameters):
 
     fx_matrix = np.zeros([len(currencies), len(currencies)])
@@ -18,7 +19,7 @@ def init_environment(currencies, parameters):
     fx_matrix.rename(index=currency_countries, inplace=True)
     fx_matrix.rename(columns=currency_countries, inplace=True)
 
-    environment = Environment(EnvironmentVariables(fx_matrix,fx_matrix.copy()), EnvironmentVariables(fx_matrix.copy(),fx_matrix.copy()),
+    environment = Environment(EnvironmentVariables(fx_matrix, fx_matrix.copy()), EnvironmentVariables(fx_matrix.copy(), fx_matrix.copy()),
                               EnvironmentParameters(parameters))
 
     return environment

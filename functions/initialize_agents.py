@@ -257,18 +257,6 @@ def init_funds_4a(environment, portfolios, p_holdings_4a, currencies, c_holdings
     return funds
 
 
-
-
-
-
-
-
-
-
-
-
-
-
 def init_exogenous_agents(portfolios, currencies, parameters):
     # create central bank
     cb_assets = {asset: 0 for asset in portfolios}
@@ -297,16 +285,7 @@ def init_exogenous_agents(portfolios, currencies, parameters):
     fx_interventionist_variables = FX_Interventionist_Variables(fx_interventionist_asset_demand, fx_interventionist_currency,fx_interventionist_currency_demand)
     fx_interventionist = FX_Interventionist(fx_interventionist_variables)
 
-
-
-
-
-
     exogeneous_agents = {repr(central_bank): central_bank, repr(underwriter): underwriter, repr(fx_interventionist): fx_interventionist}
-
-
-
-
 
     return exogeneous_agents
 

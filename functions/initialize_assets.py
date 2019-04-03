@@ -58,20 +58,15 @@ def init_portfolios_4a(parameters,maturities_4a, face_values_4a, quantities_4a, 
     return portfolios
 
 
-
 def init_currencies(parameters):
-
     currencies = []
     total_currency = parameters["total_money"]
     asset_countries = ordered_list_of_countries(parameters["n_domestic_assets"], parameters["n_foreign_assets"])
-
 
     for idx, country in enumerate(set(asset_countries)):
         currency_param = CurrencyParameters(country, parameters["currency_rate"],
                                             np.divide(total_currency, len(set(asset_countries))))
         currencies.append(Currency(idx, currency_param))
-
-
 
     return currencies
 
@@ -82,12 +77,9 @@ def init_currencies_4a(parameters, currency_rate_4a, currency_amount_4a):
     total_currency = parameters["total_money"]
     asset_countries = ordered_list_of_countries(parameters["n_domestic_assets"], parameters["n_foreign_assets"])
 
-
     for idx, country in enumerate(set(asset_countries)):
         currency_param = CurrencyParameters(country, currency_rate_4a[country],
                                            currency_amount_4a[country])
         currencies.append(Currency(idx, currency_param))
-
-
 
     return currencies
