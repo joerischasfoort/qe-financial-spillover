@@ -27,7 +27,7 @@ def init_objects(parameters, seed):
     return portfolios, currencies, funds, environment, exogenous_agents
 
 
-def init_objects_one_country(parameters, seed):
+def init_objects_one_country(parameters, default_stats, seed):
     """
     Initializes model objects: currencies,
     :param parameters:
@@ -36,62 +36,50 @@ def init_objects_one_country(parameters, seed):
     """
     # 1 initialize portfolios
     portfolios = []
-    total_assets = parameters["n_domestic_assets"] + parameters["n_foreign_assets"]
-
-    for idx in range(total_assets):
+    for idx in range(parameters["n_domestic_assets"]):
         asset_params = AssetParameters('domestic', parameters["face_value"],
                                        parameters["nominal_interest_rate"],
-                                       parameters["maturity"], parameters["quantity"])
+                                       parameters["maturity"], parameters["quantity"],
+                                       default_stats, idx)
         init_asset_vars = AssetVariablesTime(parameters["init_asset_price"], init_default_rate=0)
 
         portfolios.append(Asset(idx, init_asset_vars, None, asset_params))
 
     # 2 initialize currencies
-    currencies = [CurrencyParameters('domestic', parameters["currency_rate"], parameters["total_money"])]
+    currencies = [Currency("domestic", CurrencyParameters('domestic', parameters["currency_rate"], parameters["total_money"]))]
 
     # 3 initialize funds
     funds = []
-    total_funds = parameters["n_domestic_funds"]
 
-    for idx in range(total_funds):
-        risk_aversion = {"domestic_assets": parameters["domestic_risk_aversion_D_asset"]}
+    for idx in range(parameters["n_domestic_funds"]):
+        # 3a determine parameters
+        #TODO add heterogeneity here
+        risk_aversion = {"domestic_assets": parameters["risk_aversion"]}
         fund_params = AgentParameters("domestic", parameters["price_memory"],
-                                      parameters["fx_memory"], risk_aversion,
+                                      None, risk_aversion,
                                       parameters["adaptive_param"], parameters["news_evaluation_error"])
 
+        # 3b determine variables
         # compute initial variable values associated with portfolio shares
         asset_portfolio = {}
-        asset_demand = {}
         ewma_returns = {}
-        ewma_delta_prices = {}
         realised_rets = {}
 
         for a in portfolios:
             # funds initially have a home bias of 100%
-            asset_portfolio.update({a: a.par.quantity / sum([i == a.par.country for i in fund_countries])})
-
-            asset_demand.update({a: 0})  # demand is initialized at zero (this does not effect anything)
+            asset_portfolio.update({a: a.par.quantity})
             ewma_returns.update({a: a.par.nominal_interest_rate})  # the nominal interest rate is the initial return
-            ewma_delta_prices.update({a: parameters[
-                "init_agent_ewma_delta_prices"]})  # TODO: IS THIS STILL NEEDED? WHY IS THE INITIAL VALUE 1?
             realised_rets.update({a: 0})
 
         # compute initial variable values associated with currencies
         currency_portfolio = {}
-        currency_inventory = {}
-        currency_demand = {}
-        ewma_delta_fx = {}
         losses = {}
 
         for currency in currencies:
             # funds initially have a home bias of 100%
-            currency_portfolio.update({currency: currency.par.quantity / sum([i == currency.par.country for i in fund_countries])})
-            currency_inventory.update({currency: 0})  # TODO: could this also be empty
-            currency_demand.update({currency: parameters["init_currency_demand"]})  # Todo: could this be empty
-            ewma_delta_fx.update({currency: parameters["init_ewma_delta_fx"]})  # TODO: Still needed?
-
+            currency_portfolio.update({currency: currency.par.quantity})
             ewma_returns.update({currency: currency.par.nominal_interest_rate})  # the nominal interest rate is the initial return
-            losses.update({currency: parameters["init_losses"]})
+            losses.update({currency: parameters["init_losses"]}) #TODO is this needed?
 
         # initialized as having no value
         init_c_profits = dict.fromkeys(currencies)
@@ -103,23 +91,22 @@ def init_objects_one_country(parameters, seed):
         covs = np.zeros((len(assets), len(assets)))
         cov_matr = pd.DataFrame(covs, index=assets, columns=assets)
 
-        fund_redeemable_share_size = [asset_portfolio[a] * a.var.price for a in portfolios] + [currency_portfolio[c] for c in currencies]
-        fund_redeemable_share_size = sum(fund_redeemable_share_size)
+        fund_redeemable_share_size = sum([asset_portfolio[a] * a.var.price[-1] for a in portfolios] + [currency_portfolio[c] for c in currencies])
 
         fund_vars = AgentVariablesTime(asset_portfolio,
                                        currency_portfolio,
                                        fund_redeemable_share_size,
-                                       asset_demand,
-                                       currency_demand,
+                                       {},
+                                       {},
                                        ewma_returns,
-                                       ewma_delta_prices,
-                                       ewma_delta_fx,
+                                       {},
+                                       {},
                                        cov_matr, parameters["init_payouts"], dict.fromkeys(assets),
                                        realised_rets, init_profits, losses,
                                        fund_redeemable_share_size,
-                                       currency_inventory)
+                                       {}) # used to be currency_inventory
 
-        # Initialising expectations
+        # 3c initialising expectations
         r = ewma_returns.copy()
         cons_returns = {a: 0 for a in portfolios + currencies}
         df_rates = {a: a.var.default_rate for a in portfolios}
@@ -161,3 +148,17 @@ def init_objects_one_country(parameters, seed):
     exogenous_agents = {repr(central_bank): central_bank, repr(underwriter): underwriter}
 
     return portfolios, currencies, funds, exogenous_agents
+
+def calculate_covariance_matrix(historical_stock_returns, base_historical_variance):
+    """
+    Calculate the covariance matrix of a safe asset (money) provided stock returns
+    :param historical_stock_returns: list of historical stock returns
+    :return: DataFrame of the covariance matrix of stocks and money (in practice just the variance).
+    """
+    assets = ['stocks', 'money']
+    covariances = np.cov(np.array([historical_stock_returns, np.zeros(len(historical_stock_returns))]))
+
+    if covariances.sum().sum() == 0.:
+        # If the price is stationary, revert to base historical variance
+        covariances[0][0] = base_historical_variance
+    return pd.DataFrame(covariances, index=assets, columns=assets)

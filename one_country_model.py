@@ -1,4 +1,3 @@
-import copy
 import random
 from functions.port_opt import *
 from functions.asset_demands import *
@@ -8,7 +7,6 @@ from functions.stochasticprocess import *
 from functions.expectation_formation import *
 from functions.market_mechanism import *
 from functions.profits_and_payouts import *
-from functions.supercopy import *
 from functions.measurement import *
 
 from num_opt_pricing import *
