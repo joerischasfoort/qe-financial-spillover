@@ -26,7 +26,6 @@ parameters = {
     "risk_aversion": 5.0,
     "news_evaluation_error": 0,
     # initial values
-    "init_asset_price": 1.0,
     "total_money": 1000,
     "init_agent_ewma_delta_prices": 1,
     "init_asset_demand": 0,

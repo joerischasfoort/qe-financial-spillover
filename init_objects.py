@@ -41,14 +41,20 @@ def init_objects_one_country(parameters, default_stats, seed):
                                        parameters["nominal_interest_rate"],
                                        parameters["maturity"], parameters["quantity"],
                                        default_stats, idx)
-        init_asset_vars = AssetVariablesTime(parameters["init_asset_price"], init_default_rate=0)
+        init_asset_vars = AssetVariablesTime(parameters["face_value"] / float(parameters["quantity"]), init_default_rate=0)
 
         portfolios.append(Asset(idx, init_asset_vars, None, asset_params))
 
     # 2 initialize currencies
-    currencies = [Currency("domestic", CurrencyParameters('domestic', parameters["currency_rate"], parameters["total_money"]))]
+    currencies = [
+        Currency("domestic", CurrencyParameters('domestic', parameters["currency_rate"], parameters["total_money"]))]
 
-    # 3 initialize funds
+    # 3 simulate historical returns for portfolios & currencies:
+    historical_returns = simulated_portfolio_returns_one_country(portfolios, parameters, seed)
+    for c in currencies:
+        historical_returns.append([c.par.nominal_interest_rate for t in range(parameters["end_day"] - parameters["start_day"])])
+
+    # 4 initialize funds
     funds = []
 
     for idx in range(parameters["n_domestic_funds"]):
@@ -66,7 +72,6 @@ def init_objects_one_country(parameters, default_stats, seed):
         realised_rets = {}
 
         for a in portfolios:
-            # funds initially have a home bias of 100%
             asset_portfolio.update({a: a.par.quantity})
             ewma_returns.update({a: a.par.nominal_interest_rate})  # the nominal interest rate is the initial return
             realised_rets.update({a: 0})
@@ -76,7 +81,6 @@ def init_objects_one_country(parameters, default_stats, seed):
         losses = {}
 
         for currency in currencies:
-            # funds initially have a home bias of 100%
             currency_portfolio.update({currency: currency.par.quantity})
             ewma_returns.update({currency: currency.par.nominal_interest_rate})  # the nominal interest rate is the initial return
             losses.update({currency: parameters["init_losses"]}) #TODO is this needed?
@@ -87,9 +91,10 @@ def init_objects_one_country(parameters, default_stats, seed):
         init_profits = init_c_profits.copy()  # start with x's keys and values
         init_profits.update(init_a_profits)
 
+        # init co-variance matrix
         assets = portfolios + currencies
-        covs = np.zeros((len(assets), len(assets)))
-        cov_matr = pd.DataFrame(covs, index=assets, columns=assets)
+
+        cov_matr = calculate_covariance_matrix(historical_returns, assets)
 
         fund_redeemable_share_size = sum([asset_portfolio[a] * a.var.price[-1] for a in portfolios] + [currency_portfolio[c] for c in currencies])
 
@@ -111,24 +116,13 @@ def init_objects_one_country(parameters, default_stats, seed):
         cons_returns = {a: 0 for a in portfolios + currencies}
         df_rates = {a: a.var.default_rate for a in portfolios}
         exp_prices = {a: a.var.price for a in portfolios}
-        exp_fx_returns = {currency: currency.par.nominal_interest_rate for currency in currencies}
+        exp_currency_returns = {currency: currency.par.nominal_interest_rate for currency in currencies}
         exp_inflation = {"domestic": parameters["domestic_inflation_mean"]}
         fund_expectations = AgentExpectations(r, cons_returns, r, df_rates, None, None, exp_prices,
-                                              exp_fx_returns,
-                                              exp_inflation)  # TODO: why is this called exp_fx_returns? In the object this variable is called cash return
+                                              exp_currency_returns,
+                                              exp_inflation)
 
         funds.append(Fund(idx, fund_vars, copy_agent_variables(fund_vars), fund_params, fund_expectations))
-
-    # initialize the covariance matrix with simulated values
-    simulated_time_series = simulated_asset_return(funds, portfolios, currencies, 10000,
-                                                   parameters, seed)
-    for fund in funds:
-        for i in assets:
-            for j in assets:
-                fund.var.covariance_matrix.loc[i][j] = \
-                np.cov(simulated_time_series[fund][i], simulated_time_series[fund][j])[0][1]
-
-        fund.var_previous.covariance_matrix = fund.var.covariance_matrix.copy()
 
     # 5 initialize exogenous agents
     # create central bank
@@ -137,7 +131,7 @@ def init_objects_one_country(parameters, default_stats, seed):
 
     asset_targets = {asset: 0 for asset in portfolios}
     cb_variables = CB_VariablesTime(cb_assets, cb_currency, 0, 0, asset_targets)
-    central_bank = Central_Bank(cb_variables, None, ExoAgentParameters(parameters["cb_country"]))
+    central_bank = Central_Bank(cb_variables, None, ExoAgentParameters("domestic"))
 
     # create underwriter agent
     underwriter_assets = {asset: 0 for asset in portfolios}
@@ -149,16 +143,13 @@ def init_objects_one_country(parameters, default_stats, seed):
 
     return portfolios, currencies, funds, exogenous_agents
 
-def calculate_covariance_matrix(historical_stock_returns, base_historical_variance):
+
+def calculate_covariance_matrix(historical_stock_returns, assets):
     """
     Calculate the covariance matrix of a safe asset (money) provided stock returns
     :param historical_stock_returns: list of historical stock returns
     :return: DataFrame of the covariance matrix of stocks and money (in practice just the variance).
     """
-    assets = ['stocks', 'money']
-    covariances = np.cov(np.array([historical_stock_returns, np.zeros(len(historical_stock_returns))]))
+    covariances = np.cov(historical_stock_returns)
 
-    if covariances.sum().sum() == 0.:
-        # If the price is stationary, revert to base historical variance
-        covariances[0][0] = base_historical_variance
     return pd.DataFrame(covariances, index=assets, columns=assets)

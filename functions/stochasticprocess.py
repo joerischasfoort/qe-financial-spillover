@@ -1,4 +1,5 @@
 import numpy as np
+import pandas as pd
 import random
 from functions.market_mechanism import *
 
@@ -27,24 +28,36 @@ def stochastic_timeseries_2(parameters,portfolios,start_day, end_day,seed0,seed1
     return default_rates, fundamental_default_rate_expectation, shock_processes
 
 
-def correlated_shocks(parameters, days,seed):
+def calculate_covariance_matrix(assets, historical_returns):
+    """
+    Calculate the covariance matrix of several assets and currencies provided their returns
+    :param list of asset objects: portfolio's and currencies
+    :param historical_returns: list of lists historical returns for each asset
+    :return: DataFrame of the covariance matrix of stocks and money (in practice just the variance).
+    """
+    covariances = np.cov(np.array([hst_rets for hst_rets in historical_returns]))
 
-    risk_components = ["domestic_inflation","foreign_inflation","fx_shock"]
+    return pd.DataFrame(covariances, index=assets, columns=assets)
 
-    corrs=np.zeros((len(risk_components),len(risk_components)))
-    stds=corrs.copy()
+
+def correlated_shocks(parameters, days, seed):
+
+    risk_components = ["domestic_inflation", "foreign_inflation", "fx_shock"]
+
+    corrs = np.zeros((len(risk_components),len(risk_components)))
+    stds = corrs.copy()
     means = np.zeros((len(risk_components)))
     for i, rc in enumerate(risk_components):
         means[i]=parameters[rc + "_mean"]
-        stds[i,i]=parameters[rc + "_std"]
+        stds[i, i]=parameters[rc + "_std"]
         for i2, rc2 in enumerate(risk_components):
-            var=rc + "_and_" + rc2
-            if rc==rc2:
+            var = rc + "_and_" + rc2
+            if rc == rc2:
                 corrs[i, i2] = 1
             if var in parameters["list_risk_corr"].keys():
-                corrs[i,i2]= parameters["list_risk_corr"][var]
+                corrs[i, i2]= parameters["list_risk_corr"][var]
 
-    covs = np.dot(np.dot(stds,corrs),stds)
+    covs = np.dot(np.dot(stds, corrs), stds)
 
     random.seed(seed+10)
     np.random.seed(seed+10)
@@ -59,18 +72,18 @@ def correlated_shocks_2(parameters, start_day, end_day,seed0,seed1):
 
     risk_components = ["domestic_inflation","foreign_inflation","fx_shock"]
 
-    corrs=np.zeros((len(risk_components),len(risk_components)))
-    stds=corrs.copy()
+    corrs = np.zeros((len(risk_components),len(risk_components)))
+    stds = corrs.copy()
     means = np.zeros((len(risk_components)))
     for i, rc in enumerate(risk_components):
-        means[i]=parameters[rc + "_mean"]
-        stds[i,i]=parameters[rc + "_std"]
+        means[i] = parameters[rc + "_mean"]
+        stds[i, i]= parameters[rc + "_std"]
         for i2, rc2 in enumerate(risk_components):
-            var=rc + "_and_" + rc2
-            if rc==rc2:
+            var = rc + "_and_" + rc2
+            if rc == rc2:
                 corrs[i, i2] = 1
             if var in parameters["list_risk_corr"].keys():
-                corrs[i,i2]= parameters["list_risk_corr"][var]
+                corrs[i, i2]= parameters["list_risk_corr"][var]
 
     covs = np.dot(np.dot(stds,corrs),stds)
 

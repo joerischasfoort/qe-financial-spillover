@@ -20,9 +20,7 @@ import numpy as np
 from scipy.optimize import minimize
 
 
-
-
-def spillover_model(portfolios, currencies, environment, exogeneous_agents, funds,  seed,seed1, obj_label,saving_params,var):
+def spillover_model(portfolios, currencies, environment, exogenous_agents, funds, seed, seed1, obj_label, saving_params, var):
     """
     Koziol, Riedler & Schasfoort Agent-based simulation model of financial spillovers
     :param assets: list of Asset objects
@@ -57,12 +55,12 @@ def spillover_model(portfolios, currencies, environment, exogeneous_agents, fund
     # initial default expectations
     noise = {}
     idiosyncratic_default_rate_noise = {}
-    for j,fund in enumerate(funds):
-        for i,a in enumerate(portfolios):
+    for j, fund in enumerate(funds):
+        for i, a in enumerate(portfolios):
             random.seed(seed + j + i)
             np.random.seed(seed + j + i)
-            noise[a]=[np.random.normal(0, fund.par.news_evaluation_error) for idx in range(days)]
-            fund.exp.default_rates[a]=fundamental_default_rate_expectation[a][environment.par.global_parameters['start_day']-1]
+            noise[a] = [np.random.normal(0, fund.par.news_evaluation_error) for idx in range(days)]
+            fund.exp.default_rates[a] = fundamental_default_rate_expectation[a][environment.par.global_parameters['start_day'] - 1]
         idiosyncratic_default_rate_noise[fund]=noise
     ####################################################################################
     ####################################################################################
@@ -88,15 +86,12 @@ def spillover_model(portfolios, currencies, environment, exogeneous_agents, fund
     ##############################################################################################################
     for day in range(environment.par.global_parameters['start_day'], environment.par.global_parameters['end_day']):
 
-        if day >= environment.par.global_parameters["start_day"]+5:
-            environment.par.global_parameters["cov_memory"]=0.001
-
-
-
+        if day >= environment.par.global_parameters["start_day"] + 5:
+            environment.par.global_parameters["cov_memory"] = 0.001
 
         for row in environment.var.fx_rates.index:
             for col in environment.var.fx_rates.columns:
-                environment.var.ewma_fx_rates.loc[row, col] = compute_ewma(environment.var.fx_rates.loc[row, col], environment.var.ewma_fx_rates.loc[row, col],0) # TODO: the last variable needs to be a parameter
+                environment.var.ewma_fx_rates.loc[row, col] = compute_ewma(environment.var.fx_rates.loc[row, col], environment.var.ewma_fx_rates.loc[row, col], 0) # TODO: the last variable needs to be a parameter
 
         ######################################################################################
         ################ UPDATING THE STOCHASTIC SHOCK VARIABLES #############################
@@ -133,8 +128,8 @@ def spillover_model(portfolios, currencies, environment, exogeneous_agents, fund
 
         for fund in funds:
             fund.exp.default_rates = dr_expectations(fund, portfolios, delta_news, fundamental_default_rates, default_expectation_noise[fund])
-            previous_return_exp[fund]=fund.exp.returns.copy() # TODO: This should be done when passing all other values to "var_previous
-            previous_cons_returns[fund]=fund.exp.cons_returns.copy()
+            previous_return_exp[fund] = fund.exp.returns.copy() # TODO: This should be done when passing all other values to "var_previous
+            previous_cons_returns[fund]= fund.exp.cons_returns.copy()
             previous_local_currency_returns[fund] = fund.exp.local_currency_returns
 
         ###########################################################
@@ -197,13 +192,13 @@ def spillover_model(portfolios, currencies, environment, exogeneous_agents, fund
                 # compute demand for balance sheet positions
                 fund.var.asset_demand, fund.var.currency_demand = asset_demand(fund, portfolios, currencies, environment)
 
-            for ex in exogeneous_agents:
-                exogeneous_agents[ex].var.asset_demand = ex_agent_asset_demand(ex, exogeneous_agents, portfolios )
+            for ex in exogenous_agents:
+                exogenous_agents[ex].var.asset_demand = ex_agent_asset_demand(ex, exogenous_agents, portfolios)
 
 
             for cur in currencies:
                 if asset_market_convergence == len(portfolios):
-                    exogeneous_agents["fx_interventionist"].var.currency_demand[cur]=0
+                    exogenous_agents["fx_interventionist"].var.currency_demand[cur]=0
 
             # Update prices if convergence has not been achieved yet
             if intraday_over == False:
@@ -211,7 +206,7 @@ def spillover_model(portfolios, currencies, environment, exogeneous_agents, fund
                 for a in portfolios:
                     pre_prices.update({a: a.var.price})
 
-                portfolios, environment, Deltas = update_market_prices_and_fx(portfolios, currencies, environment, exogeneous_agents, funds, var)
+                portfolios, environment, Deltas = update_market_prices_and_fx(portfolios, currencies, environment, exogenous_agents, funds, var)
 
             # check for convergece of asset and fx market
             conv_bound = environment.par.global_parameters['conv_bound']
@@ -261,7 +256,7 @@ def spillover_model(portfolios, currencies, environment, exogeneous_agents, fund
                 print('convergence failed on day ', day)
                 file_name = saving_params["path"] + '/!objects_nonConv_day' + str(day) + '.pkl'
                 save_objects = open(file_name, 'wb')
-                list_of_objects = [portfolios, currencies, environment, exogeneous_agents, funds, seed]
+                list_of_objects = [portfolios, currencies, environment, exogenous_agents, funds, seed]
                 pickle.dump(list_of_objects, save_objects)
                 save_objects.close()
 
@@ -281,7 +276,7 @@ def spillover_model(portfolios, currencies, environment, exogeneous_agents, fund
                     x0[id_a] = a.var.price
                 x0[-1] = environment.var.fx_rates.iloc[0][1]
 
-                res = minimize(NOP, x0, args=(funds, portfolios, currencies, environment, exogeneous_agents, day, fx_shock),
+                res = minimize(NOP, x0, args=(funds, portfolios, currencies, environment, exogenous_agents, day, fx_shock),
                                method='nelder-mead', options={'xtol': conv_bound/1000, 'disp': True})
 
                 update_prices = 1
@@ -300,7 +295,7 @@ def spillover_model(portfolios, currencies, environment, exogeneous_agents, fund
                 fund.var.ewma_returns, fund.var.covariance_matrix, fund.var.hypothetical_returns = covariance_estimate(fund,  environment, previous_local_currency_returns[fund], inflation_shock)
 
         #computing new asset and cash positions
-        excess_demand, pi, nu = asset_excess_demand_and_correction_factors(funds, portfolios, currencies, exogeneous_agents)
+        excess_demand, pi, nu = asset_excess_demand_and_correction_factors(funds, portfolios, currencies, exogenous_agents)
 
          # trading
         for fund in funds:
@@ -308,18 +303,18 @@ def spillover_model(portfolios, currencies, environment, exogeneous_agents, fund
             fund.var.currency_inventory = fund_cash_inventory_adjustment(fund, portfolios, currencies)
             temp, fund.var.currency_demand = asset_demand(fund, portfolios, currencies, environment)
 
-        for ex in exogeneous_agents:
-            exogeneous_agents[ex].var.assets = ex_asset_adjustments(ex, portfolios, excess_demand, pi, nu, exogeneous_agents)
+        for ex in exogenous_agents:
+            exogenous_agents[ex].var.assets = ex_asset_adjustments(ex, portfolios, excess_demand, pi, nu, exogenous_agents)
 
         for fund in funds:
             fund.var.currency_demand = cash_demand_correction(fund, currencies,environment)
 
-        nuC, piC, excess_demandC = cash_excess_demand_and_correction_factors(funds, currencies,exogeneous_agents)
+        nuC, piC, excess_demandC = cash_excess_demand_and_correction_factors(funds, currencies, exogenous_agents)
 
         for fund in funds:
             fund.var.currency = fund_cash_adjustments(nuC, piC, excess_demandC, currencies, fund)
 
-        exogeneous_agents["fx_interventionist"].var.currency = fx_interventionist_cash_adjustment(exogeneous_agents["fx_interventionist"], nuC, piC, excess_demandC, currencies)
+        exogenous_agents["fx_interventionist"].var.currency = fx_interventionist_cash_adjustment(exogenous_agents["fx_interventionist"], nuC, piC, excess_demandC, currencies)
 
         # update previous variables
         for fund in funds:
@@ -330,8 +325,8 @@ def spillover_model(portfolios, currencies, environment, exogeneous_agents, fund
 
         environment.var_previous = copy_env_variables(environment.var)
 
-        exogeneous_agents['central_bank_domestic'].var_previous = copy_cb_variables(exogeneous_agents['central_bank_domestic'].var)
-        exogeneous_agents['underwriter'].var_previous = copy_underwriter_variables(exogeneous_agents['underwriter'].var)
+        exogenous_agents['central_bank_domestic'].var_previous = copy_cb_variables(exogenous_agents['central_bank_domestic'].var)
+        exogenous_agents['underwriter'].var_previous = copy_underwriter_variables(exogenous_agents['underwriter'].var)
 
 
 
@@ -339,8 +334,8 @@ def spillover_model(portfolios, currencies, environment, exogeneous_agents, fund
         if day>=saving_params["time"]:
             file_name = saving_params["path"] + '/objects_day_' + str(day) + "_seed_" + str(seed) + "_" + obj_label + '.pkl'
             save_objects = open(file_name, 'wb')
-            list_of_objects = [portfolios, currencies, environment, exogeneous_agents, funds, seed, obj_label]
+            list_of_objects = [portfolios, currencies, environment, exogenous_agents, funds, seed, obj_label]
             pickle.dump(list_of_objects, save_objects)
             save_objects.close()
 
-    return portfolios, currencies, environment, exogeneous_agents, funds,  data_t
+    return portfolios, currencies, environment, exogenous_agents, funds, data_t
