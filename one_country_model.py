@@ -11,7 +11,7 @@ from functions.measurement import *
 from functions.initialize_agents import simulated_portfolio_returns_one_country
 from num_opt_pricing import *
 import numpy as np
-from scipy.optimize import minimize
+from scipy import optimize
 
 
 def one_country_model(portfolios, currencies, parameters, exogenous_agents, funds, seed):
@@ -48,13 +48,12 @@ def one_country_model(portfolios, currencies, parameters, exogenous_agents, fund
         for fund in funds:
             pass
 
-        # previous price is the input price
+        # use previous price as input price for the
         x0 = np.ones(len(portfolios) + 1)
         for idx, a in enumerate(portfolios):
             x0[idx] = a.var.price
 
-        res = minimize(optimal_asset_prices_one_country, x0, args=(funds, portfolios, currencies, parameters, exogenous_agents, day),
-                       method='nelder-mead', options={'xtol': conv_bound / 1000, 'disp': True})
+        res = optimize.fsolve(optimal_asset_prices_one_country, x0, args=(funds, portfolios, currencies, parameters, exogenous_agents, day))
 
         # set the price of the portfolio's equal to the optimal prices
         for idx, a in enumerate(portfolios):

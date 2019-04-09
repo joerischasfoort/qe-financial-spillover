@@ -79,6 +79,10 @@ def optimal_asset_prices_one_country(X, funds, portfolios, currencies, parameter
     :param day: integer of the simulated day
     :return: float average excess demand
     """
+    # if negative values return a large constant
+    if X[X < 0]:
+        return 1000000
+
     total_asset_demand = [0 for a in portfolios]
 
     # set the price of the portfolio's equal to the input prices
@@ -132,4 +136,4 @@ def optimal_asset_prices_one_country(X, funds, portfolios, currencies, parameter
     # max_DA = np.max(np.array(list_DeltasA))
     # print("day:", day, "tau:", tau, "mean_A:", mean_DA, 'max_A:', max_DA)
 
-    return np.mean(total_asset_demand)
+    return sum(total_asset_demand)
