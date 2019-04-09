@@ -59,8 +59,8 @@ def init_objects_one_country(parameters, default_stats, seed):
 
     for idx in range(parameters["n_domestic_funds"]):
         # 3a determine parameters
-        #TODO add heterogeneity here
-        risk_aversion = {"domestic_assets": parameters["risk_aversion"]}
+        risk_aversion = {"domestic_assets": abs(
+            np.random.normal(parameters["risk_aversion"], parameters["risk_aversion"] / 5.0))}
         fund_params = AgentParameters("domestic", parameters["price_memory"],
                                       None, risk_aversion,
                                       parameters["adaptive_param"], parameters["news_evaluation_error"])
@@ -72,7 +72,7 @@ def init_objects_one_country(parameters, default_stats, seed):
         realised_rets = {}
 
         for a in portfolios:
-            asset_portfolio.update({a: a.par.quantity})
+            asset_portfolio.update({a: int(a.par.quantity / float(parameters['n_domestic_funds']))})
             ewma_returns.update({a: a.par.nominal_interest_rate})  # the nominal interest rate is the initial return
             realised_rets.update({a: 0})
 
@@ -81,11 +81,11 @@ def init_objects_one_country(parameters, default_stats, seed):
         losses = {}
 
         for currency in currencies:
-            currency_portfolio.update({currency: currency.par.quantity})
+            currency_portfolio.update({currency: int(currency.par.quantity / float(parameters['n_domestic_funds']))})
             ewma_returns.update({currency: currency.par.nominal_interest_rate})  # the nominal interest rate is the initial return
             losses.update({currency: parameters["init_losses"]}) #TODO is this needed?
 
-        # initialized as having no value
+        # initialized profits as having no value
         init_c_profits = dict.fromkeys(currencies)
         init_a_profits = dict.fromkeys(portfolios)
         init_profits = init_c_profits.copy()  # start with x's keys and values

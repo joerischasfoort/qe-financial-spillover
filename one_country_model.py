@@ -44,132 +44,49 @@ def one_country_model(portfolios, currencies, parameters, exogenous_agents, fund
     ############################################### DAY LOOP #####################################################
     ##############################################################################################################
     for day in range(parameters['start_day'], parameters['end_day']):
-        # 1 update default events
-        print(1)
-        # 2 update fund default expectations
+        # 1 update fund default expectations
         for fund in funds:
             pass
-        # 3 RESETTING INTRADAY PARAMETERS
-        convergence = False
-        asset_market_convergence = 0
-        intraday_over = False
-        tau = 0
-        Deltas = {}
 
-        jump_counter = {a: 0 for a in portfolios}
-        no_jump_counter = {a: 0 for a in portfolios}
-        test_sign = {a: 0 for a in portfolios}
+        # previous price is the input price
+        x0 = np.ones(len(portfolios) + 1)
+        for idx, a in enumerate(portfolios):
+            x0[idx] = a.var.price
 
-        ###################################################################################################################
-        ################################################ INTRADAY LOOP ####################################################
-        ###################################################################################################################
-        while intraday_over == False:
-            tau += 1
-            if convergence:
-                intraday_over = True
+        res = minimize(optimal_asset_prices_one_country, x0, args=(funds, portfolios, currencies, parameters, exogenous_agents, day),
+                       method='nelder-mead', options={'xtol': conv_bound / 1000, 'disp': True})
 
-            for fund in funds:
-                # shareholder dividends and fund profits
-                fund.var.profits, \
-                fund.var.cons_profits, \
-                fund.var.losses, \
-                fund.var.redeemable_shares, \
-                fund.var.payouts = profit_and_payout(fund, portfolios, currencies, environment)
+        # set the price of the portfolio's equal to the optimal prices
+        for idx, a in enumerate(portfolios):
+            # id_a = int(filter(str.isdigit, str(a)))
+            a.var.price = res[idx]
 
-                # Expectation formation
-                fund.var.ewma_delta_prices, \
-                fund.var.ewma_delta_fx, \
-                fund.exp.prices, \
-                fund.exp.exchange_rates = price_fx_expectations(fund, portfolios, currencies, environment)
+        for fund in funds:
+            # shareholder dividends and fund profits TODO change to
+            fund.var.profits, \
+            fund.var.losses, \
+            fund.var.redeemable_shares, \
+            fund.var.payouts = profit_and_payout_oc(fund, portfolios, currencies, parameters)  # TODO debug
 
-                fund.exp.exchange_rates, fund.exp.exchange_rate_anchor = anchored_FX_expectations(fund, environment, fx_shock)
+            # Expectation formation
+            fund.var.ewma_delta_prices, fund.exp.prices = price_expectations(fund, portfolios)  # TODO debug
 
-                fund.exp.returns = return_expectations(fund, portfolios, currencies, environment)
+            fund.exp.returns = return_expectations_oc(fund, portfolios, currencies, parameters)  # TODO update
 
-                # compute the weights of optimal balance sheet positions
-                #fund.var.weights  = portfolio_optimization(fund)
-                fund.var.weights = portfolio_optimization_KT(fund,day, tau)
+            tau = 1
 
-                # intermediate cash position resulting from interest payments, payouts, maturing and defaulting assets
-                fund.var.currency_inventory = cash_inventory(fund, portfolios, currencies)
+            # compute the weights of optimal balance sheet positions
+            fund.var.weights = portfolio_optimization_KT(fund, day, tau)
 
-                # compute demand for balance sheet positions
-                fund.var.asset_demand, fund.var.currency_demand = asset_demand(fund, portfolios, currencies, environment)
+            # intermediate cash position resulting from interest payments, payouts, maturing and defaulting assets
+            fund.var.currency_inventory = cash_inventory(fund, portfolios, currencies)  # TODO debug
 
-            for ex in exogenous_agents:
-                exogenous_agents[ex].var.asset_demand = ex_agent_asset_demand(ex, exogenous_agents, portfolios)
+            # compute demand for balance sheet positions
+            fund.var.asset_demand, fund.var.currency_demand = asset_demand_oc(fund, portfolios,
+                                                                              currencies)  # TODO debug
 
-            # Update prices if convergence has not been achieved yet
-            if not intraday_over:
-                pre_prices = {}
-                for a in portfolios:
-                    pre_prices.update({a: a.var.price})
-
-                portfolios, environment, Deltas = update_market_prices_and_fx(portfolios, currencies, environment, exogenous_agents, funds, var)
-
-            # check for convergece of asset and fx market
-            conv_bound = environment.par.global_parameters['conv_bound']
-            convergence, asset_market_convergence, convergence_condition = check_convergence(Deltas, conv_bound, portfolios, tau)
-
-            jump_counter, no_jump_counter, test_sign, environment = I_intensity_parameter_adjustment(
-                    jump_counter, no_jump_counter, test_sign, Deltas, convergence_condition, environment, var_t1)
-
-            update = 0
-            if var_t1 == []:
-                var_t1 = [v for v in var]
-                update = 1
-            if len(var) > 1:
-                var_t1 = [v for v in var]
-
-            h_var = []
-            for i in jump_counter:
-                if jump_counter[i] == 10:  # and convergence_condition[i]==False:
-                    h_var.append(i)
-            if len(h_var) > 0 and update == 0:
-                var = [np.random.permutation(h_var)[0]]
-                var_t1 = []
-            else:
-                var = [v for v in var_original]
-
-                # calculating and printing degree(in percent) to which the convergence bound is reached. Values <= zero need to be achieved
-                list_DeltasA = [abs(Deltas[a]) for a in portfolios]
-                mean_DA = np.mean(np.array(list_DeltasA))
-                max_DA = np.max(np.array(list_DeltasA))
-                FX_DA = (np.array(Deltas['FX']))
-
-                ####### PRINT STATEMENTS GOOD FOR IMMEDIATE TROUBLE SHOOTING
-                # print ("day:", day, "tau:", tau, "mean_A:", mean_DA, 'max_A:', max_DA, 'FX:', FX_DA)
-                # print([portfolios[0].par.change_intensity,portfolios[1].par.change_intensity,portfolios[2].par.change_intensity,portfolios[3].par.change_intensity, environment.par.global_parameters["fx_change_intensity"]])
-                # print([(Deltas[a]) for a in portfolios])
-                # print([a.var.price for a in portfolios])
-
-                # saving objects when there is no convergence (for diagnostic purpose)
-                if tau > 5000:
-                    print('convergence failed on day ', day)
-
-                NO = 0
-                # try numerical optimization
-                if NO == 1:
-                    # storing prices and fx before numerical optimization
-                    pre_prices = {}
-                    for a in portfolios:
-                        pre_prices.update({a: a.var.price})
-                    pre_fx = environment.var.fx_rates.copy()
-
-                    x0 = np.ones(len(portfolios) + 1)
-                    for a in portfolios:
-                        id_a = int(filter(str.isdigit, str(a)))
-                        x0[id_a] = a.var.price
-                    x0[-1] = environment.var.fx_rates.iloc[0][1]
-
-                    res = minimize(NOP, x0,
-                                   args=(funds, portfolios, currencies, environment, exogenous_agents, day, fx_shock),
-                                   method='nelder-mead', options={'xtol': conv_bound / 1000, 'disp': True})
-
-                    update_prices = 1
-                    if update_prices == 0:
-                        for a in portfolios:
-                            a.var.price = pre_prices[a]
+        for ex in exogenous_agents:
+            exogenous_agents[ex].var.asset_demand = ex_agent_asset_demand(ex, exogenous_agents, portfolios)
 
         ##########################################################################################################################
         ############################################## BALANCE SHEET ADJUSTMENT ##################################################

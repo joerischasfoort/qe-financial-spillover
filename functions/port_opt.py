@@ -164,8 +164,6 @@ def portfolio_optimization_KT(f, day, tau):
     #
     E_ret_assets = np.zeros((len(Cov_assets)))
 
-
-
     try:
         risk_aversion_mat = f.par.RA_matrix # if the matrix does not exist, initialize it
     except AttributeError:
@@ -234,7 +232,6 @@ def portfolio_optimization_KT(f, day, tau):
         # Start of algorithm that takes out shorted assets
         test = weights[:-1] < -1e-10
 
-
         while sum(test) > 0:
             for i in range(len(aux_cov)-1):
                 for j in range(len(aux_cov)):
@@ -283,15 +280,9 @@ def portfolio_optimization_KT(f, day, tau):
                 for j in range(len(aux_cov)):
                     aux_cov[i, j] = o_aux_cov[i, j]
 
-
-
-
-
     output = {}
 
     for i, a in enumerate(Cov_assets.columns.values):
         output[a] = weights[i]
-
-
 
     return output

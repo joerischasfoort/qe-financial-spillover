@@ -64,6 +64,28 @@ def price_fx_expectations(fund, portfolios, currencies, environment):
     return ewma_delta_prices, ewma_delta_fx, expected_prices, exp_exchange_rates
 
 
+def price_expectations(fund, portfolios):
+    """
+    Calculate the price expectations of asset portfolios
+    :param fund: Fund object for which to calculate expectations
+    :param portfolios: Dictionary with portfolio object keys which the fund holds
+    :param currencies: Dictionary with currency object keys which the fund holds
+    :param environment: Enviornment object which holds a DataFrame of current exchange rates
+    :return: Dictionaries of expected weighted moving average delta prices and exchange rates, expected
+    prices and exchange rates.
+    """
+    ewma_delta_prices = {}
+    expected_prices = {}
+    for asset in portfolios:
+        realised_dp = asset.var.price / asset.var_previous.price
+        ewma_delta_prices[asset] = compute_ewma(realised_dp, fund.var.ewma_delta_prices[asset],
+                                                fund.par.price_memory)
+        expected_prices[asset] = exp_price_or_fx(asset.var.price, asset.var_previous.price,
+                                                 fund.var.ewma_delta_prices[asset], fund.par.price_memory)
+
+    return ewma_delta_prices, expected_prices
+
+
 def anchored_FX_expectations(fund, environment, shock):
 
     exp_fx_anchor = fund.exp.exchange_rate_anchor.copy()
@@ -107,7 +129,6 @@ def return_expectations(fund, portfolios, currencies, environment):
                                     currency.par.country]
         exp_returns[currency] = ((1+exp_returns[currency] )/(1+fund.exp.inflation[currency.par.country]))-1
 
-
     repayment_effect={}
     price_effect={}
     interest_effect={}
@@ -124,26 +145,56 @@ def return_expectations(fund, portfolios, currencies, environment):
                                                                                                      asset.par.quantity)) -
                     environment.var.fx_rates.loc[fund.par.country, asset.par.country] * asset.var.price)
 
-
         price_effect[asset] = out * (
                     fund.exp.exchange_rates.loc[fund.par.country, asset.par.country] * fund.exp.prices[asset] -
                     environment.var.fx_rates.loc[fund.par.country, asset.par.country] * asset.var.price)
 
-
         interest_effect[asset] = alla * fund.exp.exchange_rates.loc[fund.par.country, asset.par.country] * np.divide(
             asset.par.face_value, float(asset.par.quantity)) * asset.par.nominal_interest_rate
-
 
         default_effect[asset] = fund.exp.default_rates[asset] * fund.exp.exchange_rates.loc[
             fund.par.country, asset.par.country] * fund.exp.prices[asset]
 
-
         exp_returns[asset] = (repayment_effect[asset] + price_effect[asset] + interest_effect[asset] - default_effect[asset])/(asset.var.price* environment.var.fx_rates.loc[fund.par.country][asset.par.country])
         exp_returns[asset] = ((1+exp_returns[asset])/(1+fund.exp.inflation[asset.par.country]))-1
 
+    return exp_returns
 
-    return  exp_returns
 
+def return_expectations_oc(fund, portfolios, currencies, environment):
+    """
+    Calcuate expectated returns on a fund's asset portfolios and currencies, one country model
+    :param fund: Fund object for which the returns are calculated
+    :param portfolios: Dictionary of Asset objects keys with corresponding values
+    :param currencies: Dictionary of Currency objects keys with corresponding values
+    :param environment: Environment object which holds a Pandas Dataframe of exchange rates
+    :return: Dictionary of portfolio and currency object keys with float return expectations
+    """
+    exp_returns = {}
+    for currency in currencies:
+        exp_returns[currency] = (1 + currency.par.nominal_interest_rate)
+
+    repayment_effect = {}
+    price_effect = {}
+    interest_effect = {}
+    default_effect = {}
+
+    for asset in portfolios:
+        out = asset.par.maturity * (1 - fund.exp.default_rates[asset])
+        mat = (1 - asset.par.maturity) * (1 - fund.exp.default_rates[asset])
+        alla = (1 - fund.exp.default_rates[asset])
+
+        repayment_effect[asset] = mat * (np.divide(asset.par.face_value, float(asset.par.quantity)) - asset.var.price)
+
+        price_effect[asset] = out * (fund.exp.prices[asset] - asset.var.price)
+
+        interest_effect[asset] = alla * np.divide(asset.par.face_value, float(asset.par.quantity)) * asset.par.nominal_interest_rate
+
+        default_effect[asset] = fund.exp.default_rates[asset] * fund.exp.prices[asset]
+
+        exp_returns[asset] = (repayment_effect[asset] + price_effect[asset] + interest_effect[asset] - default_effect[asset]) / (asset.var.price)
+
+    return exp_returns
 
 
 def covariance_estimate(fund, environment, prev_exp_ret,  inflation_shock):
@@ -208,7 +259,6 @@ def covariance_estimate(fund, environment, prev_exp_ret,  inflation_shock):
             new_covariance_matrix.loc[x,y] = max(0,new_covariance_matrix.loc[x,y])
 
     return ewma_returns, new_covariance_matrix, realized_returns
-
 
 
 def exp_price_or_fx(current_price, previous_price, previous_ewma_delta_price, memory_parameter):
