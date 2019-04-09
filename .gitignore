@@ -1,5 +1,6 @@
 # Jetbrains IDEs
 /.idea
+/venv
 
 # Pytest cache
 /.pytest_cache
