@@ -1,8 +1,6 @@
-
 from math import log
 from math import exp
 import numpy as np
-import pandas as pd
 
 
 def dr_expectations(fund, portfolios, delta_news, fundamental_default_rates, noise):
@@ -13,10 +11,9 @@ def dr_expectations(fund, portfolios, delta_news, fundamental_default_rates, noi
     :param delta_news: float the difference in the news process about the default rate
     :return: dictionary of assets and corresponding floats of expected default rates
     """
-    expected_dr = {} #TODO: rethink this! Idiosyncratic error terms don't show. Avoid expectations of zero default rate
+    expected_dr = {}  #TODO: rethink this! Idiosyncratic error terms don't show. Avoid expectations of zero default rate
 
     for a in portfolios:
-
         previously_exp_dr = fund.exp.default_rates[a]
         fdr = fundamental_default_rates[a]
 

@@ -45,20 +45,20 @@ class AgentVariablesTime:
     def __init__(self, assets, currency, redeemable_shares, asset_demand, currency_demand,
                  ewma_returns, ewma_delta_prices, ewma_delta_fx, covariance_matrix, payouts,
                  weights, hypothetical_returns, profits, losses, size_target, currency_inventory):
-        self.assets = [assets]
-        self.currency = [currency]
+        self.assets = assets
+        self.currency = currency
         self.redeemable_shares = [redeemable_shares]
-        self.asset_demand = [asset_demand]
-        self.currency_demand = [currency_demand]
+        self.asset_demand = asset_demand
+        self.currency_demand = currency_demand
         self.ewma_returns = ewma_returns
         self.ewma_delta_prices = ewma_delta_prices
         self.ewma_delta_fx = ewma_delta_fx
         self.covariance_matrix = covariance_matrix
-        self.weights = [weights]
+        self.weights = weights
         self.payouts = payouts
         self.hypothetical_returns = hypothetical_returns
-        self.profits = [profits]
-        self.losses = [losses]
+        self.profits = profits
+        self.losses = losses
         self.size_target = size_target
         self.currency_inventory = currency_inventory
 
@@ -85,6 +85,22 @@ class AgentExpectations:
         self.cons_returns = cons_returns
         self.local_currency_returns = local_currency_returns
         self.default_rates = default_rates
+        self.exchange_rate_anchor = exchange_rate_anchor
+        self.exchange_rates = exchange_rates
+        self.prices = exp_prices
+        self.cash_returns = cash_returns
+        self.inflation = inflation
+
+
+class AgentExpectationsTime:
+    """
+    Holds the agent expectations for several variables
+    """
+    def __init__(self, returns, cons_returns, local_currency_returns, default_rates, exchange_rates, exchange_rate_anchor, exp_prices, cash_returns, inflation):
+        self.returns = [returns]
+        self.cons_returns = cons_returns
+        self.local_currency_returns = local_currency_returns
+        self.default_rates = [default_rates]
         self.exchange_rate_anchor = exchange_rate_anchor
         self.exchange_rates = exchange_rates
         self.prices = exp_prices

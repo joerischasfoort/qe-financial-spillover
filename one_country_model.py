@@ -1,17 +1,9 @@
 import random
-from functions.port_opt import *
-from functions.asset_demands import *
-from functions.ex_agent_asset_demands import *
-from functions.balance_sheet_adjustments import *
-from functions.stochasticprocess import *
-from functions.expectation_formation import *
-from functions.market_mechanism import *
-from functions.profits_and_payouts import *
-from functions.measurement import *
-from functions.initialize_agents import simulated_portfolio_returns_one_country
-from num_opt_pricing import *
 import numpy as np
 from scipy import optimize
+from functions.balance_sheet_adjustments import *
+from functions.initialize_agents import simulated_portfolio_returns_one_country
+from num_opt_pricing import *
 
 
 def one_country_model(portfolios, currencies, parameters, exogenous_agents, funds, seed):
@@ -29,29 +21,36 @@ def one_country_model(portfolios, currencies, parameters, exogenous_agents, fund
     random.seed(seed)
     np.random.seed(seed)
 
-    ##################################################################################
-    ###################### COMPUTING STOCHASTIC PROCESSES ############################
-    ##################################################################################
-    # calculating stochastic components default
-    # 3 simulate historical returns for portfolios & currencies:
-    simulated_nominal_returns, TS_default_rates, fundamental_default_rate_expectation = simulated_portfolio_returns_one_country(
-        portfolios, parameters, seed, default_rates=True)
-    for c in currencies:
-        simulated_nominal_returns.append(
-            [c.par.nominal_interest_rate for t in range(parameters["end_day"] - parameters["start_day"])])
-
-    ##############################################################################################################
-    ############################################### DAY LOOP #####################################################
-    ##############################################################################################################
+    # TODO move code above to initialization
+    # TODO in code below refer to noise held by agent, and fundamental dfr exp for every asset + default rates of assets themselves
     for day in range(parameters['start_day'], parameters['end_day']):
         # 1 update fund default expectations
-        for fund in funds:
-            pass
+        # initialise intraday prices at current price
+        delta_news = {}
+        fundamental_default_rates = {}
+
+        # update default events
+        for a in portfolios:
+            delta_news[a] = log(fundamental_default_rate_expectation[a][day]) - log(
+                fundamental_default_rate_expectation[a][day - 1])
+            fundamental_default_rates[a] = fundamental_default_rate_expectation[a][day]
+            a.var.default_rate = default_rates[a][day]
+
+        default_expectation_noise = {}
+        for f in funds:
+            default_expectation_noise[f] = {a: idiosyncratic_default_rate_noise[f][a][day] for a in portfolios}
+            f_exp_default_rates = dr_expectations(f, portfolios, delta_news, fundamental_default_rates,
+                                                  default_expectation_noise[f])
+            for a in f_exp_default_rates:
+                f.exp.default_rates[a] = f_exp_default_rates[a] #TODO check if this works
 
         # use previous price as input price for the
         x0 = np.ones(len(portfolios) + 1)
         for idx, a in enumerate(portfolios):
-            x0[idx] = a.var.price
+            x0[idx] = a.var.price[-1]
+
+        # try it once
+        optimal_asset_prices_one_country(x0, funds, portfolios, currencies, parameters, exogenous_agents, day)
 
         res = optimize.fsolve(optimal_asset_prices_one_country, x0, args=(funds, portfolios, currencies, parameters, exogenous_agents, day))
 

@@ -4,8 +4,11 @@ import random
 from functions.market_mechanism import *
 
 
-def stochastic_timeseries(parameters, portfolios, days, seed):
-    shock_processes = correlated_shocks(parameters, days, seed)
+def stochastic_timeseries(parameters, portfolios, days, seed, two_countries=True):
+    if two_countries:
+        shock_processes = correlated_shocks(parameters, days, seed)
+    else:
+        shock_processes = None
 
     default_rates = {}
     fundamental_default_rate_expectation = {}
@@ -154,7 +157,6 @@ def exogenous_defaults_2(parameters, a, start_day, end_day,seed0,seed1):
 
 
 def exogenous_defaults(parameters, a, days, seed):
-
     time = days
     default_events_mean_reversion = parameters["default_events_mean_reversion"]
 
@@ -192,6 +194,37 @@ def exogenous_defaults(parameters, a, days, seed):
                                         range(len(TS_default_events))]
 
     return TS_default_rates, TS_true_default_rate_expectation
+
+
+def exogenous_defaults_one_country(default_stats, asset_idx, days, seed):
+    """
+    Calculate the default rates and fundamental expectations of them for an asset
+    :param default_stats: dictionary
+    :param asset_idx: int index of the asset in the list of portfolio's
+    :param days: int amount of days over which the simulation takes place
+    :param seed: int random seed number
+    :return:
+    """
+    default_events = ornstein_uhlenbeck_levels(days, default_stats["mean_default_events"][asset_idx],
+                                               default_stats["default_events_std"][asset_idx],
+                                               default_stats["default_events_mean_reversion"][asset_idx],
+                                               seed + 1 + asset_idx)
+
+    random.seed(seed + 2 + asset_idx)
+    np.random.seed(seed + 2 + asset_idx)
+    defaults = [np.random.poisson(default_events[idx]) for idx in range(len(default_events))]
+
+    random.seed(seed + 3 + asset_idx)
+    np.random.seed(seed + 3 + asset_idx)
+    default_rate_per_event = np.random.normal(default_stats["default_rate_mean"], default_stats["default_rate_std"],
+                                                 len(default_events))
+
+    default_rates = [default_rate_per_event[idx] * defaults[idx] for idx in range(len(default_events))]
+
+    fundamental_dr_exp = [default_events[idx] * default_stats["default_rate_mean"] for idx in
+                                        range(len(default_events))]
+
+    return default_rates, fundamental_dr_exp
 
 
 def ornstein_uhlenbeck_levels(time, init_level, sigma, mean_reversion,seed): # Todo: why are values for parameters hard coded?

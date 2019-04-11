@@ -81,21 +81,24 @@ def optimal_asset_prices_one_country(X, funds, portfolios, currencies, parameter
     """
     # if negative values return a large constant
     if X[X < 0]:
-        return 1000000
+        return 10000000
 
     total_asset_demand = [0 for a in portfolios]
 
     # set the price of the portfolio's equal to the input prices
     for idx, a in enumerate(portfolios):
         #id_a = int(filter(str.isdigit, str(a)))
-        a.var.price = X[idx]
+        a.var.price.append(X[idx])
 
     for fund in funds:
         # shareholder dividends and fund profits TODO change to
-        fund.var.profits, \
-        fund.var.losses, \
-        fund.var.redeemable_shares, \
-        fund.var.payouts = profit_and_payout_oc(fund, portfolios, currencies, parameters) #TODO debug
+        f_profits, f_losses, f_redeemable_shares, f_payouts = profit_and_payout_oc(fund, portfolios, currencies) #TODO debug
+        f_redeemable_shares.append(f_redeemable_shares)
+        for key in f_profits:
+            fund.var.profits[key].append(f_profits[key])
+            if key in currencies:
+                fund.var.losses[key].append(f_losses[key])
+                fund.var.payouts[key].append()
 
         # Expectation formation
         fund.var.ewma_delta_prices, fund.exp.prices = price_expectations(fund, portfolios) #TODO debug
@@ -136,4 +139,4 @@ def optimal_asset_prices_one_country(X, funds, portfolios, currencies, parameter
     # max_DA = np.max(np.array(list_DeltasA))
     # print("day:", day, "tau:", tau, "mean_A:", mean_DA, 'max_A:', max_DA)
 
-    return sum(total_asset_demand)
+    return total_asset_demand

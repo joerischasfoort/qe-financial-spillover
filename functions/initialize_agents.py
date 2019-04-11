@@ -335,34 +335,17 @@ def simulated_asset_return(funds, portfolios, currencies, days, parameters, seed
     return TS_for_funds
 
 
-def simulated_portfolio_returns_one_country(portfolios, parameters, seed, default_rates=False):
-    """
-    Simulate the returns for assets for the duration of the simulation.
-    :param portfolios: list of Portfolio objects for which the returns are simulated.
-    :param parameters: dictionary containing all parameters
-    :param seed: integer of the random seed
-    :param default_rates: boolean which determines whether default rates are returned.
-    :return:
-    """
+def simulated_portfolio_returns_one_country(asset_idx, asset_pars, parameters, default_stats, seed):
+    """"""
     days = parameters['end_day'] - parameters['start_day']
-
-    TS_default_rates = {}
-    fundamental_default_rate_expectation = {}
     simulated_nominal_returns = []
 
-    for asset in portfolios:
-        #compute default rates for an asset
-        TS_default_rates[asset], fundamental_default_rate_expectation[asset] = exogenous_defaults(parameters, asset, days, seed)
+    default_rates, fundamental_default_rate_expectation = exogenous_defaults_one_country(default_stats, asset_idx, days, seed)
 
-        new_fx = [1 for idx in range(days)]
+    simulated_nominal_returns = [realised_profits_asset(df, face_value=asset_pars.face_value, previous_price=1,
+                                                             price = 1, quantity=asset_pars.quantity,
+                                                             interest_rate=asset_pars.nominal_interest_rate,
+                                                             maturity=asset_pars.maturity, previous_exchange_rate=1,
+                                                             exchange_rate=1.0) for idx, df in enumerate(default_rates)]
 
-        simulated_nominal_returns.append([realised_profits_asset(df, face_value=asset.par.face_value, previous_price=1,
-                                                                 price = 1, quantity=asset.par.quantity,
-                                                                 interest_rate=asset.par.nominal_interest_rate,
-                                                                 maturity=asset.par.maturity, previous_exchange_rate=1,
-                                                                 exchange_rate=new_fx[idx]) for idx, df in enumerate(TS_default_rates[asset])])
-
-    if default_rates:
-        return simulated_nominal_returns, TS_default_rates, fundamental_default_rate_expectation
-    else:
-        return simulated_nominal_returns
+    return simulated_nominal_returns, default_rates, fundamental_default_rate_expectation

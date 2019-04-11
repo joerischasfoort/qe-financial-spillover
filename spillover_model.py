@@ -61,7 +61,7 @@ def spillover_model(portfolios, currencies, environment, exogenous_agents, funds
             np.random.seed(seed + j + i)
             noise[a] = [np.random.normal(0, fund.par.news_evaluation_error) for idx in range(days)]
             fund.exp.default_rates[a] = fundamental_default_rate_expectation[a][environment.par.global_parameters['start_day'] - 1]
-        idiosyncratic_default_rate_noise[fund]=noise
+        idiosyncratic_default_rate_noise[fund] = noise
     ####################################################################################
     ####################################################################################
 
