@@ -34,45 +34,25 @@ def init_objects_one_country(parameters, default_stats, seed):
     :param seed:
     :return: list of assets, currencies, funds, exogenous agents, and an environment
     """
-    # # TODO is this needed? calculating stochastic components default
     days = parameters["end_day"] - parameters['start_day']
-    # default_rates, fundamental_default_rate_expectation, shock_processes = stochastic_timeseries(
-    #     parameters, portfolios, days, seed, two_countries=False)
-    #
-    # # TODO place in fund expectationsinitial default expectations
-    # noise = {}
-    # idiosyncratic_default_rate_noise = {}
-    # for j, fund in enumerate(funds):
-    #     for i, a in enumerate(portfolios):
-    #         random.seed(seed + j + i)
-    #         np.random.seed(seed + j + i)
-    #         noise[a] = [np.random.normal(0, fund.par.news_evaluation_error) for idx in
-    #                     range(parameters['start_day'], parameters['end_day'])]
-    #         fund.exp.default_rates[a] = fundamental_default_rate_expectation[a][parameters['start_day'] - 1]
-    #     idiosyncratic_default_rate_noise[fund] = noise
-
-
-
 
     # 1 initialize portfolios
-    # TODO place in portfolio's and currencies:
-
-
-
+    historical_returns = []
     portfolios = []
     for idx in range(parameters["n_domestic_assets"]):
         asset_params = AssetParameters('domestic', parameters["face_value"],
                                        parameters["nominal_interest_rate"],
                                        parameters["maturity"], parameters["quantity"],
                                        default_stats, idx)
-        # TODO add default rates + nominal returns
         p_prices = [0] * days
         p_prices[0] = parameters["face_value"] / float(parameters["quantity"])
 
         p_returns, p_default_rates, p_dr_fundamental_exp = simulated_portfolio_returns_one_country(
             idx, asset_params, parameters, default_stats, seed)
 
-        init_asset_vars = AssetVariablesTime(p_prices, p_default_rates, p_returns)
+        historical_returns.append(p_returns)
+
+        init_asset_vars = AssetVariablesTime(p_prices, p_default_rates, p_returns, p_dr_fundamental_exp)
 
         portfolios.append(Asset(idx, init_asset_vars, None, asset_params))
 
@@ -80,12 +60,10 @@ def init_objects_one_country(parameters, default_stats, seed):
     currencies = [
         Currency("domestic", CurrencyParameters('domestic', parameters["currency_rate"], parameters["total_money"]))]
 
-    # 3 simulate historical returns for portfolios & currencies:
-    historical_returns = simulated_portfolio_returns_one_country(portfolios, parameters, seed)
     for c in currencies:
-        historical_returns.append([c.par.nominal_interest_rate for t in range(parameters["end_day"] - parameters["start_day"])])
+        historical_returns.append([c.par.nominal_interest_rate for t in range(days)])
 
-    # 4 initialize funds
+    # 3 initialize funds
     funds = []
 
     for idx in range(parameters["n_domestic_funds"]):
@@ -102,12 +80,19 @@ def init_objects_one_country(parameters, default_stats, seed):
         ewma_returns = {}
         realised_rets = {}
         init_a_profits = {}
+        noise = {}
+        idiosyncratic_default_rate_noise = {}
 
-        for a in portfolios:
-            asset_portfolio.update({a: [int(a.par.quantity / float(parameters['n_domestic_funds'])) for t in range(parameters["end_day"] - parameters["start_day"])]})
-            ewma_returns.update({a: [a.par.nominal_interest_rate  for t in range(parameters["end_day"] - parameters["start_day"])]})  # the nominal interest rate is the initial return
-            realised_rets.update({a: [0 for t in range(parameters["end_day"] - parameters["start_day"])]})
-            init_a_profits.update({a: [0 for t in range(parameters["end_day"] - parameters["start_day"])]})
+        for i, a in enumerate(portfolios):
+            asset_portfolio.update({a: [int(a.par.quantity / float(parameters['n_domestic_funds'])) for t in range(days)]})
+            ewma_returns.update({a: [a.par.nominal_interest_rate  for t in range(days)]})  # the nominal interest rate is the initial return
+            realised_rets.update({a: [0 for t in range(days)]})
+            init_a_profits.update({a: [0 for t in range(days)]})
+
+            random.seed(seed + idx + i)
+            np.random.seed(seed + idx + i)
+            idiosyncratic_default_rate_noise[a] = [np.random.normal(0, fund_params.news_evaluation_error) for idx in
+                        range(parameters['start_day'], parameters['end_day'])]
 
         # compute initial variable values associated with currencies
         currency_portfolio = {}
@@ -115,10 +100,10 @@ def init_objects_one_country(parameters, default_stats, seed):
         init_c_profits = {}
 
         for currency in currencies:
-            currency_portfolio.update({currency: [int(currency.par.quantity / float(parameters['n_domestic_funds'])) for t in range(parameters["end_day"] - parameters["start_day"])]})
-            ewma_returns.update({currency: [currency.par.nominal_interest_rate for t in range(parameters["end_day"] - parameters["start_day"])]})  # the nominal interest rate is the initial return
-            losses.update({currency: [parameters["init_losses"] for t in range(parameters["end_day"] - parameters["start_day"])]}) #TODO is this needed?
-            init_c_profits.update({currency: [0 for t in range(parameters["end_day"] - parameters["start_day"])]})
+            currency_portfolio.update({currency: [int(currency.par.quantity / float(parameters['n_domestic_funds'])) for t in range(days)]})
+            ewma_returns.update({currency: [currency.par.nominal_interest_rate for t in range(days)]})  # the nominal interest rate is the initial return
+            losses.update({currency: [parameters["init_losses"] for t in range(days)]}) #TODO is this needed?
+            init_c_profits.update({currency: [0 for t in range(days)]})
 
         init_profits = init_c_profits.copy()  # start with x's keys and values
         init_profits.update(init_a_profits)
@@ -150,15 +135,15 @@ def init_objects_one_country(parameters, default_stats, seed):
         exp_prices = {a: a.var.price for a in portfolios}
         exp_currency_returns = {currency: currency.par.nominal_interest_rate for currency in currencies}
         exp_inflation = {"domestic": parameters["domestic_inflation_mean"]}
-        fund_expectations = AgentExpectations(r, cons_returns, r, df_rates, None, None, exp_prices,
-                                                  exp_currency_returns, exp_inflation)
+        fund_expectations = AgentExpectationsTime(r, cons_returns, r, df_rates, None, None, exp_prices,
+                                                  exp_currency_returns, exp_inflation, idiosyncratic_default_rate_noise)
 
         funds.append(Fund(idx, fund_vars, None, fund_params, fund_expectations))
 
-    # 5 initialize exogenous agents
-    # create central bank
-    cb_assets = {asset: [0 for t in range(parameters["end_day"] - parameters["start_day"])] for asset in portfolios}
-    currency_val = np.zeros(parameters["end_day"] - parameters["start_day"])
+    # 4 initialize exogenous agents
+    # 4a create central bank
+    cb_assets = {asset: [0 for t in range(days)] for asset in portfolios}
+    currency_val = np.zeros(days)
     for asset in portfolios:
         currency_val += np.array(cb_assets[asset])
     cb_currency = {currencies[0]: currency_val}
@@ -167,7 +152,7 @@ def init_objects_one_country(parameters, default_stats, seed):
     cb_variables = CB_VariablesTime(cb_assets, cb_currency, 0, 0, asset_targets)
     central_bank = Central_Bank(cb_variables, None, ExoAgentParameters("domestic"))
 
-    # create underwriter agent
+    # 4b create underwriter agent
     underwriter_assets = {asset: 0 for asset in portfolios}
     underwriter_currency = {currency: 0 for currency in currencies}
     underwriter_variables = ExoAgentVariablesTime(underwriter_assets, underwriter_currency, 0, 0)

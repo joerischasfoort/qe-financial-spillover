@@ -216,12 +216,13 @@ def exogenous_defaults_one_country(default_stats, asset_idx, days, seed):
 
     random.seed(seed + 3 + asset_idx)
     np.random.seed(seed + 3 + asset_idx)
-    default_rate_per_event = np.random.normal(default_stats["default_rate_mean"], default_stats["default_rate_std"],
-                                                 len(default_events))
+    default_rate_per_event = np.random.normal(default_stats["default_rate_mean"][asset_idx],
+                                              default_stats["default_rate_std"][asset_idx],
+                                              len(default_events))
 
     default_rates = [default_rate_per_event[idx] * defaults[idx] for idx in range(len(default_events))]
 
-    fundamental_dr_exp = [default_events[idx] * default_stats["default_rate_mean"] for idx in
+    fundamental_dr_exp = [default_events[idx] * default_stats["default_rate_mean"][asset_idx] for idx in
                                         range(len(default_events))]
 
     return default_rates, fundamental_dr_exp

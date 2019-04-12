@@ -23,10 +23,11 @@ class AssetVariablesTime:
     """
     Holds the initial variables for the assets as well as their historical values
     """
-    def __init__(self, init_prices, init_default_rate, init_returns):
+    def __init__(self, init_prices, init_default_rate, init_returns, fundamental_expected_default_rates):
         self.price = init_prices
         self.default_rate = init_default_rate
         self.returns = init_returns
+        self.f_exp_dr = fundamental_expected_default_rates
 
 
 class AssetParameters:

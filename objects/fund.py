@@ -96,7 +96,8 @@ class AgentExpectationsTime:
     """
     Holds the agent expectations for several variables
     """
-    def __init__(self, returns, cons_returns, local_currency_returns, default_rates, exchange_rates, exchange_rate_anchor, exp_prices, cash_returns, inflation):
+    def __init__(self, returns, cons_returns, local_currency_returns, default_rates, exchange_rates,
+                 exchange_rate_anchor, exp_prices, cash_returns, inflation, exp_noise):
         self.returns = [returns]
         self.cons_returns = cons_returns
         self.local_currency_returns = local_currency_returns
@@ -106,3 +107,4 @@ class AgentExpectationsTime:
         self.prices = exp_prices
         self.cash_returns = cash_returns
         self.inflation = inflation
+        self.exp_noise = exp_noise
