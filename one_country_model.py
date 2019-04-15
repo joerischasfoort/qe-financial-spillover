@@ -21,35 +21,31 @@ def one_country_model(portfolios, currencies, parameters, exogenous_agents, fund
     random.seed(seed)
     np.random.seed(seed)
 
-    # TODO move code above to initialization
     # TODO in code below refer to noise held by agent, and fundamental dfr exp for every asset + default rates of assets themselves
     for day in range(parameters['start_day'], parameters['end_day']):
         # 1 update fund default expectations
-        # initialise intraday prices at current price
         delta_news = {}
         fundamental_default_rates = {}
 
-        # update default events
+        # update default rates for all assets
         for a in portfolios:
-            delta_news[a] = log(fundamental_default_rate_expectation[a][day]) - log(
-                fundamental_default_rate_expectation[a][day - 1])
-            fundamental_default_rates[a] = fundamental_default_rate_expectation[a][day]
-            a.var.default_rate = default_rates[a][day]
+            delta_news[a] = log(a.var.f_exp_dr[day]) - log(a.var.f_exp_dr[day - 1])
+            fundamental_default_rates[a] = a.var.f_exp_dr[day]
 
         default_expectation_noise = {}
         for f in funds:
-            default_expectation_noise[f] = {a: idiosyncratic_default_rate_noise[f][a][day] for a in portfolios}
-            f_exp_default_rates = dr_expectations(f, portfolios, delta_news, fundamental_default_rates,
-                                                  default_expectation_noise[f])
+            default_expectation_noise[f] = {a: f.exp.exp_noise[a][day] for a in portfolios}
+            f_exp_default_rates = dr_expectations_oc(f, portfolios, delta_news, fundamental_default_rates,
+                                                     default_expectation_noise[f], day)
             for a in f_exp_default_rates:
-                f.exp.default_rates[a] = f_exp_default_rates[a] #TODO check if this works
+                f.exp.default_rates[a][day] = f_exp_default_rates[a] #TODO check if this works
 
-        # use previous price as input price for the
-        x0 = np.ones(len(portfolios) + 1)
+        # use previous price as input price for the pricing algorithm
+        x0 = np.ones(len(portfolios) + 1) #TODO .. + 1 is needed?
         for idx, a in enumerate(portfolios):
-            x0[idx] = a.var.price[-1]
+            x0[idx] = a.var.price[day - 1]
 
-        # try it once
+        # find equilibrium prices for assets.
         optimal_asset_prices_one_country(x0, funds, portfolios, currencies, parameters, exogenous_agents, day)
 
         res = optimize.fsolve(optimal_asset_prices_one_country, x0, args=(funds, portfolios, currencies, parameters, exogenous_agents, day))

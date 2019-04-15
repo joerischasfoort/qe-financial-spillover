@@ -98,10 +98,10 @@ class AgentExpectationsTime:
     """
     def __init__(self, returns, cons_returns, local_currency_returns, default_rates, exchange_rates,
                  exchange_rate_anchor, exp_prices, cash_returns, inflation, exp_noise):
-        self.returns = [returns]
+        self.returns = returns
         self.cons_returns = cons_returns
         self.local_currency_returns = local_currency_returns
-        self.default_rates = [default_rates]
+        self.default_rates = default_rates
         self.exchange_rate_anchor = exchange_rate_anchor
         self.exchange_rates = exchange_rates
         self.prices = exp_prices

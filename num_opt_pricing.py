@@ -87,28 +87,29 @@ def optimal_asset_prices_one_country(X, funds, portfolios, currencies, parameter
 
     # set the price of the portfolio's equal to the input prices
     for idx, a in enumerate(portfolios):
-        #id_a = int(filter(str.isdigit, str(a)))
-        a.var.price.append(X[idx])
+        a.var.price[day] = (X[idx])
 
     for fund in funds:
-        # shareholder dividends and fund profits TODO change to
-        f_profits, f_losses, f_redeemable_shares, f_payouts = profit_and_payout_oc(fund, portfolios, currencies) #TODO debug
-        f_redeemable_shares.append(f_redeemable_shares)
+        # shareholder dividends and fund profits
+        f_profits, f_losses, f_redeemable_shares, f_payouts = profit_and_payout_oc(fund, portfolios, currencies, day)
+        fund.var.redeemable_shares.append(f_redeemable_shares)
         for key in f_profits:
-            fund.var.profits[key].append(f_profits[key])
+            fund.var.profits[key][day] = f_profits[key]
             if key in currencies:
-                fund.var.losses[key].append(f_losses[key])
-                fund.var.payouts[key].append()
+                fund.var.losses[day] = f_losses[key]
+                fund.var.payouts += f_payouts[key]
 
         # Expectation formation
-        fund.var.ewma_delta_prices, fund.exp.prices = price_expectations(fund, portfolios) #TODO debug
+        fund.var.ewma_delta_prices, fund_exp_prices = price_expectations(fund, portfolios, day)
+        for a in fund_exp_prices:
+            fund.exp.prices[a][day] = fund_exp_prices[a]
 
-        fund.exp.returns = return_expectations_oc(fund, portfolios, currencies, parameters) #TODO update
-
-        tau = 1
+        fund_exp_returns = return_expectations_oc(fund, portfolios, currencies, day)  # TODO update
+        for a in fund_exp_returns:
+            fund.exp.returns[a][day] = fund_exp_returns[a]
 
         # compute the weights of optimal balance sheet positions
-        fund.var.weights = portfolio_optimization_KT(fund, day, tau)
+        fund.var.weights = portfolio_optimization_KT(fund, day, 0)
 
         # intermediate cash position resulting from interest payments, payouts, maturing and defaulting assets
         fund.var.currency_inventory = cash_inventory(fund, portfolios, currencies)  # TODO debug

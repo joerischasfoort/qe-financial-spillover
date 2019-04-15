@@ -67,7 +67,7 @@ def profit_and_payout(fund, portfolios, currencies, environment):
     return profit_per_asset, profit_barEx, losses, redeemable_shares, total_payouts
 
 
-def profit_and_payout_oc(fund, portfolios, currencies):
+def profit_and_payout_oc(fund, portfolios, currencies, day):
     """
     Calculate the profits for a fund and what part of those profits it will pay out to shareholders.
     :param fund: fund Object for which profit is to be calculated
@@ -81,31 +81,31 @@ def profit_and_payout_oc(fund, portfolios, currencies):
     total_payouts = {c: 0 for c in currencies}
     total_profit = 0
     for a in portfolios:
-        out = a.par.maturity * (1 - a.var.default_rate)
-        mat = (1 - a.par.maturity) * (1 - a.var.default_rate)
+        out = a.par.maturity * (1 - a.var.default_rate[day])
+        mat = (1 - a.par.maturity) * (1 - a.var.default_rate[day])
         all = out + mat
 
-        repayment_effect = mat * (a.par.face_value / a.par.quantity - a.var.price[-2])
-        price_effect = out * (a.var.price[-1] - a.var.price[-2])
+        repayment_effect = mat * (a.par.face_value / a.par.quantity - a.var.price[day - 1])
+        price_effect = out * (a.var.price[day] - a.var.price[day - 1])
         interest_effect = all * (a.par.face_value / a.par.quantity) * a.par.nominal_interest_rate
-        default_effect = a.var.default_rate * a.var.price[-2]
+        default_effect = a.var.default_rate[day] * a.var.price[day - 1]
 
         profit_per_asset[a] = repayment_effect + price_effect + interest_effect - default_effect
-        total_profit = (total_profit + profit_per_asset[a] * fund.var.assets[a][-1])
-        payouts[a] = fund.var.assets[a][-1] * (repayment_effect + interest_effect - default_effect)
+        total_profit = (total_profit + profit_per_asset[a] * fund.var.assets[a][day-1])
+        payouts[a] = fund.var.assets[a][day-1] * (repayment_effect + interest_effect - default_effect)
 
         for c in currencies:
             # add the profits to the profits to be payed out in the home currency
-            total_payouts[c] = total_payouts[c] + payouts[a]
+            total_payouts[c] = total_payouts[c] + payouts[a] # TODO check if this still works with multiple assets
 
     losses = {}
     for c in currencies:
         profit_per_asset[c] = c.par.nominal_interest_rate
-        total_payouts[c] = (total_payouts[c] + fund.var.currency[c][-1] * c.par.nominal_interest_rate)
-        losses[c] = min(0, total_payouts[c] + fund.var.losses[c][-1])
-        total_payouts[c] = max(total_payouts[c] + fund.var.losses[c][-1], 0)
-        total_profit = total_profit + profit_per_asset[c] * fund.var.currency[c][-1]
+        total_payouts[c] = (total_payouts[c] + fund.var.currency[c][day-1] * c.par.nominal_interest_rate)
+        losses[c] = min(0, total_payouts[c] + fund.var.losses[c][day-1])
+        total_payouts[c] = max(total_payouts[c] + fund.var.losses[c][day-1], 0)
+        total_profit = total_profit + profit_per_asset[c] * fund.var.currency[c][day-1]
 
-    redeemable_shares = fund.var.redeemable_shares[-1] + total_profit
+    redeemable_shares = fund.var.redeemable_shares[day-1] + total_profit
 
     return profit_per_asset, losses, redeemable_shares, total_payouts

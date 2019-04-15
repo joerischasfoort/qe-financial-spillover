@@ -223,7 +223,7 @@ def exogenous_defaults_one_country(default_stats, asset_idx, days, seed):
     default_rates = [default_rate_per_event[idx] * defaults[idx] for idx in range(len(default_events))]
 
     fundamental_dr_exp = [default_events[idx] * default_stats["default_rate_mean"][asset_idx] for idx in
-                                        range(len(default_events))]
+                          range(len(default_events))]
 
     return default_rates, fundamental_dr_exp
 

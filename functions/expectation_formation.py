@@ -24,6 +24,27 @@ def dr_expectations(fund, portfolios, delta_news, fundamental_default_rates, noi
     return expected_dr
 
 
+def dr_expectations_oc(fund, portfolios, delta_news, fundamental_default_rates, noise, day):
+    """
+    Calculate default rate expectations
+    :param fund: Fund object for which to calculate default rate expectations
+    :param portfolios: Dictionary with portfolio object keys which the fund holds
+    :param delta_news: float the difference in the news process about the default rate
+    :return: dictionary of assets and corresponding floats of expected default rates
+    """
+    expected_dr = {}  #TODO: rethink this! Idiosyncratic error terms don't show. Avoid expectations of zero default rate
+
+    for a in portfolios:
+        previously_exp_dr = fund.exp.default_rates[a][day - 1]
+        fdr = fundamental_default_rates[a]
+
+        log_exp_dr = log(previously_exp_dr) + delta_news[a] + noise[a] + fund.par.adaptive_param * (
+                    log(fdr) - log(previously_exp_dr))
+        expected_dr[a] = exp(log_exp_dr)
+
+    return expected_dr
+
+
 def price_fx_expectations(fund, portfolios, currencies, environment):
     """
     Calculate the price and exchange rate expectations of currencies and asset portfolios
@@ -61,7 +82,7 @@ def price_fx_expectations(fund, portfolios, currencies, environment):
     return ewma_delta_prices, ewma_delta_fx, expected_prices, exp_exchange_rates
 
 
-def price_expectations(fund, portfolios):
+def price_expectations(fund, portfolios, day):
     """
     Calculate the price expectations of asset portfolios
     :param fund: Fund object for which to calculate expectations
@@ -74,10 +95,10 @@ def price_expectations(fund, portfolios):
     ewma_delta_prices = {}
     expected_prices = {}
     for asset in portfolios:
-        realised_dp = asset.var.price / asset.var_previous.price
+        realised_dp = asset.var.price[day] / asset.var.price[day - 1]
         ewma_delta_prices[asset] = compute_ewma(realised_dp, fund.var.ewma_delta_prices[asset],
                                                 fund.par.price_memory)
-        expected_prices[asset] = exp_price_or_fx(asset.var.price, asset.var_previous.price,
+        expected_prices[asset] = exp_price_or_fx(asset.var.price[day], asset.var.price[day - 1],
                                                  fund.var.ewma_delta_prices[asset], fund.par.price_memory)
 
     return ewma_delta_prices, expected_prices
@@ -158,7 +179,7 @@ def return_expectations(fund, portfolios, currencies, environment):
     return exp_returns
 
 
-def return_expectations_oc(fund, portfolios, currencies, environment):
+def return_expectations_oc(fund, portfolios, currencies, day):
     """
     Calcuate expectated returns on a fund's asset portfolios and currencies, one country model
     :param fund: Fund object for which the returns are calculated
@@ -169,7 +190,7 @@ def return_expectations_oc(fund, portfolios, currencies, environment):
     """
     exp_returns = {}
     for currency in currencies:
-        exp_returns[currency] = (1 + currency.par.nominal_interest_rate)
+        exp_returns[currency] = currency.par.nominal_interest_rate
 
     repayment_effect = {}
     price_effect = {}
@@ -177,19 +198,19 @@ def return_expectations_oc(fund, portfolios, currencies, environment):
     default_effect = {}
 
     for asset in portfolios:
-        out = asset.par.maturity * (1 - fund.exp.default_rates[asset])
-        mat = (1 - asset.par.maturity) * (1 - fund.exp.default_rates[asset])
-        alla = (1 - fund.exp.default_rates[asset])
+        out = asset.par.maturity * (1 - fund.exp.default_rates[asset][day])
+        mat = (1 - asset.par.maturity) * (1 - fund.exp.default_rates[asset][day])
+        alla = (1 - fund.exp.default_rates[asset][day])
 
-        repayment_effect[asset] = mat * (np.divide(asset.par.face_value, float(asset.par.quantity)) - asset.var.price)
+        repayment_effect[asset] = mat * (np.divide(asset.par.face_value, float(asset.par.quantity)) - asset.var.price[day])
 
-        price_effect[asset] = out * (fund.exp.prices[asset] - asset.var.price)
+        price_effect[asset] = out * (fund.exp.prices[asset][day] - asset.var.price[day])
 
         interest_effect[asset] = alla * np.divide(asset.par.face_value, float(asset.par.quantity)) * asset.par.nominal_interest_rate
 
-        default_effect[asset] = fund.exp.default_rates[asset] * fund.exp.prices[asset]
+        default_effect[asset] = fund.exp.default_rates[asset][day] * fund.exp.prices[asset][day]
 
-        exp_returns[asset] = (repayment_effect[asset] + price_effect[asset] + interest_effect[asset] - default_effect[asset]) / (asset.var.price)
+        exp_returns[asset] = (repayment_effect[asset] + price_effect[asset] + interest_effect[asset] - default_effect[asset]) / (asset.var.price[day])
 
     return exp_returns
 

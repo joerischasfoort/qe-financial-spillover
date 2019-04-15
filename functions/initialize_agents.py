@@ -8,11 +8,9 @@ from functions.realised_returns import *
 
 
 def init_funds(environment, portfolios, currencies, parameters, seed):
-
     funds = []
     total_funds = parameters["n_domestic_funds"] + parameters["n_foreign_funds"]
     fund_countries = ordered_list_of_countries(parameters["n_domestic_funds"], parameters["n_foreign_funds"])
-
 
     for idx in range(total_funds):
         risk_aversion = {"domestic_assets": parameters[fund_countries[idx]+"_risk_aversion_D_asset"],
@@ -36,14 +34,10 @@ def init_funds(environment, portfolios, currencies, parameters, seed):
             else:
                 asset_portfolio.update({a: 0})
 
-
             asset_demand.update({a: 0})  # demand is initialized at zero (this does not effect anything)
             ewma_returns.update({a: a.par.nominal_interest_rate}) # the nominal interest rate is the initial return
             ewma_delta_prices.update({a: parameters["init_agent_ewma_delta_prices"]}) #TODO: IS THIS STILL NEEDED? WHY IS THE INITIAL VALUE 1?
             realised_rets.update({a: 0})
-
-
-
 
 
         # compute initial variable values associated with currencies
@@ -68,10 +62,7 @@ def init_funds(environment, portfolios, currencies, parameters, seed):
 
             ewma_returns.update({currency: currency.par.nominal_interest_rate}) # the nominal interest rate is the initial return
 
-
             losses.update({currency: parameters["init_losses"]})
-
-
 
         # initialized as having no value
         init_c_profits = dict.fromkeys(currencies)
@@ -82,7 +73,6 @@ def init_funds(environment, portfolios, currencies, parameters, seed):
         assets = portfolios + currencies
         covs = np.zeros((len(assets), len(assets)))
         cov_matr = pd.DataFrame(covs, index=assets, columns=assets)
-
 
         fund_redeemable_share_size = [asset_portfolio[a] * a.var.price * environment.var.fx_rates.loc[fund_countries[idx]][a.par.country] for a in portfolios] + [currency_portfolio[c] * environment.var.fx_rates.loc[fund_countries[idx]][c.par.country] for c in currencies]
         fund_redeemable_share_size = sum(fund_redeemable_share_size)
@@ -100,9 +90,7 @@ def init_funds(environment, portfolios, currencies, parameters, seed):
                                    fund_redeemable_share_size,
                                    currency_inventory)
 
-
-
-        #Initialising expectations
+        # Initialising expectations
         r = ewma_returns.copy()
         cons_returns = {a: 0 for a in portfolios + currencies}
         df_rates = {a: a.var.default_rate for a in portfolios}
@@ -111,11 +99,11 @@ def init_funds(environment, portfolios, currencies, parameters, seed):
         exp_fx_anchor = environment.var.fx_rates.copy()
         exp_fx_returns = {currency: currency.par.nominal_interest_rate for currency in currencies}
         exp_inflation = {"domestic":parameters["domestic_inflation_mean"],"foreign":parameters["foreign_inflation_mean"]}
-        fund_expectations = AgentExpectations(r,cons_returns, r, df_rates, exp_fx, exp_fx_anchor, exp_prices, exp_fx_returns, exp_inflation) #TODO: why is this called exp_fx_returns? In the object this variable is called cash return
+        fund_expectations = AgentExpectations(r, cons_returns, r, df_rates, exp_fx, exp_fx_anchor, exp_prices, exp_fx_returns, exp_inflation) #TODO: why is this called exp_fx_returns? In the object this variable is called cash return
 
         funds.append(Fund(idx, fund_vars, copy_agent_variables(fund_vars), fund_params, fund_expectations))
 
-    #initialize the covariance matrix with simulated values
+    # initialize the covariance matrix with simulated values
     simulated_time_series = simulated_asset_return(funds, portfolios, currencies, 10000,
                                                    parameters, seed)
     for fund in funds:
@@ -315,7 +303,6 @@ def simulated_asset_return(funds, portfolios, currencies, days, parameters, seed
             else:
                 simulated_real_returns[asset] = simulated_nominal_returns[asset]
 
-
         for cur in currencies:
             if fund.par.country == cur.par.country:
                 new_fx = [1 for idx in range(days)]
@@ -328,8 +315,6 @@ def simulated_asset_return(funds, portfolios, currencies, days, parameters, seed
             simulated_nominal_returns[cur] = np.array([realised_profits_currency(cur.par.nominal_interest_rate, previous_exchange_rate=1, exchange_rate=new_fx[idx]) for idx, df in enumerate(new_fx)])
             simulated_real_returns[cur] = ((1+simulated_nominal_returns[cur]) / (1+exogenous_shocks[cur.par.country + "_inflation"]))-1
 
-
-
         TS_for_funds[fund] = simulated_real_returns
 
     return TS_for_funds
@@ -338,14 +323,14 @@ def simulated_asset_return(funds, portfolios, currencies, days, parameters, seed
 def simulated_portfolio_returns_one_country(asset_idx, asset_pars, parameters, default_stats, seed):
     """"""
     days = parameters['end_day'] - parameters['start_day']
-    simulated_nominal_returns = []
 
-    default_rates, fundamental_default_rate_expectation = exogenous_defaults_one_country(default_stats, asset_idx, days, seed)
+    default_rates, fundamental_default_rate_expectation = exogenous_defaults_one_country(default_stats, asset_idx,
+                                                                                         days, seed)
 
     simulated_nominal_returns = [realised_profits_asset(df, face_value=asset_pars.face_value, previous_price=1,
-                                                             price = 1, quantity=asset_pars.quantity,
-                                                             interest_rate=asset_pars.nominal_interest_rate,
-                                                             maturity=asset_pars.maturity, previous_exchange_rate=1,
-                                                             exchange_rate=1.0) for idx, df in enumerate(default_rates)]
+                                                        price=1, quantity=asset_pars.quantity,
+                                                        interest_rate=asset_pars.nominal_interest_rate,
+                                                        maturity=asset_pars.maturity, previous_exchange_rate=1,
+                                                        exchange_rate=1.0) for idx, df in enumerate(default_rates)]
 
     return simulated_nominal_returns, default_rates, fundamental_default_rate_expectation

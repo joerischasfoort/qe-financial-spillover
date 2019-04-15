@@ -3,15 +3,13 @@ from objects.currency import *
 from functions.distribute import *
 import numpy as np
 
+
 def init_portfolios(parameters):
-
-
     portfolios = []
 
     total_assets = parameters["n_domestic_assets"] + parameters["n_foreign_assets"]
 
     asset_countries = ordered_list_of_countries(parameters["n_domestic_assets"], parameters["n_foreign_assets"])
-
 
     for idx in range(total_assets):
         asset_params = AssetParameters(asset_countries[idx], parameters["face_value"],
@@ -32,14 +30,11 @@ def init_portfolios(parameters):
 
 
 def init_portfolios_4a(parameters,maturities_4a, face_values_4a, quantities_4a, coupon_rates_4a, default_stats):
-
-
     portfolios = []
 
     total_assets = parameters["n_domestic_assets"] + parameters["n_foreign_assets"]
 
     asset_countries = ordered_list_of_countries(parameters["n_domestic_assets"], parameters["n_foreign_assets"])
-
 
     for idx in range(total_assets):
         asset_params = AssetParameters(asset_countries[idx], face_values_4a[idx], coupon_rates_4a[idx],

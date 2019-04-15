@@ -19,7 +19,7 @@ def init_objects(parameters, seed):
     environment = init_environment(currencies, parameters)
 
     # 4 initialize funds
-    funds = init_funds(environment,portfolios, currencies, parameters, seed)
+    funds = init_funds(environment, portfolios, currencies, parameters, seed)
 
     # 5 initialize exogenous agents
     exogenous_agents = init_exogenous_agents(portfolios, currencies, parameters)
@@ -78,21 +78,22 @@ def init_objects_one_country(parameters, default_stats, seed):
         # compute initial variable values associated with portfolio shares
         asset_portfolio = {}
         ewma_returns = {}
+        ewma_delta_prices = {}
         realised_rets = {}
         init_a_profits = {}
-        noise = {}
         idiosyncratic_default_rate_noise = {}
 
         for i, a in enumerate(portfolios):
             asset_portfolio.update({a: [int(a.par.quantity / float(parameters['n_domestic_funds'])) for t in range(days)]})
             ewma_returns.update({a: [a.par.nominal_interest_rate  for t in range(days)]})  # the nominal interest rate is the initial return
+            ewma_delta_prices.update({a: 1.0}) #TODO debug
             realised_rets.update({a: [0 for t in range(days)]})
             init_a_profits.update({a: [0 for t in range(days)]})
 
             random.seed(seed + idx + i)
             np.random.seed(seed + idx + i)
             idiosyncratic_default_rate_noise[a] = [np.random.normal(0, fund_params.news_evaluation_error) for idx in
-                        range(parameters['start_day'], parameters['end_day'])]
+                                                   range(parameters['start_day'], parameters['end_day'])]
 
         # compute initial variable values associated with currencies
         currency_portfolio = {}
@@ -121,7 +122,7 @@ def init_objects_one_country(parameters, default_stats, seed):
                                        {},
                                        {},
                                        ewma_returns,
-                                       {},
+                                       ewma_delta_prices, # add ewma delta prices
                                        {},
                                        cov_matr, parameters["init_payouts"], dict.fromkeys(assets),
                                        realised_rets, init_profits, losses,
@@ -131,8 +132,8 @@ def init_objects_one_country(parameters, default_stats, seed):
         # 3c initialising expectations
         r = ewma_returns.copy()
         cons_returns = {a: 0 for a in portfolios + currencies}
-        df_rates = {a: a.var.default_rate for a in portfolios}
-        exp_prices = {a: a.var.price for a in portfolios}
+        df_rates = {a: a.var.f_exp_dr.copy() for a in portfolios} #TODO is this correct?
+        exp_prices = {a: a.var.price.copy() for a in portfolios}
         exp_currency_returns = {currency: currency.par.nominal_interest_rate for currency in currencies}
         exp_inflation = {"domestic": parameters["domestic_inflation_mean"]}
         fund_expectations = AgentExpectationsTime(r, cons_returns, r, df_rates, None, None, exp_prices,
