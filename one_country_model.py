@@ -41,19 +41,20 @@ def one_country_model(portfolios, currencies, parameters, exogenous_agents, fund
                 f.exp.default_rates[a][day] = f_exp_default_rates[a] #TODO check if this works
 
         # use previous price as input price for the pricing algorithm
-        x0 = np.ones(len(portfolios) + 1) #TODO .. + 1 is needed?
+        x0 = np.ones(len(portfolios))  # TODO .. + 1 is needed?
         for idx, a in enumerate(portfolios):
             x0[idx] = a.var.price[day - 1]
 
         # find equilibrium prices for assets.
-        optimal_asset_prices_one_country(x0, funds, portfolios, currencies, parameters, exogenous_agents, day)
+        #optimal_asset_prices_one_country(x0, funds, portfolios, currencies, parameters, exogenous_agents, day)
 
-        res = optimize.fsolve(optimal_asset_prices_one_country, x0, args=(funds, portfolios, currencies, parameters, exogenous_agents, day))
+        #res = optimize.fsolve(optimal_asset_prices_one_country, x0, args=(funds, portfolios, currencies, parameters, exogenous_agents, day))
+        res2 = optimize.root(optimal_asset_prices_one_country, x0, args=(funds, portfolios, currencies, parameters, exogenous_agents, day), method='broyden1')
 
         # set the price of the portfolio's equal to the optimal prices
         for idx, a in enumerate(portfolios):
             # id_a = int(filter(str.isdigit, str(a)))
-            a.var.price = res[idx]
+            a.var.price = res2[idx]
 
         for fund in funds:
             # shareholder dividends and fund profits TODO change to

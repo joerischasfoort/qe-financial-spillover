@@ -28,8 +28,8 @@ class ExoAgentVariablesTime:
     Holds the initial variables for the agents
     """
     def __init__(self, assets, currency, asset_demand, currency_demand):
-        self.assets = [assets]  # The quantities of assets held
-        self.currency = [currency]  # The quantities of currencies held
+        self.assets = assets  # The quantities of assets held
+        self.currency = currency  # The quantities of currencies held
         self.asset_demand = [asset_demand]
         self.currency_demand = [currency_demand]
 

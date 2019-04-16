@@ -80,7 +80,7 @@ def optimal_asset_prices_one_country(X, funds, portfolios, currencies, parameter
     :return: float average excess demand
     """
     # if negative values return a large constant
-    if X[X < 0]:
+    if X[X < 0]: #TODO fix this
         return 10000000
 
     total_asset_demand = [0 for a in portfolios]
@@ -104,21 +104,21 @@ def optimal_asset_prices_one_country(X, funds, portfolios, currencies, parameter
         for a in fund_exp_prices:
             fund.exp.prices[a][day] = fund_exp_prices[a]
 
-        fund_exp_returns = return_expectations_oc(fund, portfolios, currencies, day)  # TODO update
+        fund_exp_returns = return_expectations_oc(fund, portfolios, currencies, day)
         for a in fund_exp_returns:
             fund.exp.returns[a][day] = fund_exp_returns[a]
 
         # compute the weights of optimal balance sheet positions
-        fund.var.weights = portfolio_optimization_KT(fund, day, 0)
+        fund.var.weights = portfolio_optimization_oc(fund, day)
 
         # intermediate cash position resulting from interest payments, payouts, maturing and defaulting assets
-        fund.var.currency_inventory = cash_inventory(fund, portfolios, currencies)  # TODO debug
+        fund.var.currency_inventory = cash_inventory_oc(fund, portfolios, currencies, day)  # TODO debug
 
         # compute demand for balance sheet positions
-        fund.var.asset_demand, fund.var.currency_demand = asset_demand_oc(fund, portfolios, currencies)  #TODO debug
+        fund.var.asset_demand, fund.var.currency_demand = asset_demand_oc(fund, portfolios, currencies, day)  #TODO debug
 
     for ex in exogenous_agents:
-        exogenous_agents[ex].var.asset_demand = ex_agent_asset_demand(ex, exogenous_agents, portfolios)
+        exogenous_agents[ex].var.asset_demand = ex_agent_asset_demand_oc(ex, exogenous_agents, portfolios, day)
 
     for idx, a in enumerate(portfolios):
         # add excess demand
@@ -126,7 +126,7 @@ def optimal_asset_prices_one_country(X, funds, portfolios, currencies, parameter
         for fund in funds:
             demand += fund.var.asset_demand[a]
         for ex in exogenous_agents:
-            demand += ex.var.asset_demand[a]
+            demand += exogenous_agents[ex].var.asset_demand[a]
 
         total_asset_demand[idx] = demand
 

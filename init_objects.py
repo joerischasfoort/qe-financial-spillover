@@ -85,7 +85,7 @@ def init_objects_one_country(parameters, default_stats, seed):
 
         for i, a in enumerate(portfolios):
             asset_portfolio.update({a: [int(a.par.quantity / float(parameters['n_domestic_funds'])) for t in range(days)]})
-            ewma_returns.update({a: [a.par.nominal_interest_rate  for t in range(days)]})  # the nominal interest rate is the initial return
+            ewma_returns.update({a: [a.par.nominal_interest_rate for t in range(days)]})  # the nominal interest rate is the initial return
             ewma_delta_prices.update({a: 1.0}) #TODO debug
             realised_rets.update({a: [0 for t in range(days)]})
             init_a_profits.update({a: [0 for t in range(days)]})
@@ -114,7 +114,7 @@ def init_objects_one_country(parameters, default_stats, seed):
 
         cov_matr = calculate_covariance_matrix(historical_returns, assets)
 
-        fund_redeemable_share_size = sum([asset_portfolio[a][-1] * a.var.price[-1] for a in portfolios] + [currency_portfolio[c][-1] for c in currencies])
+        fund_redeemable_share_size = sum([asset_portfolio[a][0] * a.var.price[0] for a in portfolios] + [currency_portfolio[c][0] for c in currencies])
 
         fund_vars = AgentVariablesTime(asset_portfolio,
                                        currency_portfolio,
