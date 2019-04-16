@@ -1,0 +1,4 @@
+Traceback (most recent call last):
+  File "/scratch/kzltin001/qe-financial-spillover/Experiments/QE/QE_3500/Med_3500/extract_prices.py", line 39, in <module>
+    data = open(filename, "rb")
+IOError: [Errno 2] No such file or directory: '/scratch/kzltin001/qe-financial-spillover/Experiments/QE/QE_3500/Med_3500/Objects_Tina_3500/raw_relative/3500_Tina_raw_and_relative_data_seed_2.pkl'

@@ -1,0 +1,13 @@
+             QE                          asset  seed  time       val
+prices 2 0  900  percentage_fx_rates.iloc[0,1]   2.0   0.0  0.361299
+         1  900  percentage_fx_rates.iloc[0,1]   2.0   1.0  0.384035
+         2  900  percentage_fx_rates.iloc[0,1]   2.0   2.0  0.359796
+         3  900  percentage_fx_rates.iloc[0,1]   2.0   3.0  0.372245
+         4  900  percentage_fx_rates.iloc[0,1]   2.0   4.0  0.357011
+['time' 'val']
+            time       val
+prices 2 0   0.0  0.361299
+         1   1.0  0.384035
+         2   2.0  0.359796
+         3   3.0  0.372245
+         4   4.0  0.357011

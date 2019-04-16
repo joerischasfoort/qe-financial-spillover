@@ -1,0 +1,64 @@
+/scratch/kzltin001/qe-financial-spillover/Experiments/QE/QE_3500/Med_3500/extract_all.py:208: RuntimeWarning: invalid value encountered in double_scalars
+  relative_data[key][va] / raw_data['_seed_' +str(seed)  + '_Tina_3500med_QE0'][va] * 100
+/scratch/kzltin001/qe-financial-spillover/Experiments/QE/QE_3500/Med_3500/extract_all.py:208: RuntimeWarning: divide by zero encountered in double_scalars
+  relative_data[key][va] / raw_data['_seed_' +str(seed)  + '_Tina_3500med_QE0'][va] * 100
+############# Reading bond and equity returns..########
+2 returns data
+3 returns data
+4 returns data
+6 returns data
+8 returns data
+9 returns data
+10 returns data
+11 returns data
+12 returns data
+13 returns data
+14 returns data
+15 returns data
+16 returns data
+17 returns data
+18 returns data
+19 returns data
+20 returns data
+21 returns data
+22 returns data
+############# Reading prices..########
+2 PRICES data
+3 PRICES data
+4 PRICES data
+6 PRICES data
+8 PRICES data
+9 PRICES data
+10 PRICES data
+11 PRICES data
+12 PRICES data
+13 PRICES data
+14 PRICES data
+15 PRICES data
+16 PRICES data
+17 PRICES data
+18 PRICES data
+19 PRICES data
+20 PRICES data
+21 PRICES data
+22 PRICES data
+############# Reading asset holdings..########
+2 asset holding data
+3 asset holding data
+4 asset holding data
+6 asset holding data
+8 asset holding data
+9 asset holding data
+10 asset holding data
+11 asset holding data
+12 asset holding data
+13 asset holding data
+14 asset holding data
+15 asset holding data
+16 asset holding data
+17 asset holding data
+18 asset holding data
+19 asset holding data
+20 asset holding data
+21 asset holding data
+22 asset holding data

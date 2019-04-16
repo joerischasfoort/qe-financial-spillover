@@ -1,20 +1,20 @@
 import numpy as np
-import pandas as pd
+import matplotlib.pyplot as plt
 import random
 from functions.market_mechanism import *
 
 
-def stochastic_timeseries(parameters, portfolios, days, seed, two_countries=True):
-    if two_countries:
-        shock_processes = correlated_shocks(parameters, days, seed)
-    else:
-        shock_processes = None
+
+
+
+def stochastic_timeseries(parameters,portfolios,days,seed):
+    shock_processes = correlated_shocks(parameters,days,seed)
 
     default_rates = {}
     fundamental_default_rate_expectation = {}
 
     for a in portfolios:
-        default_rates[a], fundamental_default_rate_expectation[a] = exogenous_defaults(parameters, a, days, seed)
+        default_rates[a], fundamental_default_rate_expectation[a] =exogenous_defaults(parameters, a, days, seed)
 
     return default_rates, fundamental_default_rate_expectation, shock_processes
 
@@ -26,41 +26,31 @@ def stochastic_timeseries_2(parameters,portfolios,start_day, end_day,seed0,seed1
     fundamental_default_rate_expectation = {}
 
     for a in portfolios:
-        default_rates[a], fundamental_default_rate_expectation[a] = exogenous_defaults_2(parameters, a, start_day, end_day, seed0, seed1)
+        default_rates[a], fundamental_default_rate_expectation[a] =exogenous_defaults_2(parameters, a, start_day, end_day,seed0,seed1)
 
     return default_rates, fundamental_default_rate_expectation, shock_processes
 
 
-def calculate_covariance_matrix(assets, historical_returns):
-    """
-    Calculate the covariance matrix of several assets and currencies provided their returns
-    :param list of asset objects: portfolio's and currencies
-    :param historical_returns: list of lists historical returns for each asset
-    :return: DataFrame of the covariance matrix of stocks and money (in practice just the variance).
-    """
-    covariances = np.cov(np.array([hst_rets for hst_rets in historical_returns]))
-
-    return pd.DataFrame(covariances, index=assets, columns=assets)
 
 
-def correlated_shocks(parameters, days, seed):
+def correlated_shocks(parameters, days,seed):
 
-    risk_components = ["domestic_inflation", "foreign_inflation", "fx_shock"]
+    risk_components = ["domestic_inflation","foreign_inflation","fx_shock"]
 
-    corrs = np.zeros((len(risk_components),len(risk_components)))
-    stds = corrs.copy()
+    corrs=np.zeros((len(risk_components),len(risk_components)))
+    stds=corrs.copy()
     means = np.zeros((len(risk_components)))
     for i, rc in enumerate(risk_components):
         means[i]=parameters[rc + "_mean"]
-        stds[i, i]=parameters[rc + "_std"]
+        stds[i,i]=parameters[rc + "_std"]
         for i2, rc2 in enumerate(risk_components):
-            var = rc + "_and_" + rc2
-            if rc == rc2:
+            var=rc + "_and_" + rc2
+            if rc==rc2:
                 corrs[i, i2] = 1
             if var in parameters["list_risk_corr"].keys():
-                corrs[i, i2]= parameters["list_risk_corr"][var]
+                corrs[i,i2]= parameters["list_risk_corr"][var]
 
-    covs = np.dot(np.dot(stds, corrs), stds)
+    covs = np.dot(np.dot(stds,corrs),stds)
 
     random.seed(seed+10)
     np.random.seed(seed+10)
@@ -71,22 +61,24 @@ def correlated_shocks(parameters, days, seed):
     return shock_processes
 
 
+
+
 def correlated_shocks_2(parameters, start_day, end_day,seed0,seed1):
 
     risk_components = ["domestic_inflation","foreign_inflation","fx_shock"]
 
-    corrs = np.zeros((len(risk_components),len(risk_components)))
-    stds = corrs.copy()
+    corrs=np.zeros((len(risk_components),len(risk_components)))
+    stds=corrs.copy()
     means = np.zeros((len(risk_components)))
     for i, rc in enumerate(risk_components):
-        means[i] = parameters[rc + "_mean"]
-        stds[i, i]= parameters[rc + "_std"]
+        means[i]=parameters[rc + "_mean"]
+        stds[i,i]=parameters[rc + "_std"]
         for i2, rc2 in enumerate(risk_components):
-            var = rc + "_and_" + rc2
-            if rc == rc2:
+            var=rc + "_and_" + rc2
+            if rc==rc2:
                 corrs[i, i2] = 1
             if var in parameters["list_risk_corr"].keys():
-                corrs[i, i2]= parameters["list_risk_corr"][var]
+                corrs[i,i2]= parameters["list_risk_corr"][var]
 
     covs = np.dot(np.dot(stds,corrs),stds)
 
@@ -105,6 +97,8 @@ def correlated_shocks_2(parameters, start_day, end_day,seed0,seed1):
     shock_processes = {rc: m[i] for i, rc in enumerate(risk_components)}
 
     return shock_processes
+
+
 
 
 def exogenous_defaults_2(parameters, a, start_day, end_day,seed0,seed1):
@@ -155,8 +149,8 @@ def exogenous_defaults_2(parameters, a, start_day, end_day,seed0,seed1):
 
     return TS_default_rates, TS_true_default_rate_expectation
 
-
 def exogenous_defaults(parameters, a, days, seed):
+
     time = days
     default_events_mean_reversion = parameters["default_events_mean_reversion"]
 
@@ -196,46 +190,15 @@ def exogenous_defaults(parameters, a, days, seed):
     return TS_default_rates, TS_true_default_rate_expectation
 
 
-def exogenous_defaults_one_country(default_stats, asset_idx, days, seed):
-    """
-    Calculate the default rates and fundamental expectations of them for an asset
-    :param default_stats: dictionary
-    :param asset_idx: int index of the asset in the list of portfolio's
-    :param days: int amount of days over which the simulation takes place
-    :param seed: int random seed number
-    :return:
-    """
-    default_events = ornstein_uhlenbeck_levels(days, default_stats["mean_default_events"][asset_idx],
-                                               default_stats["default_events_std"][asset_idx],
-                                               default_stats["default_events_mean_reversion"][asset_idx],
-                                               seed + 1 + asset_idx)
-
-    random.seed(seed + 2 + asset_idx)
-    np.random.seed(seed + 2 + asset_idx)
-    defaults = [np.random.poisson(default_events[idx]) for idx in range(len(default_events))]
-
-    random.seed(seed + 3 + asset_idx)
-    np.random.seed(seed + 3 + asset_idx)
-    default_rate_per_event = np.random.normal(default_stats["default_rate_mean"][asset_idx],
-                                              default_stats["default_rate_std"][asset_idx],
-                                              len(default_events))
-
-    default_rates = [default_rate_per_event[idx] * defaults[idx] for idx in range(len(default_events))]
-
-    fundamental_dr_exp = [default_events[idx] * default_stats["default_rate_mean"][asset_idx] for idx in
-                          range(len(default_events))]
-
-    return default_rates, fundamental_dr_exp
-
-
 def ornstein_uhlenbeck_levels(time, init_level, sigma, mean_reversion,seed): # Todo: why are values for parameters hard coded?
-
     default_events = [init_level]
     random.seed(seed)
     np.random.seed(seed)
     for t in range(1, time):
         error = np.random.normal(0, sigma)
         new_dr = exp(np.log((default_events[-1])+error + mean_reversion * (np.log(init_level) - np.log(default_events[-1]))))
+        if new_dr <=0 or np.isnan(new_dr) == True:
+            new_dr = default_events[-1]
 
 
         default_events.append(new_dr)
@@ -252,6 +215,8 @@ def ornstein_uhlenbeck_levels_2(time0, time1, init_level, sigma, mean_reversion,
     for t in range(1, time0):
         error = np.random.normal(0, sigma)
         new_dr = exp(np.log((default_events[-1])+error + mean_reversion * (np.log(init_level) - np.log(default_events[-1]))))
+        if new_dr <=0 or np.isnan(new_dr) == True:
+            new_dr = default_events[-1]
         default_events.append(new_dr)
 
     random.seed(seed1)
@@ -259,6 +224,8 @@ def ornstein_uhlenbeck_levels_2(time0, time1, init_level, sigma, mean_reversion,
     for t in range(time0, time1):
         error = np.random.normal(0, sigma)
         new_dr = exp(np.log((default_events[-1])+error + mean_reversion * (np.log(init_level) - np.log(default_events[-1]))))
+        if new_dr <=0 or np.isnan(new_dr) == True:
+            new_dr = default_events[-1]
         default_events.append(new_dr)
 
     return default_events
@@ -281,5 +248,6 @@ def shock_FX(portfolios, environment, exogeneous_agents, funds, currencies, shoc
     Deltas = {}
     Deltas.update(Delta_Demand)
     Deltas.update({"FX": Delta_Capital})
+
 
     return environment, Deltas
