@@ -112,7 +112,7 @@ def init_objects_one_country(parameters, default_stats, seed):
         # init co-variance matrix
         assets = portfolios + currencies
 
-        cov_matr = calculate_covariance_matrix(historical_returns, assets)
+        cov_matrices = [calculate_covariance_matrix(historical_returns, assets) for x in range(days)]
 
         fund_redeemable_share_size = sum([asset_portfolio[a][0] * a.var.price[0] for a in portfolios] + [currency_portfolio[c][0] for c in currencies])
 
@@ -124,7 +124,7 @@ def init_objects_one_country(parameters, default_stats, seed):
                                        ewma_returns,
                                        ewma_delta_prices, # add ewma delta prices
                                        {},
-                                       cov_matr, parameters["init_payouts"], dict.fromkeys(assets),
+                                       cov_matrices, parameters["init_payouts"], dict.fromkeys(assets),
                                        realised_rets, init_profits, losses,
                                        fund_redeemable_share_size,
                                        {}) # used to be currency_inventory

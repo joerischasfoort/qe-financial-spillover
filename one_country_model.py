@@ -2,7 +2,6 @@ import random
 import numpy as np
 from scipy import optimize
 from functions.balance_sheet_adjustments import *
-from functions.initialize_agents import simulated_portfolio_returns_one_country
 from num_opt_pricing import *
 
 
@@ -21,7 +20,6 @@ def one_country_model(portfolios, currencies, parameters, exogenous_agents, fund
     random.seed(seed)
     np.random.seed(seed)
 
-    # TODO in code below refer to noise held by agent, and fundamental dfr exp for every asset + default rates of assets themselves
     for day in range(parameters['start_day'], parameters['end_day']):
         # 1 update fund default expectations
         delta_news = {}
@@ -41,80 +39,92 @@ def one_country_model(portfolios, currencies, parameters, exogenous_agents, fund
                 f.exp.default_rates[a][day] = f_exp_default_rates[a] #TODO check if this works
 
         # use previous price as input price for the pricing algorithm
-        x0 = np.ones(len(portfolios))  # TODO .. + 1 is needed?
+        x0 = np.ones(len(portfolios))
         for idx, a in enumerate(portfolios):
             x0[idx] = a.var.price[day - 1]
 
         # find equilibrium prices for assets.
         #optimal_asset_prices_one_country(x0, funds, portfolios, currencies, parameters, exogenous_agents, day)
-
-        #res = optimize.fsolve(optimal_asset_prices_one_country, x0, args=(funds, portfolios, currencies, parameters, exogenous_agents, day))
         res2 = optimize.root(optimal_asset_prices_one_country, x0, args=(funds, portfolios, currencies, parameters, exogenous_agents, day), method='broyden1')
+        res = res2['x']
 
-        # set the price of the portfolio's equal to the optimal prices
+        # set the price of the portfolio's equal to the optimal prices TODO, this is probably not nescessary as the price was already set.
         for idx, a in enumerate(portfolios):
             # id_a = int(filter(str.isdigit, str(a)))
-            a.var.price = res2[idx]
+            a.var.price[day] = res[idx]
 
+        # use these prices to determine final expectations, weight, and demand.
         for fund in funds:
-            # shareholder dividends and fund profits TODO change to
-            fund.var.profits, \
-            fund.var.losses, \
-            fund.var.redeemable_shares, \
-            fund.var.payouts = profit_and_payout_oc(fund, portfolios, currencies, parameters)  # TODO debug
+            # shareholder dividends and fund profits
+            f_profits, f_losses, f_redeemable_shares, f_payouts = profit_and_payout_oc(fund, portfolios, currencies,
+                                                                                       day)
+            fund.var.redeemable_shares.append(f_redeemable_shares)
+            for key in f_profits:
+                fund.var.profits[key][day] = f_profits[key]
+                if key in currencies:
+                    fund.var.losses[day] = f_losses[key]
+                    fund.var.payouts += f_payouts[key]
 
             # Expectation formation
-            fund.var.ewma_delta_prices, fund.exp.prices = price_expectations(fund, portfolios)  # TODO debug
+            fund.var.ewma_delta_prices, fund_exp_prices = price_expectations(fund, portfolios, day)
+            for a in fund_exp_prices:
+                fund.exp.prices[a][day] = fund_exp_prices[a]
 
-            fund.exp.returns = return_expectations_oc(fund, portfolios, currencies, parameters)  # TODO update
-
-            tau = 1
+            fund_exp_returns = return_expectations_oc(fund, portfolios, currencies, day)
+            for a in fund_exp_returns:
+                fund.exp.returns[a][day] = fund_exp_returns[a]
 
             # compute the weights of optimal balance sheet positions
-            fund.var.weights = portfolio_optimization_KT(fund, day, tau)
+            fund.var.weights = portfolio_optimization_oc(fund, day)
 
             # intermediate cash position resulting from interest payments, payouts, maturing and defaulting assets
-            fund.var.currency_inventory = cash_inventory(fund, portfolios, currencies)  # TODO debug
+            fund.var.currency_inventory = cash_inventory_oc(fund, portfolios, currencies, day)  # TODO debug
 
             # compute demand for balance sheet positions
-            fund.var.asset_demand, fund.var.currency_demand = asset_demand_oc(fund, portfolios,
-                                                                              currencies)  # TODO debug
+            fund.var.asset_demand, fund.var.currency_demand = asset_demand_oc(fund, portfolios, currencies,
+                                                                              day)  # TODO debug
 
         for ex in exogenous_agents:
-            exogenous_agents[ex].var.asset_demand = ex_agent_asset_demand(ex, exogenous_agents, portfolios)
+            exogenous_agents[ex].var.asset_demand = ex_agent_asset_demand_oc(ex, exogenous_agents, portfolios, day)
 
         ##########################################################################################################################
         ############################################## BALANCE SHEET ADJUSTMENT ##################################################
         ###########################################################################################################################
 
-        # updating the covariance matrices
-        if abs(portfolios[0].var.price/portfolios[0].var_previous.price-1) < 0.01:
+        # updating the covariance matrices TODo change
+        if abs(portfolios[0].var.price[day] / portfolios[0].var.price[day - 1] - 1) < 0.05: # 0.01
             for fund in funds:
-                fund.var.ewma_returns, fund.var.covariance_matrix, fund.var.hypothetical_returns = covariance_estimate(fund,  environment, previous_local_currency_returns[fund], inflation_shock)
+                fund.var.ewma_returns[day], fund.var.covariance_matrix[day], fund.var.hypothetical_returns[day] = covariance_estimate_oc(fund, parameters, day)
 
         #computing new asset and cash positions
         excess_demand, pi, nu = asset_excess_demand_and_correction_factors(funds, portfolios, currencies, exogenous_agents)
 
          # trading
         for fund in funds:
-            fund.var.assets = fund_asset_adjustments(fund, portfolios, excess_demand, pi, nu)
-            fund.var.currency_inventory = fund_cash_inventory_adjustment(fund, portfolios, currencies)
-            temp, fund.var.currency_demand = asset_demand(fund, portfolios, currencies, environment)
+            fund_assets = fund_asset_adjustments_oc(fund, portfolios, excess_demand, pi, nu, day)
+            for a in fund.var.assets:
+                fund.var.assets[a][day] = fund_assets[a]
+
+            fund_currency_inventory = fund_cash_inventory_adjustment_oc(fund, portfolios, currencies, day)
+            for c in fund_currency_inventory:
+                fund.var.currency_inventory[c] = fund_currency_inventory[c]
+
+            temp, fund.var.currency_demand = asset_demand_oc(fund, portfolios, currencies, day)
 
         for ex in exogenous_agents:
-            exogenous_agents[ex].var.assets = ex_asset_adjustments(ex, portfolios, excess_demand, pi, nu, exogenous_agents)
+            exogenous_agents[ex].var.assets = ex_asset_adjustments_oc(ex, portfolios, excess_demand, pi, nu, exogenous_agents, day)
 
         for fund in funds:
-            fund.var.currency_demand = cash_demand_correction(fund, currencies,environment)
+            fund.var.currency_demand = cash_demand_correction_oc(fund, currencies)
 
-        nuC, piC, excess_demandC = cash_excess_demand_and_correction_factors(funds, currencies, exogenous_agents)
+        nuC, piC, excess_demandC = cash_excess_demand_and_correction_factors_oc(funds, currencies, exogenous_agents)
 
         for fund in funds:
-            fund.var.currency = fund_cash_adjustments(nuC, piC, excess_demandC, currencies, fund)
+            fund_var_currency = fund_cash_adjustments(nuC, piC, excess_demandC, currencies, fund)
+            for c in fund_var_currency:
+                fund.var.currency[day] = fund_var_currency[c]
 
-        exogenous_agents["fx_interventionist"].var.currency = fx_interventionist_cash_adjustment(exogenous_agents["fx_interventionist"], nuC, piC, excess_demandC, currencies)
-
-    return portfolios, currencies, environment, exogenous_agents, funds, data_t
+    return portfolios, currencies, exogenous_agents, funds
 
 
 

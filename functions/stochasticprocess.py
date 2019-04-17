@@ -1,10 +1,6 @@
 import numpy as np
-import matplotlib.pyplot as plt
 import random
 from functions.market_mechanism import *
-
-
-
 
 
 def stochastic_timeseries(parameters,portfolios,days,seed):
@@ -29,8 +25,6 @@ def stochastic_timeseries_2(parameters,portfolios,start_day, end_day,seed0,seed1
         default_rates[a], fundamental_default_rate_expectation[a] =exogenous_defaults_2(parameters, a, start_day, end_day,seed0,seed1)
 
     return default_rates, fundamental_default_rate_expectation, shock_processes
-
-
 
 
 def correlated_shocks(parameters, days,seed):
@@ -59,8 +53,6 @@ def correlated_shocks(parameters, days,seed):
     shock_processes = {rc: m[i] for i, rc in enumerate(risk_components)}
 
     return shock_processes
-
-
 
 
 def correlated_shocks_2(parameters, start_day, end_day,seed0,seed1):
@@ -99,11 +91,7 @@ def correlated_shocks_2(parameters, start_day, end_day,seed0,seed1):
     return shock_processes
 
 
-
-
 def exogenous_defaults_2(parameters, a, start_day, end_day,seed0,seed1):
-
-
     default_events_mean_reversion = parameters["default_events_mean_reversion"]
 
     try:
@@ -148,6 +136,7 @@ def exogenous_defaults_2(parameters, a, start_day, end_day,seed0,seed1):
     TS_true_default_rate_expectation = [TS_default_events[idx] * default_rate_mean for idx in range(len(TS_default_events))]
 
     return TS_default_rates, TS_true_default_rate_expectation
+
 
 def exogenous_defaults(parameters, a, days, seed):
 
@@ -249,5 +238,38 @@ def shock_FX(portfolios, environment, exogeneous_agents, funds, currencies, shoc
     Deltas.update(Delta_Demand)
     Deltas.update({"FX": Delta_Capital})
 
-
     return environment, Deltas
+
+
+def exogenous_defaults_one_country(default_stats, asset_idx, days, seed):
+    """
+    Calculate the default rates and fundamental expectations of them for an asset
+    :param default_stats: dictionary
+    :param asset_idx: int index of the asset in the list of portfolio's
+    :param days: int amount of days over which the simulation takes place
+    :param seed: int random seed number
+    :return:
+    """
+    default_events = ornstein_uhlenbeck_levels(days, default_stats["mean_default_events"][asset_idx],
+                                               default_stats["default_events_std"][asset_idx],
+                                               default_stats["default_events_mean_reversion"][asset_idx],
+                                               seed + 1 + asset_idx)
+
+    random.seed(seed + 2 + asset_idx)
+    np.random.seed(seed + 2 + asset_idx)
+    defaults = [np.random.poisson(default_events[idx]) for idx in range(len(default_events))]
+
+    random.seed(seed + 3 + asset_idx)
+    np.random.seed(seed + 3 + asset_idx)
+    default_rate_per_event = np.random.normal(default_stats["default_rate_mean"][asset_idx],
+                                              default_stats["default_rate_std"][asset_idx],
+                                              len(default_events))
+
+    default_rates = [default_rate_per_event[idx] * defaults[idx] for idx in range(len(default_events))]
+
+    fundamental_dr_exp = [default_events[idx] * default_stats["default_rate_mean"][asset_idx] for idx in
+                          range(len(default_events))]
+
+    return default_rates, fundamental_dr_exp
+
+

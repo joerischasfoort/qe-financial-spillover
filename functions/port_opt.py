@@ -292,7 +292,7 @@ def portfolio_optimization_oc(fund, day):
     :return: dictionary of assets with their optimal weight.
     """
     # create a copy of the covariance matrix of the funds
-    covariance_assets = fund.var.covariance_matrix.copy()
+    covariance_assets = fund.var.covariance_matrix[day - 1].copy() # TODO should it be day-1?
 
     expected_return_assets = np.zeros((len(covariance_assets)))
 

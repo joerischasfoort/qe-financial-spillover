@@ -279,6 +279,54 @@ def covariance_estimate(fund, environment, prev_exp_ret,  inflation_shock):
     return ewma_returns, new_covariance_matrix, realized_returns
 
 
+def covariance_estimate_oc(fund, parameters, day):
+    """
+    Calculate expected weighted moving average of returns and covariance matrix between them
+    :param fund: the Fund object for which to make the calculation
+    :param portfolios: Dictionary of Asset object keys and quantity values
+    :return: dictionary of asset objects and their expected weighted moving average of returns , and
+    a pandas DataFrame of covariances of returns between asset portfolios.
+    """
+    ewma_returns = {}
+    realized_returns = {}
+
+    for asset in fund.var.assets:
+        realized_returns[asset] = fund.var.profits[asset][day] / (asset.var.price[day - 1])
+        ewma_returns[asset] = compute_ewma(realized_returns[asset], fund.var.ewma_returns[asset][day - 1], parameters["cov_memory"])
+
+    for c in fund.var.currency:
+        realized_returns[c] = fund.var.profits[c][day]
+        ewma_returns[c] = compute_ewma(fund.var.profits[c][day], fund.var.ewma_returns[c][day - 1], parameters["cov_memory"])
+        #TODO add realized returns c
+
+
+    new_covariance_matrix = fund.var.covariance_matrix[day].copy()
+    new_correlation_matrix = fund.var.covariance_matrix[day].copy()
+    old_correlation_matrix = fund.var.covariance_matrix[day - 1].copy()
+    for idx_x, asset_x in enumerate(new_covariance_matrix.columns):
+        for idx_y, asset_y in enumerate(new_covariance_matrix.columns):
+            if idx_x <= idx_y:
+                covar = (realized_returns[asset_x] - ewma_returns[asset_x]) * (realized_returns[asset_y] - ewma_returns[asset_y])
+
+                ewma_covar = compute_ewma(covar, fund.var.covariance_matrix[day - 1].loc[asset_x][asset_y], parameters["cov_memory"])
+                new_covariance_matrix.loc[asset_x][asset_y] = ewma_covar
+                new_covariance_matrix.loc[asset_y][asset_x] = ewma_covar
+
+    for idx_x, asset_x in enumerate(new_covariance_matrix.columns):
+        for idx_y, asset_y in enumerate(new_covariance_matrix.columns):
+            if idx_x <= idx_y:
+                new_correlation_matrix.loc[asset_x][asset_y] = (new_covariance_matrix.loc[asset_y][asset_x] / (np.sqrt(new_covariance_matrix.loc[asset_y][asset_y]) * np.sqrt(new_covariance_matrix.loc[asset_x][asset_x])))*100
+                new_correlation_matrix.loc[asset_y][asset_x] = new_correlation_matrix.loc[asset_x][asset_y]
+                old_correlation_matrix.loc[asset_x][asset_y] = (fund.var.covariance_matrix[day - 1].loc[asset_y][asset_x] / (np.sqrt(fund.var.covariance_matrix[day - 1].loc[asset_y][asset_y]) * np.sqrt(fund.var.covariance_matrix[day - 1].loc[asset_x][asset_x])))*100
+                old_correlation_matrix.loc[asset_y][asset_x] = old_correlation_matrix.loc[asset_x][asset_y]
+
+    for x in new_covariance_matrix.index:
+        for y in new_covariance_matrix.columns:
+            new_covariance_matrix.loc[x, y] = max(0, new_covariance_matrix.loc[x, y])
+
+    return ewma_returns, new_covariance_matrix, realized_returns
+
+
 def exp_price_or_fx(current_price, previous_price, previous_ewma_delta_price, memory_parameter):
     """
     Equation 1.11 calculate expected price or exchange rate
