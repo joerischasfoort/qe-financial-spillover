@@ -154,7 +154,7 @@ def init_objects_one_country(parameters, default_stats, seed):
     central_bank = Central_Bank(cb_variables, None, ExoAgentParameters("domestic"))
 
     # 4b create underwriter agent
-    underwriter_assets = {asset: 0 for asset in portfolios}
+    underwriter_assets = {asset: [0 for t in range(days)] for asset in portfolios}
     underwriter_currency = {currency: 0 for currency in currencies}
     underwriter_variables = ExoAgentVariablesTime(underwriter_assets, underwriter_currency, 0, 0)
     underwriter = Underwriter(underwriter_variables, None)

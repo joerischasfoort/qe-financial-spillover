@@ -6,8 +6,8 @@ from one_country_model import *
 # 1 setup parameters
 parameters = {
     # global parameters
-    "n_domestic_assets": 2,
-    "n_domestic_funds": 3,
+    "n_domestic_assets": 1,
+    "n_domestic_funds": 2,
     "domestic_price_index": 1,
     "domestic_inflation_mean": 0.0,
     "domestic_inflation_std": 0.01/float(250),

@@ -299,7 +299,6 @@ def covariance_estimate_oc(fund, parameters, day):
         ewma_returns[c] = compute_ewma(fund.var.profits[c][day], fund.var.ewma_returns[c][day - 1], parameters["cov_memory"])
         #TODO add realized returns c
 
-
     new_covariance_matrix = fund.var.covariance_matrix[day].copy()
     new_correlation_matrix = fund.var.covariance_matrix[day].copy()
     old_correlation_matrix = fund.var.covariance_matrix[day - 1].copy()

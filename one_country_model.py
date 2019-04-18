@@ -45,6 +45,7 @@ def one_country_model(portfolios, currencies, parameters, exogenous_agents, fund
 
         # find equilibrium prices for assets.
         #optimal_asset_prices_one_country(x0, funds, portfolios, currencies, parameters, exogenous_agents, day)
+        print(day)
         res2 = optimize.root(optimal_asset_prices_one_country, x0, args=(funds, portfolios, currencies, parameters, exogenous_agents, day), method='broyden1')
         res = res2['x']
 
@@ -91,7 +92,7 @@ def one_country_model(portfolios, currencies, parameters, exogenous_agents, fund
         ############################################## BALANCE SHEET ADJUSTMENT ##################################################
         ###########################################################################################################################
 
-        # updating the covariance matrices TODo change
+        # updating the covariance matrices TODO debug
         if abs(portfolios[0].var.price[day] / portfolios[0].var.price[day - 1] - 1) < 0.05: # 0.01
             for fund in funds:
                 fund.var.ewma_returns[day], fund.var.covariance_matrix[day], fund.var.hypothetical_returns[day] = covariance_estimate_oc(fund, parameters, day)
@@ -112,7 +113,9 @@ def one_country_model(portfolios, currencies, parameters, exogenous_agents, fund
             temp, fund.var.currency_demand = asset_demand_oc(fund, portfolios, currencies, day)
 
         for ex in exogenous_agents:
-            exogenous_agents[ex].var.assets = ex_asset_adjustments_oc(ex, portfolios, excess_demand, pi, nu, exogenous_agents, day)
+            exogenous_agents_var_assets = ex_asset_adjustments_oc(ex, portfolios, excess_demand, pi, nu, exogenous_agents, day)
+            for a in exogenous_agents_var_assets:
+                exogenous_agents[ex].var.assets[a][day] = exogenous_agents_var_assets[a]
 
         for fund in funds:
             fund.var.currency_demand = cash_demand_correction_oc(fund, currencies)
@@ -122,7 +125,7 @@ def one_country_model(portfolios, currencies, parameters, exogenous_agents, fund
         for fund in funds:
             fund_var_currency = fund_cash_adjustments(nuC, piC, excess_demandC, currencies, fund)
             for c in fund_var_currency:
-                fund.var.currency[day] = fund_var_currency[c]
+                fund.var.currency[c][day] = fund_var_currency[c]
 
     return portfolios, currencies, exogenous_agents, funds
 

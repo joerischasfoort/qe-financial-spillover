@@ -37,7 +37,7 @@ def ex_agent_asset_demand_oc(ex, exogeneous_agents, portfolios, day):
         out = a.par.maturity * (1 - a.var.default_rate[day])
         mat = (1 - a.par.maturity) * (1 - a.var.default_rate[day])
         if ex == "underwriter":
-            a_demand[a] = -(out * exogeneous_agents[ex].var.assets[a] + ( # TODO make this previous assets?
+            a_demand[a] = -(out * exogeneous_agents[ex].var.assets[a][day - 1] + (
                         mat + a.var.default_rate[day]) * a.par.quantity)
 
         if ex == "central_bank_domestic":
