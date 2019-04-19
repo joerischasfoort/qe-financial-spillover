@@ -20,7 +20,7 @@ def one_country_model(portfolios, currencies, parameters, exogenous_agents, fund
     random.seed(seed)
     np.random.seed(seed)
 
-    for day in range(parameters['start_day'], parameters['end_day']):
+    for day in range(parameters['start_day'], parameters['end_day'] - 1):
         # 1 update fund default expectations
         delta_news = {}
         fundamental_default_rates = {}

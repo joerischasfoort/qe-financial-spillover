@@ -8,12 +8,9 @@ parameters = {
     # global parameters
     "n_domestic_assets": 1,
     "n_domestic_funds": 2,
-    "domestic_price_index": 1,
     "domestic_inflation_mean": 0.0,
-    "domestic_inflation_std": 0.01/float(250),
     "start_day": 1,
-    "end_day": 501,
-    "p_change_intensity": 0.0001,
+    "end_day": 101,
     "cov_memory": 0.00,
     # asset parameters
     "face_value": 5000,
@@ -28,11 +25,8 @@ parameters = {
     # initial values
     "total_money": 1000,
     "init_agent_ewma_delta_prices": 1,
-    "init_asset_demand": 0,
-    "init_currency_demand": 0,
     "init_payouts": 0,
     "init_losses": 0,
-    "init_profits": 0,
     # shock processes parameters
     "domestic_default_events_mean": 80 / float(250),
     "domestic_default_events_std": 5 / float(250),
@@ -40,8 +34,6 @@ parameters = {
     "domestic_default_rate_mean": 0.02 / float(80),
     "domestic_default_rate_std": 0,
     "default_rate_mean_reversion": 1,
-    "default_rate_delta_t": 0.003968253968253968,
-    'conv_bound': 0.001,
     "adaptive_param": 0.0,
 }
 
@@ -58,7 +50,7 @@ portfolios, currencies, funds, exogenous_agents = init_objects_one_country(param
 
 # 3 simulate model
 start = time.time()
-portfolios, currencies, environment, exogenous_agents, funds, data_t = one_country_model(portfolios, currencies, parameters, exogenous_agents, funds, seed)
+portfolios, currencies, exogenous_agents, funds = one_country_model(portfolios, currencies, parameters, exogenous_agents, funds, seed)
 end = time.time()
 
 print(end - start)
