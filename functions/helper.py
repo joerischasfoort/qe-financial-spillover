@@ -67,17 +67,17 @@ def make_relative_data(filename_zero,  targets, seeds,days ,analyze, experiment_
 
 				raw_data[obj_label] = add_observations(raw_data[obj_label], funds, portfolios,currencies, environment,exogeneous_agents)
 
-				if day==days[-1] and i == targets[-1]:
+				if day==days[-1] and i == new_targets[-1]:
 					print('All days for seed', seed, 'processed')
 
 		relative_data =  relative_development(raw_data, benchmark)
-		file_name = experiment_dir + outputfolder+label+'Tina_raw_and_relative_data_seed_' + str(seed) + '.pkl'     #  ATTENTION ERROR SOURCE HERE 
+		file_name = experiment_dir + outputfolder+'Tina_raw_and_relative_data_seed_' + str(seed) + "_" +label + '.pkl'     #  ATTENTION ERROR SOURCE HERE 
 		save_objects = open(file_name, 'wb')
 		list_of_objects = [seed, raw_data, relative_data]
 		pickle.dump(list_of_objects, save_objects)
 		save_objects.close()
 		if printarg=='yes':
-			print(file_name+'was written, YAY!')
+			print(file_name+' was written, YAY!')
 
  
  

@@ -22,11 +22,11 @@ seeds = [2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21,
 analyze = ["fx", "returns","assets","prices","weights","covariance",'default_prob']
 
 experiment_dir = "/Users/Tina/git_repos/qe-financial-spillover/Experiments/QE/QE_2500_2750/"
-object_dir = "/Users/Tina/git_repos/qe-financial-spillover/Experiments/QE/QE_2500_2750/Med_Cal_Objects/"
+object_dir = experiment_dir + "Med_Cal_Objects/"
 
 
 "WHERE IS THE BENCHMARK?"
-filename =  "/Users/Tina/git_repos/qe-financial-spillover/Experiments/QE/QE_2500_2750/Med_Cal_Objects/objects_day_2499_seed_2_2500_2750_med_QE0.pkl"
+filename = object_dir+"objects_day_2499_seed_2_2500_2750_med_QE0.pkl"
 label = '_2500_2750_med_QE' #  object label specified in the simulation file
 
 make_relative_data(filename, targets, seeds,days, analyze, experiment_dir , object_dir, label,  '/Users/Tina/git_repos/qe-financial-spillover/', 'raw_relative/test/', printarg='yes')
