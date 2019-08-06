@@ -6,7 +6,7 @@ import os
 
 
 
-def make_relative_data(filename_zero,  targets, seeds,days ,analyze, experiment_dir , object_dir, label, import_path, outputfolder):
+def make_relative_data(filename_zero,  targets, seeds,days ,analyze, experiment_dir , object_dir, label, import_path, outputfolder, printarg):
 	# Be careful how to import analysis_functions.py and use the right path!!
 	import sys
 	sys.path.append(import_path)
@@ -76,6 +76,8 @@ def make_relative_data(filename_zero,  targets, seeds,days ,analyze, experiment_
 		list_of_objects = [seed, raw_data, relative_data]
 		pickle.dump(list_of_objects, save_objects)
 		save_objects.close()
+		if printarg=='yes':
+			print(file_name+'was written, YAY!')
 
  
  

@@ -30,7 +30,7 @@ object_dir = "/Users/Tina/git_repos/qe-financial-spillover/Experiments/QE/QE_250
 filename =  "/Users/Tina/git_repos/qe-financial-spillover/Experiments/QE/QE_2500_2750/Med_Cal_Objects/objects_day_2499_seed_2_2500_2750_med_QE0.pkl"
 label = '_2500_2750_med_QE'
 
-make_relative_data(filename, targets, seeds,days, analyze, experiment_dir , object_dir, label,  '/Users/Tina/git_repos/qe-financial-spillover/', 'raw_relative/test/')
+make_relative_data(filename, targets, seeds,days, analyze, experiment_dir , object_dir, label,  '/Users/Tina/git_repos/qe-financial-spillover/', 'raw_relative/test/', printarg='yes')
  
  
 #    data_mean, data_p5, data_p95  = compute_averages(relative_data,benchmark, ordered_var_list, range(900,999))
