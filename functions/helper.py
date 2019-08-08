@@ -4,6 +4,11 @@ import pickle
 import itertools
 import os
 
+import pandas as pd
+import pickle
+import itertools
+import os
+
 
 
 def make_relative_data(filename_zero,  targets, seeds,days ,analyze, experiment_dir , object_dir, label, import_path, outputfolder, printarg):
@@ -71,7 +76,7 @@ def make_relative_data(filename_zero,  targets, seeds,days ,analyze, experiment_
 					print('All days for seed', seed, 'processed')
 
 		relative_data =  relative_development(raw_data, benchmark)
-		file_name = experiment_dir + outputfolder+'Tina_raw_and_relative_data_seed_' + str(seed) + "_" +label + '.pkl'     #  ATTENTION ERROR SOURCE HERE 
+		file_name = experiment_dir + outputfolder+label+'Tina_raw_and_relative_data_seed_' + str(seed)+ '.pkl'     #  ATTENTION ERROR SOURCE HERE 
 		save_objects = open(file_name, 'wb')
 		list_of_objects = [seed, raw_data, relative_data]
 		pickle.dump(list_of_objects, save_objects)
@@ -80,78 +85,72 @@ def make_relative_data(filename_zero,  targets, seeds,days ,analyze, experiment_
 			print(file_name+' was written, YAY!')
 
  
- 
-	
 
-	# for seed in seeds:
-	# 	benchmark =  "_seed_" +str(seed) +label+"0"
-	# 	raw_data = {}
-	# 	ordered_var_list = []
+def read_data(pickl_dir, seeds, important_filelabel, var_list, label_zero):
+	df = pd.DataFrame()
+	df_list = []
 
-	# 	for i in targets:
-	# 		obj_label = "_seed_" +str(seed)  +label + str(i)
-	# 		ordered_var_list.append(obj_label)
-	# 		raw_data.update({obj_label: creating_lists(analyze, funds, portfolios,currencies, environment,exogeneous_agents)})
+	files = [f for f in os.listdir(pickl_dir)]
 
-	# 		for day in days:
-	# 			filename = object_dir + "objects_day_" + str(day) + obj_label+".pkl"
-	# 			data = open(filename,"rb")
-	# 			list_of_objects = pickle.load(data)
-	# 			portfolios = list_of_objects[0]
-	# 			currencies = list_of_objects[1]
-	# 			environment = list_of_objects[2]
-	# 			exogeneous_agents = list_of_objects[3]
-	# 			funds = list_of_objects[4]
+	temp = []
 
-	# 			raw_data[obj_label] = add_observations(raw_data[obj_label], funds, portfolios,currencies, environment,exogeneous_agents)
+	print seeds
 
-	# 			if day==days[-1] and i == targets[-1]:
-	# 				print('All days for seed', seed, 'processed')
+	for seed in seeds:
+	    for f in files:
+	        if 'seed_'+str(seed) in f:
+	        	print f
+	        	temp.append(f.split("seed_",1)[1])   
 
-	# 	relative_data =  relative_development(raw_data, benchmark)
-	# 	file_name = experiment_dir + 'raw_relative/test/'+label+'Tina_raw_and_relative_data_seed_' + str(seed) + '.pkl'     #  ATTENTION ERROR SOURCE HERE 
-	# 	save_objects = open(file_name, 'wb')
-	# 	list_of_objects = [seed, raw_data, relative_data]
-	# 	pickle.dump(list_of_objects, save_objects)
-	# 	save_objects.close()
 
-def read_return_data(local_dir, label, seeds, var_list_returns):
+	myset = set(temp)
+	new_seeds = list(myset)
+
+
 
 	print('############# Reading bond and equity returns..########')
+    
 	for seed in seeds:
-	    filename = local_dir + 'MEAN_25002750_Tina_raw_and_relative_data_seed_' + str(seed) + '.pkl'
-	    data = open(filename, "rb")
-	    list_of_objects = pickle.load(data)
-	    seedx = list_of_objects[0]
-	    raw_data = list_of_objects[1]
-	    relative_data = list_of_objects[2]
-	    print seed, 'returns data'
 
-	    rows = []
+		filename = pickl_dir + important_filelabel + str(seed)  + '.pkl'
+		try:
 
-	    for qe, assets in relative_data.items():
-	        all = {}
-	        #
-	        for key_asset, var in assets.items():
-	            if key_asset in var_list_returns:
-	                #print key_asset
-	                for time, val in enumerate(var):
-	                    all = {}
-	                    all['seed'] = seed
+			data = open(filename, "rb")
+			list_of_objects = pickle.load(data)
+			seedx = list_of_objects[0]
+			raw_data = list_of_objects[1]
+			relative_data = list_of_objects[2]
+			print filename
+ 
+			"Make change variables: be careful with label zero. It depends how the QE-0 label was saved!"
+			for key, value in relative_data.items():
+				relative_data[key]['percentage_portfolio2'] = relative_data[key]['portfolios[2].var.price'] / raw_data['_seed_' +str(seed)  + label_zero]['portfolios[2].var.price'] * 100
+				relative_data[key]['percentage_portfolio1'] = relative_data[key]['portfolios[1].var.price'] / raw_data['_seed_' +str(seed)  + label_zero]['portfolios[1].var.price'] * 100
+				relative_data[key]['percentage_portfolio0'] = relative_data[key]['portfolios[0].var.price'] / raw_data['_seed_' +str(seed)  + label_zero]['portfolios[0].var.price'] * 100
+				relative_data[key]['percentage_portfolio3'] = relative_data[key]['portfolios[3].var.price'] / raw_data['_seed_' +str(seed)  + label_zero]['portfolios[3].var.price'] * 100
+				relative_data[key]['percentage_fx_rates.iloc[0,1]'] = relative_data[key]['environment.var.fx_rates.iloc[0,1]'] / raw_data['_seed_' +str(seed)  + label_zero]['environment.var.fx_rates.iloc[0,1]'] * 100
+			rows = []
+	 
 
-	                    list_temp = []
-	                    list_temp.append(qe)
-
-	                    #print list_temp[0][qe.find('_', 10):] This drags out the QE
-
-	                    all['QE'] = list_temp[0][qe.find('_', 13) + 3:]
-	                    all['asset'] = key_asset
-	                    all['val'] = val
-	                    all['time'] = time
-	                    #print time
-	                    rows.append(all)
-
-	    temp = pd.DataFrame(rows) # all times per experiment
-	    df_list.append(temp) # all data per seed
-	df_exp_returns = pd.concat(df_list, keys=seeds , sort=True)  # concat seeds
-	return df_exp_returns
+			for qe, assets in relative_data.items():
+				all = {}
+				for key_asset, var in assets.items():
+					if key_asset in var_list:
+						for time, val in enumerate(var):
+							all = {}
+							all['seed'] = seed
+							list_temp = []
+							list_temp.append(qe)
+							"ATTENTION!!! - This drags out the QE, but it depends on len(string)"
+							all['QE'] = list_temp[0][qe.find('_',18 ) + 3:]
+							all['asset'] = key_asset
+							all['val'] = val
+							all['time'] = time
+							rows.append(all)
+			temp = pd.DataFrame(rows) # all times per experiment
+			df_list.append(temp) # all data per seed
+		except:
+			print("problem with "+filename)
+	df = pd.concat(df_list, keys=seeds , sort=True)  # concat seeds
+	return df
+ 
